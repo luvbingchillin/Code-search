@@ -4,36 +4,53 @@ An autonomous, privacy-first developer onboarding tool that retrieves and explai
 
 This project evolved from the CodeOrient baseline to solve its three critical flaws: semantic fragmentation, cloud latency, and lack of data privacy.
 
-## The Three Pillars of Architecture
+## Features
 
-1. **Tree-sitter AST Chunking (Ingestion)**
-   Discards naive text splitters (like LangChain's RecursiveCharacterTextSplitter) in favor of Tree-sitter. This parses Python Abstract Syntax Trees (ASTs) to extract structurally complete entities (functions, classes), ensuring context remains intact for high multi-hop recall.
+- **100% Edge-Computed Privacy**: No code is ever sent to cloud APIs (OpenAI/Anthropic). All inference and retrieval happen locally on your hardware.
+- **AST-Driven Ingestion**: Utilizes Tree-sitter instead of naive text splitters to extract structurally complete functions and classes, completely eliminating semantic fragmentation.
+- **Autonomous Multi-Hop Retrieval**: The agent intelligently traverses the structural codebase graph to resolve internal dependencies before synthesizing an answer.
+- **Deterministic Agentic Loop**: Compiled WebAssembly workflows (NemoIR) strictly manage the ReAct loop and enforce a hard 4,096 token limit to prevent browser VRAM crashes.
+- **Split-Pane UI Workspace**: A seamless React interface allowing developers to chat with the agent while simultaneously inspecting the exact syntax-highlighted AST chunks being referenced.
 
-2. **NemoIR Agent Harness (Orchestration)**
-   Utilizes a research compiler toolchain (`hkalexling/nemoir`) for structured agent workflows. Instead of standard JavaScript loops, NemoIR compiles `.nemo` workflows into WebAssembly to orchestrate a highly deterministic ReAct retrieval loop directly in the browser.
+## Tech Stack
 
-3. **WebLLM + WebGPU (Edge Inference)**
-   Eliminates cloud latency and guarantees 100% IP privacy by running the generative agent entirely in the user's browser. We utilize WebLLM to run quantized Small Language Models (SLMs) like Qwen2.5-Coder directly on local hardware via WebGPU.
+**Frontend (Edge Inference & UI)**
+- **Core Framework**: React 19, TypeScript, Vite 6
+- **Styling**: TailwindCSS
+- **Edge Inference Engine**: WebLLM (executing quantized SLMs like Qwen2.5-Coder via WebGPU)
+- **Agent Orchestration**: NemoIR (WebAssembly ReAct loops)
+- **Code Visualization**: PrismJS (Python syntax highlighting)
+- **Automated Testing**: Vitest, React Testing Library
 
-## Project Scope
+**Backend (Offline Ingestion Pipeline)**
+- **Language**: Python
+- **AST Parser**: Tree-sitter (`tree-sitter-python`)
+- **Embeddings**: SentenceTransformers (e.g., `all-MiniLM-L6-v2`)
+- **Vector Storage**: Local Vector DB (LanceDB / ChromaDB)
 
-- **Language Support:** Python codebases ONLY.
-- **Scale:** Curated to 15-20 high-quality open-source repositories (e.g., FastAPI, LangChain).
-- **Inference Constraints:** Hard-capped at 4,096 tokens to ensure browser VRAM stability. Pre-trained SLMs only.
+## Getting Started
 
-## Directory Structure
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- A WebGPU-compatible browser (e.g., Chrome, Edge) for local SLM execution
 
-* `/frontend`: The Vite + React + TypeScript edge UI. Features a split-pane layout with a chat interface on the left and a Python AST code viewer on the right. Includes integration hooks for WebLLM and NemoIR.
-* `FYP_Report_CCDS25-0441.pdf`: Initial academic scoping and project plan documentation.
+### Installation
+1. Clone the repository to your local machine.
+2. Navigate into the frontend directory and install the dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+3. Start the local development server:
+   ```bash
+   npm run dev
+   ```
 
-## Running the Frontend
+## Usage
 
-Navigate to the frontend directory and start the local Vite development server:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Visit `http://localhost:5173` to interact with the UI.
+1. Open your browser and navigate to `http://localhost:5173`.
+2. **Initialize Local Ingestion (Future Feature)**: Use the Python backend CLI to parse and ingest a local Python repository (e.g., FastAPI) using Tree-sitter.
+3. **Query the Codebase**: In the left-hand Chat Pane, ask an architectural question (e.g., *"How is the authentication middleware structured?"*).
+4. **Monitor the Agent**: Watch the Agentic Loop Banner track the local agent's state as it transitions between *Thinking*, *Searching AST*, and *Synthesizing*.
+5. **Inspect the Code**: View the exact Python AST chunks the agent retrieved in the right-hand Code Viewer Pane, complete with accurate source line numbers and multi-hop tabs.
