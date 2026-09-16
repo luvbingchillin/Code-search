@@ -51,7 +51,8 @@ export class AgentSimulator {
 
   public async runReActCycle(
     query: string,
-    onStateChange: (state: ReActState, message: string, chunks?: AstCodeChunk[]) => void
+    onStateChange: (state: ReActState, message: string, chunks?: AstCodeChunk[]) => void,
+    onTokenStream?: (chunk: string, accumulated: string) => void
   ): Promise<{ response: string; citedChunks: AstCodeChunk[] }> {
     this.isCancelled = false;
 
@@ -74,11 +75,6 @@ export class AgentSimulator {
     await this.delay(300);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
-    // 3. Synthesizing
-    onStateChange('Synthesizing', 'Synthesizing response with cited AST context via WebLLM...');
-    await this.delay(600);
-    if (this.isCancelled) throw new Error('Query cancelled by user');
-
     const topChunk = matchedChunks[0];
     const citedSummary = matchedChunks
       .map(
@@ -93,6 +89,23 @@ export class AgentSimulator {
       `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`. ` +
       `It handles critical logic with a calculated semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.\n\n` +
       `You can inspect the full AST definition, decorators, parameters, and line ranges in the code viewer pane on the right.`;
+
+    // 3. Synthesizing
+    onStateChange('Synthesizing', 'Synthesizing response with cited AST context via WebLLM...');
+    if (onTokenStream) {
+      const words = response.split(' ');
+      let currentAcc = '';
+      for (let i = 0; i < words.length; i++) {
+        if (this.isCancelled) throw new Error('Query cancelled by user');
+        const chunk = (i === 0 ? '' : ' ') + words[i];
+        currentAcc += chunk;
+        onTokenStream(chunk, currentAcc);
+        await this.delay(8);
+      }
+    } else {
+      await this.delay(600);
+      if (this.isCancelled) throw new Error('Query cancelled by user');
+    }
 
     // 4. Complete
     onStateChange('Complete', `Completed retrieval and synthesis in ${(1.8).toFixed(1)}s`, matchedChunks);

@@ -10,7 +10,7 @@ import { CodeViewerPane } from './components/viewer/CodeViewerPane';
 export const App: React.FC = () => {
   const webLLM = useWebLLM();
   const nemoIR = useNemoIR();
-  const agent = useReActAgent();
+  const agent = useReActAgent({ webLLM, nemoIR });
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-950 text-gray-100 overflow-hidden select-none">
@@ -31,6 +31,8 @@ export const App: React.FC = () => {
             onSelectChunk={agent.setSelectedChunkId}
             onSubmit={agent.submitQuery}
             onCancel={agent.cancelQuery}
+            streamingTokens={agent.streamingTokens}
+            onReset={agent.reset}
           />
         }
         rightPane={

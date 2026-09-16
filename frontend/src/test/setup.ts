@@ -1,6 +1,33 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Fallback window stub to prevent React 19 ReferenceError: window is not defined during asynchronous teardown
+const fallbackWindow: any = {
+  event: undefined,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  matchMedia: () => ({ matches: false, addListener: () => {}, removeListener: () => {} }),
+};
+
+if (typeof (globalThis as any).window !== 'undefined') {
+  let currentWindow = (globalThis as any).window;
+  try {
+    Object.defineProperty(globalThis, 'window', {
+      get() {
+        return currentWindow || fallbackWindow;
+      },
+      set(v) {
+        currentWindow = v;
+      },
+      configurable: true,
+    });
+  } catch (e) {
+    // ignore if property cannot be redefined
+  }
+}
 
 afterEach(() => {
   cleanup();
@@ -78,4 +105,34 @@ Object.defineProperty(navigator, 'gpu', {
   writable: true,
   configurable: true,
 });
+
+// Polyfill fetch for Node/JSDOM to support file: and .wasm URLs natively for @nemoir/compiler-wasm
+const origFetch = globalThis.fetch;
+globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const url = typeof input === 'string' ? input : (input as any)?.url || (input as any)?.href || String(input);
+  if (typeof url === 'string' && (url.startsWith('file:') || url.endsWith('.wasm'))) {
+    const filePath = url.startsWith('file:') ? fileURLToPath(url) : url;
+    const buf = fs.readFileSync(filePath);
+    return new Response(buf, {
+      status: 200,
+      headers: { 'Content-Type': 'application/wasm' },
+    });
+  }
+  return origFetch(input, init);
+};
+
+// Polyfill Worker for JSDOM
+if (typeof (globalThis as any).Worker === 'undefined' || typeof (window as any).Worker === 'undefined') {
+  class WorkerMock {
+    onmessage: ((ev: any) => void) | null = null;
+    onerror: ((ev: any) => void) | null = null;
+    postMessage(_msg: any) {}
+    terminate() {}
+    addEventListener() {}
+    removeEventListener() {}
+  }
+  (window as any).Worker = WorkerMock;
+  (globalThis as any).Worker = WorkerMock;
+}
+
 

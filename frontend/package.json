@@ -11,11 +11,17 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.85",
+    "@nemoir/compiler-wasm": "^0.1.10",
+    "@nemoir/web-runtime": "^0.6.1",
+    "@nemoir/web-ui": "^0.3.2",
     "lucide-react": "^1.16.0",
     "prismjs": "^1.29.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-resizable-panels": "^2.1.7"
+    "react-resizable-panels": "^2.1.7",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

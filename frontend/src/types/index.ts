@@ -56,17 +56,28 @@ export interface ChatMessage {
   };
 }
 
-export type WebLLMLoadingStatus = 'unloaded' | 'loading' | 'ready' | 'error';
+export type WebLLMLoadingStatus = 'unloaded' | 'loading' | 'ready' | 'generating' | 'error';
 
 export interface UseWebLLMReturn {
   status: WebLLMLoadingStatus;
   progress: number;
   progressText: string;
   currentModel: string | null;
+  error: string | null;
+  isWebGPUSupported: boolean;
+  engine: unknown | null;
   loadModel: (modelId?: string) => Promise<void>;
-  generate: (prompt: string) => Promise<string>;
-  initEngine: () => Promise<void>;
-  interrupt: () => void;
+  generate: (
+    prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    onToken?: (chunk: string, accumulated: string) => void
+  ) => Promise<string>;
+  generateStream: (
+    prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+    onToken?: (chunk: string, accumulated: string) => void
+  ) => Promise<string>;
+  initEngine: (modelId?: string) => Promise<void>;
+  interrupt: () => void | Promise<void>;
+  unload: () => Promise<void>;
 }
 
 export type NemoWasmStatus = 'uninitialized' | 'initializing' | 'ready' | 'error';
@@ -93,7 +104,9 @@ export interface UseReActAgentReturn {
   messages: ChatMessage[];
   activeChunks: AstCodeChunk[];
   selectedChunkId: string | null;
+  streamingTokens?: string;
   submitQuery: (query: string) => Promise<void>;
   cancelQuery: () => void;
   setSelectedChunkId: (id: string) => void;
+  reset?: () => void;
 }

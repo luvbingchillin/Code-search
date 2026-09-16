@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ webLLM, nemoIR, agentStatus }) =
         {/* Model Selector Pill */}
         <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-purple-950/40 border border-purple-800/50 text-xs text-purple-200">
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-          <span className="font-mono truncate max-w-[160px]">{webLLM.currentModel ?? 'Llama-3.2-1B'}</span>
+          <span className="font-mono truncate max-w-[160px]">{webLLM.currentModel ?? 'Qwen2.5-Coder-1.5B'}</span>
         </div>
       </div>
     </header>

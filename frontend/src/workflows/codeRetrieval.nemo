@@ -1,0 +1,33 @@
+workflow CodeRetrievalAgent {
+  input {
+    query: string
+  }
+
+  stage @entry Thinking {
+    prompt: "Analyze user query and formulate AST search strategy"
+    output: {
+      confidence: number
+    }
+    transition if confidence > 0.5 => SearchingAST
+    transition else => Synthesizing
+  }
+
+  stage SearchingAST {
+    prompt: "Search AST code chunks matching the query"
+    output: {
+      hasResults: bool {
+        true => Synthesizing
+        false => Complete
+      }
+    }
+  }
+
+  stage Synthesizing {
+    prompt: "Synthesize explanation from retrieved AST chunks"
+    transition else => Complete
+  }
+
+  stage @exit Complete {
+    prompt: "Return code retrieval results to user"
+  }
+}
