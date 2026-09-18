@@ -88,7 +88,12 @@ export interface NemoSearchOptions {
     repo?: string;
     astNodeType?: AstNodeType;
     filePath?: string;
+    identifier?: string;
   };
+  searchType?: 'semantic' | 'exact';
+  exactMatch?: boolean;
+  filePath?: string;
+  identifier?: string;
 }
 
 export interface UseNemoIRReturn {
@@ -96,6 +101,7 @@ export interface UseNemoIRReturn {
   isReady: boolean;
   initNemo: (wasmUrl?: string, workflowUrl?: string) => Promise<void>;
   searchAstChunks: (query: string, options?: NemoSearchOptions) => Promise<AstCodeChunk[]>;
+  lookupEntity?: (name: string) => Promise<AstCodeChunk[]>;
   executeWorkflow: (input: Record<string, unknown>) => Promise<unknown>;
 }
 
@@ -108,5 +114,5 @@ export interface UseReActAgentReturn {
   submitQuery: (query: string) => Promise<void>;
   cancelQuery: () => void;
   setSelectedChunkId: (id: string) => void;
-  reset?: () => void;
+  reset: () => void;
 }

@@ -42,6 +42,13 @@ export function useReActAgent(
   const webLLMRef = useRef<UseWebLLMReturn | undefined>(webLLM);
   webLLMRef.current = webLLM;
 
+  const nemoIR =
+    options && 'wasmStatus' in options
+      ? (options as unknown as UseNemoIRReturn)
+      : (options as UseReActAgentOptions)?.nemoIR;
+  const nemoIRRef = useRef<UseNemoIRReturn | undefined>(nemoIR);
+  nemoIRRef.current = nemoIR;
+
   const [agentStatus, setAgentStatus] = useState<AgentStatus>(initialStatus);
   const statusRef = useRef<AgentStatus>(initialStatus);
   statusRef.current = agentStatus;
@@ -186,7 +193,9 @@ export function useReActAgent(
           statusRef.current = searchingStatus;
           setAgentStatus(searchingStatus);
 
-          const matchedChunks = simulatorRef.current.searchAstChunks(trimmed);
+          const matchedChunks = nemoIRRef.current
+            ? await nemoIRRef.current.searchAstChunks(trimmed)
+            : simulatorRef.current.searchAstChunks(trimmed);
           activeChunksRef.current = matchedChunks;
           setActiveChunks(matchedChunks);
           citedChunksList = matchedChunks;
