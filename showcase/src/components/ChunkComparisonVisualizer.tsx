@@ -184,8 +184,8 @@ export const ChunkComparisonVisualizer: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
             <span>[ SYNTACTIC FIDELITY // HEAD-TO-HEAD AUDIT ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4 chande-tilt">
-            Why Fragmented Code Ruins AI Explanations
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
+            Why Fragmented Code <span className="highlight-sweep is-visible">Ruins AI Explanations</span>
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
             When code is sliced by arbitrary character limits, the AI is forced to hallucinate missing logic. When the entire syntax tree is preserved, the AI explains your architecture with 100% precision.

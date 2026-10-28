@@ -25,9 +25,9 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* High-Impact Headline in Phudu */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#0a1f10] font-display uppercase leading-[1.05] mb-6 chande-tilt">
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#0a1f10] font-display uppercase leading-[1.08] mb-6">
           Stop Gambling on <br className="hidden sm:inline" />
-          <span className="text-[#143520] underline decoration-[#68f12b] decoration-4 underline-offset-8">Fragmented Codebases</span>
+          <span className="highlight-sweep is-visible">Fragmented Codebases</span>
         </h1>
 
         {/* Clear Plain-English Subhead */}

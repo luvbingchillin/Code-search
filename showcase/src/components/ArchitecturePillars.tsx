@@ -54,8 +54,8 @@ export const ArchitecturePillars: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
             <span>[ SPECIMEN ANALYSIS // CORE PILLARS ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4 chande-tilt">
-            Four Core Advantages
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
+            Four <span className="highlight-sweep is-visible">Core Advantages</span>
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
             Engineered from the ground up to eliminate cloud privacy leaks, broken code fragments, and browser memory crashes.

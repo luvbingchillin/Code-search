@@ -38,16 +38,35 @@
   }
 }
 
-/* Chande Scroll-Velocity Skew (from chande-tilt.js) */
-:root {
-  --scroll-skew: 0deg;
+/* Green Highlighter Bar Reveal Animation (as found in chandebootcamp.com) */
+.highlight-sweep {
+  position: relative;
+  display: inline-block;
+  padding: 0.05em 0.35em;
+  margin: 0 -0.05em;
+  color: #0a1f10;
+  z-index: 1;
+  white-space: nowrap;
 }
 
-.chande-tilt {
-  transform: skewY(var(--scroll-skew));
+.highlight-sweep::before {
+  content: '';
+  position: absolute;
+  inset: 0.06em 0;
+  background-color: #68f12b;
+  border-radius: 6px;
+  z-index: -1;
+  transform: scaleX(0);
   transform-origin: left center;
-  transition: transform 0.12s ease-out;
-  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 14px rgba(104, 241, 43, 0.4);
+}
+
+.highlight-sweep.is-active::before,
+.highlight-sweep.is-visible::before,
+.group:hover .highlight-sweep::before,
+*:hover > .highlight-sweep::before {
+  transform: scaleX(1);
 }
 
 /* Tactile Card Magnetic Elevation & Glow */
@@ -145,8 +164,9 @@ button:active, .acid-btn:active {
   .flowing-wire {
     animation: none !important;
   }
-  .chande-tilt {
-    transform: none !important;
+  .highlight-sweep::before {
+    transform: scaleX(1) !important;
+    transition: none !important;
   }
   animateMotion {
     display: none !important;

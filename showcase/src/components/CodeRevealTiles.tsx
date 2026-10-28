@@ -1,22 +1,15 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
 import { Eye, EyeOff, Sparkles, Terminal } from 'lucide-react';
 
-interface TileData {
-  id: number;
-  row: number;
-  col: number;
-  symbol: string;
-}
-
 export const CodeRevealTiles: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [forceRevealAll, setForceRevealAll] = useState(false);
   const [revealedPercent, setRevealedPercent] = useState(0);
 
-  // Compiler-verified Python code to reveal underneath
+  // Python AST Code to reveal
   const hiddenCode = `@app.get(
     "/api/v2/analyze/{repository_id}",
     response_model=AnalysisResponse,
@@ -51,79 +44,242 @@ def extract_complete_ast(
     }
   }, [hiddenCode]);
 
-  // Matrix dimensions: 8 columns x 6 rows = 48 tiles
-  const COLS = 8;
-  const ROWS = 6;
-  const tiles: TileData[] = useMemo(() => {
-    const symbols = [
-      'def', 'class', '@app.get', 'async', 'tokens', 'wasm',
-      'AST', 'WebGPU', 'privacy', 'tree', '0x1A', 'void',
-      'import', 'typing', 'depends', 'return', 'yield', 'router'
-    ];
-    const list: TileData[] = [];
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        const id = r * COLS + c;
-        list.push({
-          id,
-          row: r,
-          col: c,
-          symbol: symbols[id % symbols.length]
-        });
-      }
-    }
-    return list;
-  }, []);
+  // Pointer state for canvas
+  const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
+    x: -9999,
+    y: -9999,
+    active: false
+  });
 
-  // Update cursor coordinates relative to container bounding box
-  const updatePointer = useCallback((clientX: number, clientY: number) => {
+  // Canvas drawing loop with Chande Bootcamp's exact mosaic specifications
+  useEffect(() => {
+    // Avoid JSDOM canvas warning during tests
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') return;
+
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext('2d');
+    } catch {
+      return;
+    }
+    if (!ctx) return;
+
+    // Safety fallback for JSDOM/older environments where roundRect is not defined
+    if (typeof ctx.roundRect !== 'function') {
+      (ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number) => void }).roundRect = function(x: number, y: number, w: number, h: number) {
+        ctx!.rect(x, y, w, h);
+      };
+    }
+
+    let animId = 0;
+    let width = 0;
+    let height = 0;
+
+    // Chande Mosaic Palette
+    // Colors: #0a1f10 (obsidian), #0f6b2a (forest), #68f12b (acid lime), #e9ffd1 (mint highlight)
+    const chandePalette = [
+      '#08180d',
+      '#0b2313',
+      '#0f351a',
+      '#154a24',
+      '#1c6130',
+      '#247d3d',
+      '#35a34e',
+      '#5cf11e',
+      '#68f12b'
+    ];
+
+    interface Tile {
+      baseX: number;
+      baseY: number;
+      currX: number;
+      currY: number;
+      scale: number;
+      alpha: number;
+      color: string;
+      studColor: string;
+      phase: number;
+    }
+
+    let tiles: Tile[] = [];
+    const TILE_SIZE = 26; // Exact square tile size from Chande hero
+    const GAP = 3;
+    const RADIUS = 5;
+    const HOVER_RADIUS = 135;
+
+    const initTiles = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = container.clientWidth;
+      height = container.clientHeight;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.scale(dpr, dpr);
+
+      const step = TILE_SIZE + GAP;
+      const cols = Math.ceil(width / step) + 1;
+      const rows = Math.ceil(height / step) + 1;
+
+      tiles = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * step;
+          const y = r * step;
+
+          // Slats color ramp across columns matching Chande hero field
+          const colRatio = (c / cols);
+          const colorIdx = Math.floor(colRatio * (chandePalette.length - 1));
+          const color = chandePalette[colorIdx % chandePalette.length];
+          const studColor = colRatio > 0.6 ? '#68f12b' : '#35a34e';
+
+          tiles.push({
+            baseX: x,
+            baseY: y,
+            currX: x,
+            currY: y,
+            scale: 1,
+            alpha: 1,
+            color,
+            studColor,
+            phase: (c * 0.12 + r * 0.08)
+          });
+        }
+      }
+    };
+
+    initTiles();
+
+    const handleResize = () => {
+      initTiles();
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Animation Render Loop
+    let time = 0;
+    const render = () => {
+      time += 0.03;
+      ctx.clearRect(0, 0, width, height);
+
+      let openedCount = 0;
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
+      const mouseActive = mouseRef.current.active && !forceRevealAll;
+
+      for (let i = 0; i < tiles.length; i++) {
+        const t = tiles[i];
+
+        // Target state based on hover scatter
+        let targetX = t.baseX;
+        let targetY = t.baseY;
+        let targetScale = 1;
+        let targetAlpha = forceRevealAll ? 0 : 0.98;
+
+        if (mouseActive) {
+          const dx = (t.baseX + TILE_SIZE / 2) - mx;
+          const dy = (t.baseY + TILE_SIZE / 2) - my;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < HOVER_RADIUS) {
+            openedCount++;
+            const norm = dist / HOVER_RADIUS; // 0 (dead center) to 1 (rim)
+            const infl = (1 - norm) * (1 - norm); // Quadratic drop-off
+
+            // Radial scatter push
+            const push = infl * 28;
+            const dirX = dist > 1e-3 ? dx / dist : 0;
+            const dirY = dist > 1e-3 ? dy / dist : 0;
+            targetX += dirX * push;
+            targetY += dirY * push;
+
+            // Aggressive shrink & dissolve directly under cursor
+            targetScale = Math.max(0.08, norm * norm);
+            targetAlpha = Math.max(0, Math.pow(norm, 2.2) - 0.05);
+          }
+        }
+
+        // Spring-damping interpolation
+        t.currX += (targetX - t.currX) * 0.22;
+        t.currY += (targetY - t.currY) * 0.22;
+        t.scale += (targetScale - t.scale) * 0.22;
+        t.alpha += (targetAlpha - t.alpha) * 0.25;
+
+        // Skip drawing invisible tiles for max performance
+        if (t.alpha <= 0.02 || t.scale <= 0.05) continue;
+
+        const size = TILE_SIZE * t.scale;
+        const rad = RADIUS * t.scale;
+        const renderX = t.currX + (TILE_SIZE - size) / 2;
+        const renderY = t.currY + (TILE_SIZE - size) / 2;
+
+        ctx.save();
+        ctx.globalAlpha = t.alpha;
+
+        // 1. Draw rounded tile body
+        ctx.beginPath();
+        ctx.roundRect(renderX, renderY, size, size, Math.max(1, rad));
+        ctx.fillStyle = t.color;
+        ctx.fill();
+
+        // 2. Bevel hairline highlight on top-left edge (Chande bevel: 0.32)
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(233, 255, 209, 0.18)';
+        ctx.stroke();
+
+        // 3. Central stud / dot on tile (Chande studs: 0.56)
+        if (size > 14) {
+          const studX = renderX + size / 2;
+          const studY = renderY + size / 2;
+          const studR = Math.max(1, 2 * t.scale);
+
+          ctx.beginPath();
+          ctx.arc(studX, studY, studR, 0, Math.PI * 2);
+          ctx.fillStyle = t.studColor;
+          ctx.globalAlpha = t.alpha * 0.7;
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      // Update telemetry pill
+      if (forceRevealAll) {
+        setRevealedPercent(100);
+      } else if (tiles.length > 0) {
+        setRevealedPercent(Math.min(100, Math.round((openedCount / (tiles.length * 0.25)) * 100)));
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [forceRevealAll]);
+
+  // Pointer event handlers
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    setCursorPos({ x, y });
-  }, []);
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    updatePointer(e.clientX, e.clientY);
+    mouseRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      active: true
+    };
   };
 
   const handlePointerLeave = () => {
-    setCursorPos(null);
+    mouseRef.current.active = false;
   };
-
-  // Touch move support
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length > 0) {
-      updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-    }
-  };
-
-  // Interaction Radius (in px)
-  const HOVER_RADIUS = 140;
-
-  // Track how many tiles are currently displaced/revealed
-  useEffect(() => {
-    if (forceRevealAll) {
-      setRevealedPercent(100);
-      return;
-    }
-    if (!cursorPos || !containerRef.current) {
-      setRevealedPercent(0);
-      return;
-    }
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight;
-    let count = 0;
-
-    for (const tile of tiles) {
-      const tileCenterX = ((tile.col + 0.5) / COLS) * width;
-      const tileCenterY = ((tile.row + 0.5) / ROWS) * height;
-      const dist = Math.hypot(tileCenterX - cursorPos.x, tileCenterY - cursorPos.y);
-      if (dist < HOVER_RADIUS) count++;
-    }
-    setRevealedPercent(Math.round((count / tiles.length) * 100));
-  }, [cursorPos, forceRevealAll, tiles]);
 
   return (
     <section id="reveal-tiles" className="py-24 md:py-32 border-b border-[#dad0a7]/30">
@@ -135,18 +291,18 @@ def extract_complete_ast(
               <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
               <span>[ STRUCTURAL X-RAY // INTERACTIVE CODE REVEAL ]</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3 chande-tilt">
-              Hover to Uncover Hidden Code Structures
+            <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3">
+              Hover to Uncover <span className="highlight-sweep is-visible">Hidden Code Structures</span>
             </h2>
             <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
-              Arbitrary chunkers leave critical signatures, nested dependencies, and decorators concealed behind black-box boundaries. Move your cursor across the tiles to peel back the surface and reveal compiler-verified AST nodes.
+              Arbitrary chunkers leave critical signatures, nested dependencies, and decorators concealed behind black-box boundaries. Move your cursor across the Chande mosaic tiles to part the surface and reveal compiler-verified AST nodes.
             </p>
           </div>
 
           {/* Action & Stats Controls */}
           <div className="flex items-center space-x-3">
             <div className="hidden sm:inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-[#0a1f10]/5 border border-[#0a1f10]/15 font-mono text-xs font-bold text-[#0a1f10]">
-              <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
+              <span className="w-2 h-2 rounded-full bg-[#68f12b] shadow-[0_0_6px_#68f12b]" />
               <span>Revealed: {revealedPercent}%</span>
             </div>
             <button
@@ -156,7 +312,7 @@ def extract_complete_ast(
               {forceRevealAll ? (
                 <>
                   <EyeOff className="w-4 h-4 text-[#68f12b]" />
-                  <span>Conceal Tiles</span>
+                  <span>Conceal Mosaic Tiles</span>
                 </>
               ) : (
                 <>
@@ -180,7 +336,7 @@ def extract_complete_ast(
             </div>
             <div className="flex items-center space-x-2 text-[11px] text-[#dad0a7]">
               <Sparkles className="w-3.5 h-3.5 text-[#68f12b]" />
-              <span>Glide pointer or touch to part the mosaic tiles</span>
+              <span>Glide pointer across the green mosaic tiles to dissolve them</span>
             </div>
           </div>
 
@@ -189,8 +345,7 @@ def extract_complete_ast(
             ref={containerRef}
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
-            onTouchMove={handleTouchMove}
-            className="relative min-h-[380px] sm:min-h-[420px] p-6 sm:p-9 bg-[#030d06] cursor-crosshair overflow-hidden select-none"
+            className="relative min-h-[400px] sm:min-h-[440px] p-6 sm:p-9 bg-[#030d06] cursor-crosshair overflow-hidden select-none"
           >
             {/* Underlying Python Code Layer (Illuminated Compiler Truth) */}
             <div className="font-mono text-xs sm:text-sm text-[#f4f3eb] leading-relaxed relative z-0 pointer-events-none">
@@ -199,75 +354,12 @@ def extract_complete_ast(
               </pre>
             </div>
 
-            {/* Matrix of Tactile Fragmenting Tiles Overlay */}
-            <div
-              className={`absolute inset-0 grid grid-cols-8 grid-rows-6 gap-1 p-2 sm:p-3 pointer-events-none z-10 transition-opacity duration-300 ${
-                forceRevealAll ? 'opacity-0' : 'opacity-100'
-              }`}
-            >
-              {tiles.map((tile) => {
-                let scale = 1;
-                let opacity = 0.96;
-                let translateX = 0;
-                let translateY = 0;
-                let isNear = false;
-
-                if (cursorPos && containerRef.current) {
-                  const width = containerRef.current.clientWidth;
-                  const height = containerRef.current.clientHeight;
-
-                  const tileCenterX = ((tile.col + 0.5) / COLS) * width;
-                  const tileCenterY = ((tile.row + 0.5) / ROWS) * height;
-
-                  const dx = tileCenterX - cursorPos.x;
-                  const dy = tileCenterY - cursorPos.y;
-                  const dist = Math.hypot(dx, dy);
-
-                  if (dist < HOVER_RADIUS) {
-                    isNear = true;
-                    // Normalized distance from 0 (center) to 1 (outer rim)
-                    const normDist = dist / HOVER_RADIUS;
-                    // Chande smoothstep ease: infl from 1.0 (dead center) to 0.0 (periphery)
-                    const t = 1.0 - normDist;
-                    const infl = t * t * (3.0 - 2.0 * t);
-
-                    // Shrink aggressively near center (scale down to 0.12)
-                    scale = Math.max(0.12, 1.0 - infl * 0.88);
-
-                    // Radial push deflection away from cursor
-                    const pushFactor = infl * 26;
-                    const awayX = dist > 1e-3 ? dx / dist : 0;
-                    const awayY = dist > 1e-3 ? dy / dist : 0;
-                    translateX = awayX * pushFactor;
-                    translateY = awayY * pushFactor;
-
-                    // Fade to reveal code directly underneath
-                    opacity = Math.max(0, Math.pow(normDist, 1.6) - 0.08);
-                  }
-                }
-
-                return (
-                  <div
-                    key={tile.id}
-                    style={{
-                      transform: `translate(${translateX.toFixed(1)}px, ${translateY.toFixed(1)}px) scale(${scale.toFixed(2)})`,
-                      opacity: opacity.toFixed(2),
-                      transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease'
-                    }}
-                    className={`rounded-xl bg-[#092211] border ${
-                      isNear ? 'border-[#68f12b]/60 shadow-[0_0_12px_rgba(104,241,43,0.3)]' : 'border-[#68f12b]/15'
-                    } flex flex-col items-center justify-center p-1 sm:p-2 text-center text-[#dad0a7]/60 shadow-inner group`}
-                  >
-                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-[#68f12b]/80 tracking-wider">
-                      №{tile.id < 10 ? `0${tile.id}` : tile.id}
-                    </span>
-                    <span className="text-[8px] font-mono uppercase tracking-widest text-[#dad0a7]/40 truncate">
-                      {tile.symbol}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Chande Mosaic Canvas Layer (The exact mosaic tiles from the landing page first screen) */}
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 pointer-events-auto z-10"
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
 
           {/* Footer Bar */}
