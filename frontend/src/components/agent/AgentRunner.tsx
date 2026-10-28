@@ -96,8 +96,6 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   compact = false,
   className = '',
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(!compact);
-
   // Resolve active properties merging explicit props and status object
   const rawState = propState ?? status?.state ?? 'Idle';
   const normState = normalizeAgentState(rawState);
@@ -106,6 +104,8 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   const elapsedMs = propElapsed ?? status?.elapsedMs ?? 0;
   const chunkCount = propChunks ?? status?.activeChunkCount ?? 0;
   const errorMsg = propError ?? status?.error;
+
+  const [isExpanded, setIsExpanded] = useState<boolean>(!compact);
 
   const isBusy =
     normState === 'thinking' ||
@@ -167,18 +167,18 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   const getStateBadgeStyle = () => {
     switch (normState) {
       case 'thinking':
-        return 'text-amber-400 bg-amber-950/50 border-amber-800/60 shadow-amber-900/20';
+        return 'text-amber-300 bg-amber-950/80 border-amber-600/70 shadow-amber-950/30';
       case 'searching':
-        return 'text-blue-400 bg-blue-950/50 border-blue-800/60 shadow-blue-900/20';
+        return 'text-sky-300 bg-sky-950/80 border-sky-600/70 shadow-sky-950/30';
       case 'synthesizing':
-        return 'text-purple-400 bg-purple-950/50 border-purple-800/60 shadow-purple-900/20';
+        return 'text-purple-300 bg-purple-950/80 border-purple-600/70 shadow-purple-950/30';
       case 'complete':
-        return 'text-emerald-400 bg-emerald-950/50 border-emerald-800/60 shadow-emerald-900/20';
+        return 'text-emerald-300 bg-emerald-950/80 border-emerald-600/70 shadow-emerald-950/30';
       case 'error':
-        return 'text-rose-400 bg-rose-950/50 border-rose-800/60 shadow-rose-900/20';
+        return 'text-rose-300 bg-rose-950/80 border-rose-600/70 shadow-rose-950/30';
       case 'idle':
       default:
-        return 'text-gray-400 bg-gray-900/60 border-gray-800';
+        return 'text-slate-300 bg-slate-800/90 border-slate-700';
     }
   };
 
@@ -187,7 +187,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       case 'thinking':
         return <Brain className="w-3.5 h-3.5 animate-pulse text-amber-400" />;
       case 'searching':
-        return <Search className="w-3.5 h-3.5 animate-pulse text-blue-400" />;
+        return <Search className="w-3.5 h-3.5 animate-pulse text-sky-400" />;
       case 'synthesizing':
         return <Sparkles className="w-3.5 h-3.5 animate-spin text-purple-400" />;
       case 'complete':
@@ -196,7 +196,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
         return <AlertCircle className="w-3.5 h-3.5 text-rose-400" />;
       case 'idle':
       default:
-        return <Zap className="w-3.5 h-3.5 text-gray-400" />;
+        return <Zap className="w-3.5 h-3.5 text-slate-400" />;
     }
   };
 
@@ -210,36 +210,48 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
         return <AlertCircle className="w-3.5 h-3.5 text-rose-400" />;
       case 'pending':
       default:
-        return <div className="w-2 h-2 rounded-full bg-gray-600 my-0.5 ml-0.5" />;
+        return <div className="w-2 h-2 rounded-full bg-slate-600 my-0.5 ml-0.5" />;
     }
   };
 
   const tokenCount = streamingTokens ? streamingTokens.trim().split(/\s+/).filter(Boolean).length : 0;
+  const showBody = !compact && (isExpanded || normState === 'error');
 
   return (
     <div
       data-testid="agent-runner"
-      className={`bg-gray-900/95 border-b border-gray-800/80 transition-all ${className}`}
+      className={`bg-slate-900 border-b border-slate-800 transition-all ${className}`}
     >
       {/* Top Header / Status Control Bar */}
-      <div className="px-3 py-2 flex items-center justify-between border-b border-gray-800/40 bg-gray-950/40">
-        <div className="flex items-center space-x-2">
+      <div className="px-3 py-1.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70">
+        <div className="flex items-center space-x-2 min-w-0">
           {/* Agent State Badge */}
           <div
             data-testid="agent-status-badge"
-            className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shadow-xs ${getStateBadgeStyle()}`}
+            className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shadow-xs shrink-0 ${getStateBadgeStyle()}`}
           >
             {getStateIcon()}
             <span data-testid="agent-status-label">{displayLabel}</span>
           </div>
 
+          {/* Active Step Description in Status Rail */}
+          {stepMessage && (
+            <span
+              data-testid="agent-step-message"
+              className="truncate font-mono text-xs text-slate-300 max-w-[160px] sm:max-w-[240px]"
+              title={stepMessage}
+            >
+              {stepMessage}
+            </span>
+          )}
+
           {/* Elapsed Timer */}
           {elapsedMs > 0 && (
             <div
               data-testid="agent-elapsed-time"
-              className="flex items-center space-x-1 text-[11px] font-mono text-gray-400 bg-gray-900/80 px-2 py-0.5 rounded border border-gray-800"
+              className="flex items-center space-x-1 text-[11px] font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700 shrink-0"
             >
-              <Clock className="w-3 h-3 text-gray-500" />
+              <Clock className="w-3 h-3 text-slate-400" />
               <span data-testid="agent-elapsed-timer">{(elapsedMs / 1000).toFixed(1)}s</span>
             </div>
           )}
@@ -248,21 +260,21 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           {chunkCount > 0 && (
             <div
               data-testid="agent-chunk-count"
-              className="flex items-center space-x-1 text-[11px] font-mono text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded border border-blue-900/50"
+              className="flex items-center space-x-1 text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-700/60 shrink-0"
             >
-              <Layers className="w-3 h-3 text-blue-400" />
+              <Layers className="w-3 h-3 text-sky-400" />
               <span data-testid="agent-active-chunks">{chunkCount} chunks</span>
             </div>
           )}
         </div>
 
         {/* Action Controls */}
-        <div data-testid="agent-controls" className="flex items-center space-x-1.5">
+        <div data-testid="agent-controls" className="flex items-center space-x-1.5 shrink-0 ml-2">
           {isBusy && onCancel && (
             <button
               onClick={onCancel}
               data-testid="agent-cancel-btn"
-              className="flex items-center space-x-1 text-xs text-rose-400 hover:text-rose-300 bg-rose-950/30 hover:bg-rose-950/60 border border-rose-900/60 px-2 py-0.5 rounded transition-colors cursor-pointer"
+              className="flex items-center space-x-1 text-xs text-rose-300 hover:text-white bg-rose-950 hover:bg-rose-900 border border-rose-700 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs"
               title="Cancel current query"
             >
               <StopCircle className="w-3 h-3" />
@@ -274,7 +286,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
             <button
               onClick={onReset}
               data-testid="agent-reset-btn"
-              className="flex items-center space-x-1 text-xs text-gray-400 hover:text-gray-200 bg-gray-800/40 hover:bg-gray-800 border border-gray-700/50 px-2 py-0.5 rounded transition-colors cursor-pointer"
+              className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs"
               title="Reset agent state"
             >
               <RotateCcw className="w-3 h-3" />
@@ -285,56 +297,47 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           <button
             onClick={() => setIsExpanded((prev) => !prev)}
             data-testid="agent-toggle-traces-btn"
-            className="text-gray-500 hover:text-gray-300 p-0.5 rounded hover:bg-gray-800/50 transition-colors cursor-pointer"
+            className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs"
             title={isExpanded ? 'Collapse agent traces' : 'Expand agent traces'}
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span className="text-[11px] font-sans">Traces</span>
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
           </button>
         </div>
       </div>
 
       {/* Expandable Body */}
-      {isExpanded && (
-        <div className="p-3 space-y-2.5">
-          {/* Active Step Description */}
-          {stepMessage && (
-            <div className="flex items-center space-x-2 text-xs text-gray-300">
-              <Terminal className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span data-testid="agent-step-message" className="truncate font-mono text-[11px] text-gray-300">
-                {stepMessage}
-              </span>
-            </div>
-          )}
-
+      {showBody && (
+        <div className="p-3 space-y-2.5 bg-slate-950/40">
           {/* Execution Steps / Traces */}
-          <div data-testid="agent-steps-list" className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+          <div data-testid="agent-steps-list" className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {activeSteps.map((step, idx) => (
               <div
                 key={step.id || `step-${idx}`}
                 data-testid="agent-step-item"
                 data-step-id={step.id || `step-${idx}`}
-                className={`flex items-center justify-between p-1.5 rounded text-xs border transition-colors ${
+                className={`flex items-center justify-between p-2 rounded text-xs border transition-colors ${
                   step.status === 'running'
-                    ? 'bg-purple-950/30 border-purple-800/60 text-purple-200'
+                    ? 'bg-purple-950/60 border-purple-600/70 text-purple-200 shadow-xs'
                     : step.status === 'completed'
-                    ? 'bg-gray-950/40 border-gray-800/60 text-gray-300'
+                    ? 'bg-slate-900 border-slate-700/80 text-slate-200'
                     : step.status === 'error'
-                    ? 'bg-rose-950/30 border-rose-800/60 text-rose-300'
-                    : 'bg-gray-950/20 border-gray-900/60 text-gray-400'
+                    ? 'bg-rose-950/60 border-rose-600/70 text-rose-200 shadow-xs'
+                    : 'bg-slate-950 border-slate-800 text-slate-400'
                 }`}
               >
                 <div className="flex items-center space-x-2 min-w-0">
                   <span className="shrink-0">{getStepStatusIcon(step.status)}</span>
                   <span
                     data-testid={`agent-step-name-${step.id || idx}`}
-                    className={`truncate font-medium text-[11px] ${
+                    className={`truncate font-medium text-xs ${
                       step.status === 'running'
                         ? 'text-purple-300 font-semibold'
                         : step.status === 'completed'
-                        ? 'text-gray-200'
+                        ? 'text-slate-200'
                         : step.status === 'error'
                         ? 'text-rose-300'
-                        : 'text-gray-400'
+                        : 'text-slate-400'
                     }`}
                   >
                     {step.name}
@@ -343,7 +346,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
 
                 <span
                   data-testid="agent-step-status"
-                  className="text-[11px] uppercase font-mono tracking-wider text-gray-400 shrink-0 ml-1"
+                  className="text-[11px] uppercase font-mono tracking-wider text-slate-400 shrink-0 ml-1 font-semibold"
                 >
                   {step.status}
                 </span>
@@ -352,18 +355,18 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           </div>
 
           {/* Streaming Tokens Display */}
-          {(streamingTokens !== undefined || normState === 'synthesizing') && (
+          {(Boolean(streamingTokens) || normState === 'synthesizing') && (
             <div
               data-testid="agent-streaming-output"
-              className="mt-2 p-2.5 rounded bg-gray-950 border border-purple-900/40 text-xs font-mono"
+              className="mt-2 p-2.5 rounded bg-slate-950 border border-purple-600/60 text-xs font-mono shadow-xs"
             >
-              <div className="flex items-center justify-between pb-1.5 border-b border-gray-800 text-[11px] text-gray-300">
-                <span className="flex items-center space-x-1 text-purple-400">
-                  <Sparkles className="w-3 h-3" />
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px] text-slate-300">
+                <span className="flex items-center space-x-1 text-purple-400 font-semibold">
+                  <Sparkles className="w-3.5 h-3.5" />
                   <span>WebLLM Token Stream</span>
                 </span>
                 {tokenCount > 0 && (
-                  <span data-testid="agent-token-count" className="text-gray-400 font-mono">
+                  <span data-testid="agent-token-count" className="text-slate-300 font-mono font-medium">
                     {tokenCount} tokens
                   </span>
                 )}
@@ -371,7 +374,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
 
               <div
                 data-testid="agent-streaming-tokens"
-                className="mt-2 text-gray-200 leading-relaxed whitespace-pre-wrap break-words max-h-36 overflow-y-auto"
+                className="mt-2 text-slate-100 leading-relaxed whitespace-pre-wrap break-words max-h-36 overflow-y-auto"
               >
                 {streamingTokens ? (
                   <>
@@ -386,7 +389,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                 ) : (
                   <span
                     data-testid="agent-streaming-placeholder"
-                    className="text-gray-400 italic flex items-center space-x-1.5"
+                    className="text-slate-400 italic flex items-center space-x-1.5"
                   >
                     <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
                     <span>Awaiting initial token from WebLLM SLM engine...</span>
@@ -400,12 +403,12 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           {normState === 'error' && errorMsg && (
             <div
               data-testid="agent-error-banner"
-              className="p-2.5 rounded bg-rose-950/40 border border-rose-800/80 flex items-start space-x-2 text-xs text-rose-300"
+              className="p-2.5 rounded bg-rose-950/70 border border-rose-600/80 flex items-start space-x-2 text-xs text-rose-200 shadow-xs"
             >
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <span className="font-semibold block text-rose-200">ReAct Loop Execution Failed</span>
-                <span data-testid="agent-error-message" className="text-rose-300/90 break-words">
+                <span data-testid="agent-error-message" className="text-rose-200/90 break-words font-mono text-[11px]">
                   {errorMsg}
                 </span>
               </div>
@@ -414,7 +417,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
 
           {/* Optional NemoIR Web UI Trace Drawer Integration */}
           {timeline && timeline.length > 0 && (
-            <div data-testid="agent-trace-drawer" className="pt-1 border-t border-gray-800/50">
+            <div data-testid="agent-trace-drawer" className="pt-1 border-t border-slate-800">
               <WorkflowTraceDrawer items={timeline} maxHeight="180px" />
             </div>
           )}

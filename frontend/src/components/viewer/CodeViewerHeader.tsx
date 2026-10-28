@@ -39,26 +39,26 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
     switch (nodeType) {
       case 'FunctionDef':
       case 'AsyncFunctionDef':
-        return 'bg-purple-900/60 text-purple-300 border-purple-700/50';
+        return 'bg-purple-950 text-purple-300 border-purple-600/70 shadow-xs';
       case 'ClassDef':
-        return 'bg-blue-900/60 text-blue-300 border-blue-700/50';
+        return 'bg-blue-950 text-blue-300 border-blue-600/70 shadow-xs';
       case 'Module':
-        return 'bg-amber-900/60 text-amber-300 border-amber-700/50';
+        return 'bg-amber-950 text-amber-300 border-amber-600/70 shadow-xs';
       default:
-        return 'bg-gray-800 text-gray-300 border-gray-700';
+        return 'bg-slate-800 text-slate-200 border-slate-700';
     }
   };
 
   return (
     <div
       data-testid="code-viewer-header"
-      className="h-11 bg-gray-900/90 border-b border-gray-800 px-3 flex items-center justify-between text-xs backdrop-blur-sm"
+      className="h-10 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between text-xs select-none"
     >
       <div className="flex items-center space-x-2.5 overflow-hidden">
         <FileCode className="w-4 h-4 text-purple-400 shrink-0" />
         <span
           data-testid="chunk-file-path"
-          className="font-mono text-gray-200 truncate max-w-[280px]"
+          className="font-mono text-slate-200 truncate max-w-[280px] font-medium"
           title={chunk?.filePath}
         >
           {chunk ? chunk.filePath : 'No file selected'}
@@ -77,14 +77,14 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
 
             <span
               data-testid="chunk-line-range"
-              className="text-[11px] text-gray-400 font-mono hidden sm:inline"
+              className="text-[11px] text-slate-400 font-mono hidden sm:inline"
             >
               Lines {chunk.startLine}–{chunk.endLine}
             </span>
 
             <span
               data-testid="chunk-relevance-score"
-              className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 hidden md:inline"
+              className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
             >
               Relevance {(chunk.relevanceScore * 100).toFixed(0)}%
             </span>
@@ -97,22 +97,22 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
         {onSearchChange && (
           <div className="relative flex items-center">
             {isSearchActive ? (
-              <div className="flex items-center bg-gray-950 border border-gray-700 rounded px-2 py-0.5 space-x-1">
-                <Search className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center bg-slate-950 border border-slate-700 rounded px-2 py-0.5 space-x-1 shadow-xs">
+                <Search className="w-3 h-3 text-slate-400" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Find in code..."
                   autoFocus
-                  className="bg-transparent text-gray-200 text-xs focus:outline-none w-28 sm:w-36 font-mono"
+                  className="bg-transparent text-slate-100 text-xs focus:outline-none w-28 sm:w-36 font-mono placeholder-slate-500"
                 />
                 <button
                   onClick={() => {
                     onSearchChange('');
                     setIsSearchActive(false);
                   }}
-                  className="text-gray-400 hover:text-white"
+                  className="text-slate-400 hover:text-white cursor-pointer"
                   title="Close search"
                 >
                   <X className="w-3 h-3" />
@@ -121,7 +121,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             ) : (
               <button
                 onClick={() => setIsSearchActive(true)}
-                className="p-1.5 rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                 title="Search in code"
               >
                 <Search className="w-3.5 h-3.5" />
@@ -134,10 +134,10 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           <button
             data-testid="toggle-ast-inspector-btn"
             onClick={onToggleInspector}
-            className={`p-1.5 rounded transition-colors flex items-center space-x-1 text-xs ${
+            className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
               isInspectorOpen
-                ? 'bg-purple-950/80 text-purple-300 border border-purple-800/60'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                ? 'bg-purple-950 text-purple-300 border-purple-600/70'
+                : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title="Toggle AST Metadata Inspector"
           >
@@ -150,7 +150,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           data-testid="copy-code-btn"
           onClick={handleCopy}
           disabled={!chunk}
-          className="flex items-center space-x-1 px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
           title="Copy Python AST code to clipboard"
         >
           {copied ? (
@@ -169,7 +169,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
         {onToggleMaximize && (
           <button
             onClick={onToggleMaximize}
-            className="p-1.5 rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-800 transition-colors"
+            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer"
             title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
           >
             {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}

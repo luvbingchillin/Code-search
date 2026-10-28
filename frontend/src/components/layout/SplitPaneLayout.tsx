@@ -63,16 +63,16 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
     <div
       ref={containerRef}
       data-testid="split-pane-layout"
-      className="flex-1 w-full h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden bg-gray-950"
+      className="flex-1 w-full h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden bg-slate-950"
     >
       {/* Mobile Tab Switcher (< 768px) */}
-      <div className="md:hidden flex bg-gray-900 border-b border-gray-800 text-xs font-mono shrink-0 select-none">
+      <div className="md:hidden flex bg-slate-900 border-b border-slate-800 text-xs font-mono shrink-0 select-none">
         <button
           onClick={() => setMobileTab('chat')}
           className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'chat'
-              ? 'border-indigo-500 text-white bg-gray-950/60'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+              ? 'border-indigo-400 text-white bg-slate-950/80'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
@@ -82,8 +82,8 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
           onClick={() => setMobileTab('code')}
           className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'code'
-              ? 'border-indigo-500 text-white bg-gray-950/60'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+              ? 'border-indigo-400 text-white bg-slate-950/80'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
           <Code2 className="w-3.5 h-3.5" />
@@ -96,7 +96,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
         <div
           data-testid="chat-pane"
           style={{ width: isDesktop ? `${leftWidthPercent}%` : '100%' }}
-          className={`h-full flex flex-col bg-gray-950 overflow-hidden border-r border-gray-800 shrink-0 ${
+          className={`h-full flex flex-col bg-[#0b101d] overflow-hidden border-r border-slate-800 shrink-0 ${
             !isDesktop && mobileTab !== 'chat' ? 'hidden' : 'flex'
           }`}
         >
@@ -113,18 +113,18 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onMouseDown={handleMouseDown}
-          className="w-1.5 bg-gray-800 hover:bg-indigo-600 focus:bg-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0"
+          className="w-1.5 bg-slate-800 hover:bg-indigo-500 focus:bg-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0"
           title="Drag to resize panes"
           aria-label="Drag to resize panes or use left and right arrow keys"
         >
-          <div className="w-0.5 h-8 bg-gray-600 group-hover:bg-indigo-300 rounded-full transition-colors" />
+          <div className="w-0.5 h-8 bg-slate-600 group-hover:bg-indigo-200 rounded-full transition-colors" />
         </div>
 
         {/* Right Code Viewer Pane */}
         <div
           data-testid="code-viewer-pane"
           style={{ width: isDesktop ? `${100 - leftWidthPercent}%` : '100%' }}
-          className={`h-full flex-1 flex flex-col bg-gray-900 overflow-hidden ${
+          className={`h-full flex-1 flex flex-col bg-[#070a12] overflow-hidden ${
             !isDesktop && mobileTab !== 'code' ? 'hidden' : 'flex'
           }`}
         >

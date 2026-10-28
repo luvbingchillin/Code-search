@@ -38,17 +38,17 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({ chunk }) => {
   return (
     <div
       data-testid="code-display"
-      className="flex-1 overflow-auto bg-gray-950 font-mono text-xs sm:text-sm leading-6 flex"
+      className="flex-1 overflow-auto bg-[#070a12] font-mono text-xs sm:text-sm leading-6 flex"
     >
-      {/* Aligned Line Numbers Gutter */}
+      {/* Aligned Line Numbers Gutter with High Contrast Border */}
       <div
         data-testid="code-line-numbers"
-        className="select-none py-3 px-3.5 text-right text-gray-400 bg-gray-950/90 border-r border-gray-800/80 sticky left-0 z-10 shrink-0 font-mono"
+        className="select-none py-3 px-3.5 text-right text-slate-500 bg-[#06090f] border-r border-slate-800 sticky left-0 z-10 shrink-0 font-mono"
       >
         {lines.map((_, index) => {
           const lineNumber = chunk.startLine + index;
           return (
-            <div key={index} data-testid="line-number" className="h-6">
+            <div key={index} data-testid="line-number" className="h-6 font-mono">
               {lineNumber}
             </div>
           );
@@ -56,7 +56,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({ chunk }) => {
       </div>
 
       {/* Synchronized Code Content Area */}
-      <div className="py-3 px-4 flex-1 overflow-x-auto">
+      <div className="py-3 px-4 flex-1 overflow-x-auto bg-[#070a12]">
         <pre className="language-python !bg-transparent !p-0 !m-0 font-mono">
           <code
             className="language-python"

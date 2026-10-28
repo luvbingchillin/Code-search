@@ -47,13 +47,13 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
   }, [code, language]);
 
   return (
-    <div className="my-2 rounded-lg border border-gray-800 bg-gray-950 overflow-hidden text-xs shadow-inner">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-900/90 border-b border-gray-800/80 text-[11px] font-mono text-gray-400">
-        <span className="font-semibold text-gray-300 uppercase tracking-wider">{language || 'code'}</span>
+    <div className="my-2 rounded-lg border border-slate-700 bg-slate-950 overflow-hidden text-xs shadow-inner">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+        <span className="font-semibold text-slate-200 uppercase tracking-wider">{language || 'code'}</span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors px-2 py-0.5 rounded hover:bg-gray-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400 cursor-pointer"
+          className="flex items-center space-x-1 text-slate-300 hover:text-white transition-colors px-2 py-0.5 rounded hover:bg-slate-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400 cursor-pointer"
           title={copied ? 'Copied to clipboard' : 'Copy code snippet'}
         >
           {copied ? (
@@ -75,7 +75,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
             <code dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
           </pre>
         ) : (
-          <pre className="!bg-transparent !p-0 !m-0 font-mono whitespace-pre text-gray-200">
+          <pre className="!bg-transparent !p-0 !m-0 font-mono whitespace-pre text-slate-100">
             <code>{code}</code>
           </pre>
         )}
@@ -212,8 +212,8 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs shadow-xs ${
                 isUser
-                  ? 'bg-indigo-600 text-white shadow-indigo-500/20'
-                  : 'bg-gray-800 border border-gray-700 text-indigo-400'
+                  ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                  : 'bg-slate-800 border border-slate-700 text-indigo-400'
               }`}
             >
               {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -223,15 +223,15 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
             <div
               className={`max-w-[85%] rounded-xl px-3.5 py-2.5 ${
                 isUser
-                  ? 'bg-indigo-600 text-white rounded-tr-none shadow-sm'
-                  : 'bg-gray-900 border border-gray-800 text-gray-200 rounded-tl-none shadow-sm'
+                  ? 'bg-indigo-600 text-white rounded-tr-none shadow-md shadow-indigo-950/40'
+                  : 'bg-slate-900 border border-slate-700/80 text-slate-100 rounded-tl-none shadow-md shadow-slate-950/30'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 text-[11px] text-gray-400">
-                <span className={`font-semibold ${isUser ? 'text-indigo-100' : 'text-gray-300'}`}>
+              <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
+                <span className={`font-semibold ${isUser ? 'text-indigo-100' : 'text-slate-200'}`}>
                   {isUser ? 'You' : 'CodeSeek Agent'}
                 </span>
-                <span className={isUser ? 'text-indigo-200/80 text-[11px]' : 'text-gray-400 text-[11px]'}>
+                <span className={isUser ? 'text-indigo-200 text-[11px]' : 'text-slate-400 text-[11px]'}>
                   {msg.timestamp}
                 </span>
               </div>
@@ -240,16 +240,16 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
               {msg.thoughts && msg.thoughts.length > 0 && (
                 <details
                   data-testid="thought-accordion"
-                  className="mb-2 bg-gray-950/70 rounded-md border border-gray-800 text-xs p-2"
+                  className="mb-2 bg-slate-950/90 rounded-md border border-slate-700/80 text-xs p-2"
                 >
-                  <summary className="cursor-pointer text-gray-400 hover:text-gray-200 font-mono text-[11px] flex items-center justify-between select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400 rounded">
+                  <summary className="cursor-pointer text-slate-300 hover:text-white font-mono text-[11px] flex items-center justify-between select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400 rounded">
                     <span className="flex items-center space-x-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                       <span>ReAct Reasoning Chain ({msg.thoughts.length} steps)</span>
                     </span>
-                    <ChevronDown className="w-3 h-3 text-gray-400 transition-transform duration-200" />
+                    <ChevronDown className="w-3 h-3 text-slate-400 transition-transform duration-200" />
                   </summary>
-                  <ul className="mt-2 space-y-1 list-disc list-inside text-gray-400 pl-1 text-[11px]">
+                  <ul className="mt-2 space-y-1 list-disc list-inside text-slate-300 pl-1 text-[11px]">
                     {msg.thoughts.map((th, i) => (
                       <li key={i}>{th}</li>
                     ))}
@@ -262,8 +262,8 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
 
               {/* Clickable AST Citations Badges */}
               {msg.citedChunks && msg.citedChunks.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-gray-800/80">
-                  <div className="text-[11px] font-medium text-gray-400 mb-1.5 flex items-center space-x-1">
+                <div className="mt-3 pt-2 border-t border-slate-800">
+                  <div className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
                     <Code2 className="w-3.5 h-3.5 text-indigo-400" />
                     <span>Cited AST Chunks:</span>
                   </div>
@@ -280,7 +280,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                           type="button"
                           data-testid={`chunk-citation-${chunkId}`}
                           onClick={() => onSelectChunk(chunkId)}
-                          className="flex items-center space-x-1 text-xs px-2 py-0.5 rounded bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 font-mono transition-colors shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                          className="flex items-center space-x-1 text-xs px-2.5 py-1 rounded bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-600/70 text-indigo-200 font-mono transition-colors shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                           title="Click to view Python AST definition in viewer"
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
