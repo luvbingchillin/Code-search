@@ -9,12 +9,20 @@ export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
   selectedChunkId: string | null;
   onSelectChunk: (chunkId: string) => void;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
+  isMinimized?: boolean;
+  onMinimize?: () => void;
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   chunks,
   selectedChunkId,
   onSelectChunk,
+  isMaximized,
+  onToggleMaximize,
+  isMinimized,
+  onMinimize,
 }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,6 +46,10 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        isMaximized={isMaximized}
+        onToggleMaximize={onToggleMaximize}
+        isMinimized={isMinimized}
+        onMinimize={onMinimize}
       />
 
       {/* Sticky First-Class AST Symbol Context Strip */}

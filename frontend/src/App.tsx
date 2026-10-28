@@ -12,34 +12,76 @@ export const App: React.FC = () => {
   const nemoIR = useNemoIR();
   const agent = useReActAgent({ webLLM, nemoIR });
 
-  // Keyboard shortcut listener for developer efficiency (Cmd+K / Ctrl+K / / to search)
+  const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);
+  const [isCodeMinimized, setIsCodeMinimized] = React.useState<boolean>(false);
+
+  const toggleChatMinimized = React.useCallback(() => {
+    setIsChatMinimized((prev) => !prev);
+  }, []);
+
+  const toggleCodeMinimized = React.useCallback(() => {
+    setIsCodeMinimized((prev) => !prev);
+  }, []);
+
+  const toggleMaximizeCode = React.useCallback(() => {
+    setIsChatMinimized((prev) => {
+      // If chat is currently open, minimize chat to maximize code viewer.
+      // If chat is already minimized, restore chat.
+      return !prev;
+    });
+    setIsCodeMinimized(false);
+  }, []);
+
+  // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      const isCtrlOrMeta = e.metaKey || e.ctrlKey;
+
+      if (isCtrlOrMeta && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input-textarea"]');
-        textarea?.focus();
+        if (isChatMinimized) setIsChatMinimized(false);
+        setTimeout(() => {
+          const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input-textarea"]');
+          textarea?.focus();
+        }, 50);
+      } else if (isCtrlOrMeta && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleChatMinimized();
+      } else if (isCtrlOrMeta && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        toggleCodeMinimized();
       } else if (e.key === '/' && document.activeElement?.tagName !== 'TEXTAREA' && document.activeElement?.tagName !== 'INPUT') {
         e.preventDefault();
-        const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input-textarea"]');
-        textarea?.focus();
+        if (isChatMinimized) setIsChatMinimized(false);
+        setTimeout(() => {
+          const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="chat-input-textarea"]');
+          textarea?.focus();
+        }, 50);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isChatMinimized, toggleChatMinimized, toggleCodeMinimized]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-950 text-gray-100 overflow-hidden select-text">
-      {/* Top Application Header */}
+    <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden select-text">
+      {/* Top Application Header with Layout Controls */}
       <Header
         webLLM={webLLM}
         nemoIR={nemoIR}
         agentStatus={agent.agentStatus}
+        isChatMinimized={isChatMinimized}
+        onToggleChatMinimized={toggleChatMinimized}
+        isCodeMinimized={isCodeMinimized}
+        onToggleCodeMinimized={toggleCodeMinimized}
       />
 
       {/* Main Resilient Split-Pane Interface */}
       <SplitPaneLayout
+        isChatMinimized={isChatMinimized}
+        onToggleChatMinimized={toggleChatMinimized}
+        isCodeMinimized={isCodeMinimized}
+        onToggleCodeMinimized={toggleCodeMinimized}
         leftPane={
           <ChatPane
             status={agent.agentStatus}
@@ -50,6 +92,8 @@ export const App: React.FC = () => {
             onCancel={agent.cancelQuery}
             streamingTokens={agent.streamingTokens}
             onReset={agent.reset}
+            isMinimized={isChatMinimized}
+            onMinimize={toggleChatMinimized}
           />
         }
         rightPane={
@@ -57,6 +101,10 @@ export const App: React.FC = () => {
             chunks={agent.activeChunks}
             selectedChunkId={agent.selectedChunkId}
             onSelectChunk={agent.setSelectedChunkId}
+            isMaximized={isChatMinimized && !isCodeMinimized}
+            onToggleMaximize={toggleMaximizeCode}
+            isMinimized={isCodeMinimized}
+            onMinimize={toggleCodeMinimized}
           />
         }
       />

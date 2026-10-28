@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X } from 'lucide-react';
+import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 interface CodeViewerHeaderProps {
@@ -8,6 +8,8 @@ interface CodeViewerHeaderProps {
   isInspectorOpen?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
+  isMinimized?: boolean;
+  onMinimize?: () => void;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
 }
@@ -18,6 +20,8 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   isInspectorOpen,
   isMaximized,
   onToggleMaximize,
+  isMinimized,
+  onMinimize,
   searchTerm = '',
   onSearchChange,
 }) => {
@@ -166,11 +170,27 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           )}
         </button>
 
+        {onMinimize && (
+          <button
+            type="button"
+            data-testid="minimize-code-btn"
+            onClick={onMinimize}
+            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer"
+            title="Minimize code viewer pane"
+            aria-label="Minimize code viewer pane"
+          >
+            <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+        )}
+
         {onToggleMaximize && (
           <button
+            type="button"
+            data-testid="toggle-maximize-code-btn"
             onClick={onToggleMaximize}
             className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer"
             title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
+            aria-label={isMaximized ? "Restore split layout" : "Maximize code viewer"}
           >
             {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>

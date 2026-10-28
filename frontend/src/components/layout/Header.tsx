@@ -1,14 +1,25 @@
 import React from 'react';
-import { Cpu, Database, Sparkles, Terminal, AlertCircle, Loader2 } from 'lucide-react';
+import { Cpu, Database, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn } from '../../types';
 
 interface HeaderProps {
   webLLM: UseWebLLMReturn;
   nemoIR: UseNemoIRReturn;
   agentStatus: AgentStatus;
+  isChatMinimized?: boolean;
+  onToggleChatMinimized?: () => void;
+  isCodeMinimized?: boolean;
+  onToggleCodeMinimized?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ webLLM, nemoIR }) => {
+export const Header: React.FC<HeaderProps> = ({
+  webLLM,
+  nemoIR,
+  isChatMinimized = false,
+  onToggleChatMinimized,
+  isCodeMinimized = false,
+  onToggleCodeMinimized,
+}) => {
   const getWebLLMStatusColor = () => {
     switch (webLLM.status) {
       case 'ready':
@@ -85,6 +96,45 @@ export const Header: React.FC<HeaderProps> = ({ webLLM, nemoIR }) => {
             {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
           </kbd>
         </div>
+
+        {/* Layout Pane Visibility Controls (Toggle Chat / Toggle Code Viewer) */}
+        {(onToggleChatMinimized || onToggleCodeMinimized) && (
+          <div className="flex items-center space-x-1 pl-2 border-l border-slate-800">
+            {onToggleChatMinimized && (
+              <button
+                type="button"
+                data-testid="toggle-chat-pane-btn"
+                onClick={onToggleChatMinimized}
+                className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                  !isChatMinimized
+                    ? 'bg-slate-800 text-indigo-300 border border-slate-700 hover:bg-slate-700'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
+                }`}
+                title={isChatMinimized ? 'Restore Chat Pane (Ctrl+B)' : 'Minimize Chat Pane (Ctrl+B)'}
+                aria-label={isChatMinimized ? 'Restore Chat Pane' : 'Minimize Chat Pane'}
+              >
+                <PanelLeftClose className={`w-4 h-4 ${isChatMinimized ? 'rotate-180 text-slate-400' : ''}`} />
+              </button>
+            )}
+
+            {onToggleCodeMinimized && (
+              <button
+                type="button"
+                data-testid="toggle-code-pane-btn"
+                onClick={onToggleCodeMinimized}
+                className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                  !isCodeMinimized
+                    ? 'bg-slate-800 text-indigo-300 border border-slate-700 hover:bg-slate-700'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
+                }`}
+                title={isCodeMinimized ? 'Restore AST Code Viewer' : 'Minimize AST Code Viewer'}
+                aria-label={isCodeMinimized ? 'Restore AST Code Viewer' : 'Minimize AST Code Viewer'}
+              >
+                <PanelRightClose className={`w-4 h-4 ${isCodeMinimized ? 'rotate-180 text-slate-400' : ''}`} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

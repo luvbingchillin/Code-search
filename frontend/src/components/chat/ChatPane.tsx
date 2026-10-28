@@ -16,6 +16,8 @@ interface ChatPaneProps {
   streamingTokens?: string;
   steps?: AgentExecutionStep[];
   onReset?: () => void;
+  isMinimized?: boolean;
+  onMinimize?: () => void;
 }
 
 export const ChatPane: React.FC<ChatPaneProps> = ({
@@ -28,6 +30,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   streamingTokens,
   steps,
   onReset,
+  onMinimize,
 }) => {
   const isBusy =
     status.state === 'Thinking' ||
@@ -37,7 +40,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   return (
     <div className="h-full flex flex-col justify-between overflow-hidden">
       {/* Top ReAct Agentic Loop Stepper & Status Banner */}
-      <AgenticLoopBanner status={status} onCancel={onCancel} />
+      <AgenticLoopBanner status={status} onCancel={onCancel} onMinimize={onMinimize} />
 
       {/* NemoIR ReAct AgentRunner Orchestrator */}
       <AgentRunner

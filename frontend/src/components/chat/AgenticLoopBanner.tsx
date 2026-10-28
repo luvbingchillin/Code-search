@@ -1,10 +1,11 @@
 import React from 'react';
-import { Brain, Search, Cpu, CheckCircle, AlertTriangle, Clock, XSquare } from 'lucide-react';
+import { Brain, Search, Cpu, CheckCircle, AlertTriangle, Clock, XSquare, PanelLeftClose } from 'lucide-react';
 import { AgentStatus, ReActState } from '../../types';
 
 interface AgenticLoopBannerProps {
   status: AgentStatus;
   onCancel?: () => void;
+  onMinimize?: () => void;
 }
 
 interface StepItem {
@@ -20,7 +21,7 @@ const STEPS: StepItem[] = [
   { id: 'step-4', name: 'Synthesizing', label: 'Synthesizing' },
 ];
 
-export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, onCancel }) => {
+export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, onCancel, onMinimize }) => {
   const getStepStatus = (stepName: StepItem['name']): 'upcoming' | 'current' | 'completed' => {
     if (status.state === 'Error') {
       return 'upcoming';
@@ -169,6 +170,20 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
           >
             <XSquare className="w-3.5 h-3.5 text-rose-400" />
             <span>Cancel</span>
+          </button>
+        )}
+
+        {/* Minimize Chat Pane Action */}
+        {onMinimize && (
+          <button
+            type="button"
+            data-testid="minimize-chat-btn"
+            onClick={onMinimize}
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700"
+            title="Minimize chat pane (Ctrl+B)"
+            aria-label="Minimize chat pane"
+          >
+            <PanelLeftClose className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
