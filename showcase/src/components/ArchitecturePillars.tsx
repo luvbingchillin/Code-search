@@ -1,4 +1,5 @@
 import React from 'react';
+import { TrackingEye } from './TrackingEye';
 
 interface PillarData {
   number: string;
@@ -15,7 +16,7 @@ export const ArchitecturePillars: React.FC = () => {
       simpleTitle: '100% Private to You',
       techTitle: '100% Edge-Computed Privacy',
       simpleDescription:
-        'Your code never leaves your computer. No cloud servers, no third-party data tracking, and zero risk of your intellectual property leaking.',
+        'Your code never leaves your computer. No cloud servers, no third-party data tracking, and zero risk of your intellectual property leaking to outside models.',
       impactHighlight: 'Zero external cloud transmission'
     },
     {
@@ -98,9 +99,20 @@ export const ArchitecturePillars: React.FC = () => {
                 </h3>
 
                 {/* Plain-English Explanation */}
-                <p className="text-sm sm:text-base text-[#dad0a7] font-sans leading-relaxed mb-8">
+                <p className="text-sm sm:text-base text-[#dad0a7] font-sans leading-relaxed mb-6">
                   {pillar.simpleDescription}
                 </p>
+
+                {/* Interactive Tracking Eye inside Pillar 01 */}
+                {pillar.number === '01' && (
+                  <div className="mb-6 pt-1">
+                    <TrackingEye
+                      label="CLOUD AI EYE IS WATCHING"
+                      sublabel="Notice how external AI tracks you • Local SLM keeps code 100% blind to cloud"
+                      size="sm"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Bottom Impact Highlight with Electric Lime Dot */}
