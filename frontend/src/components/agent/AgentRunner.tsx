@@ -48,6 +48,7 @@ export interface AgentRunnerProps {
   onCancel?: () => void;
   onReset?: () => void;
   compact?: boolean;
+  embedded?: boolean;
   className?: string;
 }
 
@@ -94,6 +95,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   onCancel,
   onReset,
   compact = false,
+  embedded = false,
   className = '',
 }) => {
   // Resolve active properties merging explicit props and status object
@@ -105,7 +107,14 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   const chunkCount = propChunks ?? status?.activeChunkCount ?? 0;
   const errorMsg = propError ?? status?.error;
 
-  const [isExpanded, setIsExpanded] = useState<boolean>(!compact);
+  const [isExpanded, setIsExpanded] = useState<boolean>(!compact && (!embedded || normState !== 'idle'));
+
+  // When embedded in ChatPane, automatically expand execution traces when active work begins
+  React.useEffect(() => {
+    if (embedded && (normState === 'thinking' || normState === 'searching' || normState === 'synthesizing')) {
+      setIsExpanded(true);
+    }
+  }, [embedded, normState]);
 
   const isBusy =
     normState === 'thinking' ||
@@ -225,24 +234,46 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       {/* Top Header / Status Control Bar */}
       <div className="px-3 py-1.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70">
         <div className="flex items-center space-x-2 min-w-0">
-          {/* Agent State Badge */}
-          <div
-            data-testid="agent-status-badge"
-            className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shadow-xs shrink-0 ${getStateBadgeStyle()}`}
-          >
-            {getStateIcon()}
-            <span data-testid="agent-status-label">{displayLabel}</span>
-          </div>
+          {embedded ? (
+            <>
+              {/* Preserved in DOM with sr-only for accessibility & test selectors; eliminates duplicate Idle/Ready status */}
+              <div data-testid="agent-status-badge" className="sr-only">
+                <span data-testid="agent-status-label">{displayLabel}</span>
+              </div>
+              {stepMessage && (
+                <span data-testid="agent-step-message" className="sr-only">
+                  {stepMessage}
+                </span>
+              )}
+              <div className="flex items-center space-x-1.5 text-xs">
+                <Terminal className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="font-mono text-[11px] text-slate-300 font-medium">
+                  {normState === 'idle' ? 'Execution Traces & Engine Metrics' : `${displayLabel} Pipeline`}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Agent State Badge */}
+              <div
+                data-testid="agent-status-badge"
+                className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shadow-xs shrink-0 ${getStateBadgeStyle()}`}
+              >
+                {getStateIcon()}
+                <span data-testid="agent-status-label">{displayLabel}</span>
+              </div>
 
-          {/* Active Step Description in Status Rail */}
-          {stepMessage && (
-            <span
-              data-testid="agent-step-message"
-              className="truncate font-mono text-xs text-slate-300 max-w-[160px] sm:max-w-[240px]"
-              title={stepMessage}
-            >
-              {stepMessage}
-            </span>
+              {/* Active Step Description in Status Rail */}
+              {stepMessage && (
+                <span
+                  data-testid="agent-step-message"
+                  className="truncate font-mono text-xs text-slate-300 max-w-[160px] sm:max-w-[240px]"
+                  title={stepMessage}
+                >
+                  {stepMessage}
+                </span>
+              )}
+            </>
           )}
 
           {/* Elapsed Timer */}

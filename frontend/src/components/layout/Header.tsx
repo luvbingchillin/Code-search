@@ -1,10 +1,10 @@
 import React from 'react';
-import { Cpu, Database, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn } from '../../types';
 
 interface HeaderProps {
   webLLM: UseWebLLMReturn;
-  nemoIR: UseNemoIRReturn;
+  nemoIR?: UseNemoIRReturn;
   agentStatus: AgentStatus;
   isChatMinimized?: boolean;
   onToggleChatMinimized?: () => void;
@@ -79,13 +79,6 @@ export const Header: React.FC<HeaderProps> = ({
           {getWebLLMIcon()}
           <span className="text-slate-300 font-medium">WebLLM:</span>
           <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
-        </div>
-
-        {/* NemoIR Vector Search Badge */}
-        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 border border-slate-700 text-xs shadow-xs">
-          <Database className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-slate-300 font-medium">NemoIR:</span>
-          <span className="text-blue-300 font-mono font-semibold">{nemoIR.isReady ? 'Wasm SIMD' : nemoIR.wasmStatus}</span>
         </div>
 
         {/* Model Selector / Accelerator Indicator */}

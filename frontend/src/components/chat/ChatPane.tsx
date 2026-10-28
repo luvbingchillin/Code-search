@@ -49,6 +49,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
         steps={steps}
         onCancel={onCancel}
         onReset={onReset}
+        embedded={true}
       />
 
       {/* Scrollable Conversation Stream */}
