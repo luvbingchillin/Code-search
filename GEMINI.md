@@ -20,3 +20,9 @@
   - Polished demo of the browser split-pane interface and ReAct state transitions.
   - Verification of `useNemoIR` WebAssembly workflow execution and token budgeting.
   - Concrete benchmark metrics: retrieval latency, token consumption, and AST chunk precision.
+
+## Living UI Knowledge Base & Agent Learning Directives
+- **Master Reference Document:** [`DESIGN_SYSTEM.md`](file:///c:/Users/kangy/Desktop/Fyp/DESIGN_SYSTEM.md)
+- **Agent Protocol:** Any agent modifying or adding UI components in `showcase/` or `frontend/` must read and follow [`DESIGN_SYSTEM.md`](file:///c:/Users/kangy/Desktop/Fyp/DESIGN_SYSTEM.md).
+- **Continuous Learning:** When new design patterns, color tokens, animations, or testing quirks are discovered or introduced, agents must record them in non-verbose summaries directly inside [`DESIGN_SYSTEM.md`](file:///c:/Users/kangy/Desktop/Fyp/DESIGN_SYSTEM.md).
+
