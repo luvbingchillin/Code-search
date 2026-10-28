@@ -113,7 +113,7 @@ export const ArchitectureFlow: React.FC = () => {
               <span>[ RUNTIME BLUEPRINT // DIRECTED PIPELINE ]</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3">
-              How The Machine <span className="highlight-sweep is-visible">Operates</span>
+              How The Machine <span className="highlight-sweep">Operates</span>
             </h2>
             <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
               Watch information travel across the connected pipeline—from your question to verified code on your screen.

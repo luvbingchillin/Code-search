@@ -38,15 +38,17 @@
   }
 }
 
-/* Green Highlighter Bar Reveal Animation (as found in chandebootcamp.com) */
+/* Green Highlighter Bar Reveal Animation (Sweeps on Hover) */
 .highlight-sweep {
   position: relative;
   display: inline-block;
   padding: 0.05em 0.35em;
   margin: 0 -0.05em;
-  color: #0a1f10;
+  color: inherit;
   z-index: 1;
   white-space: nowrap;
+  transition: color 0.3s ease;
+  cursor: pointer;
 }
 
 .highlight-sweep::before {
@@ -58,15 +60,23 @@
   z-index: -1;
   transform: scaleX(0);
   transform-origin: left center;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 14px rgba(104, 241, 43, 0.4);
 }
 
-.highlight-sweep.is-active::before,
-.highlight-sweep.is-visible::before,
+.highlight-sweep:hover::before,
 .group:hover .highlight-sweep::before,
-*:hover > .highlight-sweep::before {
+h1:hover .highlight-sweep::before,
+h2:hover .highlight-sweep::before,
+header:hover .highlight-sweep::before {
   transform: scaleX(1);
+}
+
+.highlight-sweep:hover,
+.group:hover .highlight-sweep,
+h1:hover .highlight-sweep,
+h2:hover .highlight-sweep {
+  color: #0a1f10;
 }
 
 /* Tactile Card Magnetic Elevation & Glow */

@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrackingEye } from './TrackingEye';
+import { MosaicTileReveal } from './MosaicTileReveal';
 
 interface PillarData {
   number: string;
@@ -55,7 +56,7 @@ export const ArchitecturePillars: React.FC = () => {
             <span>[ SPECIMEN ANALYSIS // CORE PILLARS ]</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
-            Four <span className="highlight-sweep is-visible">Core Advantages</span>
+            Four <span className="highlight-sweep">Core Advantages</span>
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
             Engineered from the ground up to eliminate cloud privacy leaks, broken code fragments, and browser memory crashes.
@@ -113,6 +114,9 @@ export const ArchitecturePillars: React.FC = () => {
                     />
                   </div>
                 )}
+
+                {/* Interactive Mosaic Tiles inside Pillar 03 to reveal the Full Picture */}
+                {pillar.number === '03' && <MosaicTileReveal />}
               </div>
 
               {/* Bottom Impact Highlight with Electric Lime Dot */}

@@ -3,7 +3,6 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ArchitecturePillars } from './components/ArchitecturePillars';
 import { ChunkComparisonVisualizer } from './components/ChunkComparisonVisualizer';
-import { CodeRevealTiles } from './components/CodeRevealTiles';
 import { ArchitectureFlow } from './components/ArchitectureFlow';
 import { TerminalQuickStart } from './components/TerminalQuickStart';
 import { Footer } from './components/Footer';
@@ -16,7 +15,6 @@ export function App() {
         <Hero />
         <ArchitecturePillars />
         <ChunkComparisonVisualizer />
-        <CodeRevealTiles />
         <ArchitectureFlow />
         <TerminalQuickStart />
       </main>
