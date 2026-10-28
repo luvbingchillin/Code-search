@@ -45,14 +45,14 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
                 : 'bg-gray-950 hover:bg-gray-900/50 border-transparent text-gray-400 hover:text-gray-200'
             }`}
           >
-            <span className="text-[10px] px-1 rounded bg-gray-800 text-gray-400 font-sans">
+            <span className="text-[11px] px-1 rounded bg-gray-800 text-gray-300 font-sans">
               #{index + 1}
             </span>
             <Code className="w-3.5 h-3.5 text-purple-400" />
             <span className="truncate max-w-[140px]">{chunk.identifier}</span>
             <span
-              className={`text-[10px] ${
-                isSelected ? 'text-purple-400' : 'text-gray-400'
+              className={`text-xs font-medium ${
+                isSelected ? 'text-purple-400' : 'text-gray-300'
               }`}
             >
               {(chunk.relevanceScore * 100).toFixed(0)}%

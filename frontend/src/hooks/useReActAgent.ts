@@ -340,7 +340,13 @@ export function useReActAgent(
           error: isCancelled ? undefined : (err?.message || 'Unknown error'),
         };
         statusRef.current = errStatus;
-        setAgentStatus(errStatus);
+        try {
+          if (typeof window !== 'undefined') {
+            setAgentStatus(errStatus);
+          }
+        } catch {
+          // Ignore state update on unmounted component
+        }
       }
     },
     []

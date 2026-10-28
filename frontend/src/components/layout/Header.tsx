@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ webLLM, nemoIR }) => {
               Edge AI v1.0
             </span>
           </div>
-          <p className="text-[11px] text-gray-400">Generative Code Retrieval & Python AST Search Engine</p>
+          <p className="text-xs text-gray-300">Generative Code Retrieval & Python AST Search Engine</p>
         </div>
       </div>
 
@@ -81,8 +81,8 @@ export const Header: React.FC<HeaderProps> = ({ webLLM, nemoIR }) => {
         <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-gray-950/70 border border-gray-800 text-xs text-gray-300">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span className="font-mono truncate max-w-[150px]">{webLLM.currentModel ?? 'Qwen2.5-Coder'}</span>
-          <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 rounded shadow-xs">
-            ⌘K
+          <kbd className="ml-1 px-1.5 py-0.5 text-[11px] font-mono bg-gray-800 text-gray-300 border border-gray-700 rounded shadow-xs" title="Search Shortcut">
+            {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
           </kbd>
         </div>
       </div>

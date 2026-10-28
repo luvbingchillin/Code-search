@@ -1,19 +1,28 @@
 import React, { useState } from 'react';
-import { Copy, Check, FileCode, Layers, Info } from 'lucide-react';
+import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 interface CodeViewerHeaderProps {
   chunk: AstCodeChunk | null;
   onToggleInspector?: () => void;
   isInspectorOpen?: boolean;
+  isMaximized?: boolean;
+  onToggleMaximize?: () => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   chunk,
   onToggleInspector,
   isInspectorOpen,
+  isMaximized,
+  onToggleMaximize,
+  searchTerm = '',
+  onSearchChange,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const handleCopy = async () => {
     if (!chunk) return;
@@ -84,6 +93,43 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-1.5 shrink-0">
+        {/* In-Pane Search Bar */}
+        {onSearchChange && (
+          <div className="relative flex items-center">
+            {isSearchActive ? (
+              <div className="flex items-center bg-gray-950 border border-gray-700 rounded px-2 py-0.5 space-x-1">
+                <Search className="w-3 h-3 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Find in code..."
+                  autoFocus
+                  className="bg-transparent text-gray-200 text-xs focus:outline-none w-28 sm:w-36 font-mono"
+                />
+                <button
+                  onClick={() => {
+                    onSearchChange('');
+                    setIsSearchActive(false);
+                  }}
+                  className="text-gray-400 hover:text-white"
+                  title="Close search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsSearchActive(true)}
+                className="p-1.5 rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+                title="Search in code"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+
         {onToggleInspector && (
           <button
             data-testid="toggle-ast-inspector-btn"
@@ -119,6 +165,16 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             </>
           )}
         </button>
+
+        {onToggleMaximize && (
+          <button
+            onClick={onToggleMaximize}
+            className="p-1.5 rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 border border-gray-800 transition-colors"
+            title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
+          >
+            {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </button>
+        )}
       </div>
     </div>
   );

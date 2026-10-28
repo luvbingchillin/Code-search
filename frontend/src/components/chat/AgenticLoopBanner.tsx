@@ -89,41 +89,19 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
   return (
     <div
       data-testid="agentic-loop-banner"
-      className="p-3 bg-gray-900/90 border-b border-gray-800 flex flex-col space-y-2.5 backdrop-blur-sm"
+      className="px-3 py-2 bg-gray-900/95 border-b border-gray-800 flex flex-wrap items-center justify-between gap-y-1.5 text-xs backdrop-blur-sm select-none shrink-0"
     >
-      {/* Top row: State badge, timer, and cancel */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${getStateColor(status.state)}`}>
-            {getStateIcon(status.state)}
-            <span data-testid="agentic-state-label">{status.state}</span>
-          </div>
-
-          <div
-            data-testid="agentic-elapsed-timer"
-            className="flex items-center space-x-1 text-xs font-mono text-gray-400 bg-gray-800/60 px-2 py-0.5 rounded border border-gray-700/50"
-          >
-            <Clock className="w-3 h-3 text-gray-400" />
-            <span>{(status.elapsedMs / 1000).toFixed(1)}s</span>
-          </div>
+      {/* Left: State Badge & Step Description */}
+      <div className="flex items-center space-x-2.5 min-w-0">
+        <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shrink-0 shadow-xs ${getStateColor(status.state)}`}>
+          {getStateIcon(status.state)}
+          <span data-testid="agentic-state-label">{status.state}</span>
         </div>
 
-        {isBusy && onCancel && (
-          <button
-            onClick={onCancel}
-            className="flex items-center space-x-1 text-xs text-rose-400 hover:text-rose-300 transition-colors px-2 py-0.5 rounded hover:bg-rose-950/40 border border-rose-900/40"
-          >
-            <XSquare className="w-3 h-3" />
-            <span>Cancel</span>
-          </button>
-        )}
-      </div>
-
-      {/* Granular Step Description or Error */}
-      <div className="text-xs text-gray-300 flex items-start space-x-2">
         <span
           data-testid="agentic-step-description"
-          className="line-clamp-2 leading-relaxed"
+          className="text-gray-300 font-mono text-xs truncate max-w-[200px] sm:max-w-[320px] leading-tight"
+          title={status.error || status.currentStepMessage}
         >
           {status.error ? (
             <span className="text-rose-300 font-medium">{status.error}</span>
@@ -133,46 +111,66 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
         </span>
       </div>
 
-      {/* Horizontal 4-step Stepper */}
-      <div data-testid="agentic-stepper" className="flex items-center justify-between pt-1">
-        {STEPS.map((step, idx) => {
-          const stepStatus = getStepStatus(step.name);
-          return (
-            <React.Fragment key={step.id}>
-              <div className="flex items-center space-x-1.5">
-                <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+      {/* Right: Stepper, Timer, Cancel */}
+      <div className="flex items-center space-x-3 shrink-0 ml-auto">
+        {/* Horizontal 4-step Mini Stepper */}
+        <div data-testid="agentic-stepper" className="hidden lg:flex items-center space-x-2">
+          {STEPS.map((step, idx) => {
+            const stepStatus = getStepStatus(step.name);
+            return (
+              <div key={step.id} className="flex items-center space-x-1 text-[11px]">
+                <span
+                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center font-mono font-bold text-[11px] ${
                     stepStatus === 'completed'
-                      ? 'bg-emerald-500 text-gray-950'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                       : stepStatus === 'current'
-                      ? 'bg-purple-500 text-white ring-2 ring-purple-400/50 animate-pulse'
-                      : 'bg-gray-800 text-gray-400 border border-gray-700'
+                      ? 'bg-purple-500 text-white shadow-xs shadow-purple-500/50'
+                      : 'bg-gray-800 text-gray-400 border border-gray-700/60'
                   }`}
                 >
                   {stepStatus === 'completed' ? '✓' : idx + 1}
-                </div>
+                </span>
                 <span
-                  className={`text-[11px] font-medium ${
+                  className={`font-medium ${
                     stepStatus === 'completed'
                       ? 'text-emerald-400'
                       : stepStatus === 'current'
-                      ? 'text-purple-300'
+                      ? 'text-purple-300 font-semibold'
                       : 'text-gray-400'
                   }`}
                 >
                   {step.label}
                 </span>
+                {idx < STEPS.length - 1 && (
+                  <span className="text-gray-600 select-none">→</span>
+                )}
               </div>
-              {idx < STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 rounded transition-colors ${
-                    stepStatus === 'completed' ? 'bg-emerald-500/70' : 'bg-gray-800'
-                  }`}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Elapsed Timer */}
+        {status.elapsedMs > 0 && (
+          <div
+            data-testid="agentic-elapsed-timer"
+            className="flex items-center space-x-1 text-[11px] font-mono text-gray-300 bg-gray-950 px-2 py-0.5 rounded border border-gray-800"
+          >
+            <Clock className="w-3 h-3 text-gray-400" />
+            <span>{(status.elapsedMs / 1000).toFixed(1)}s</span>
+          </div>
+        )}
+
+        {/* Cancel Action */}
+        {isBusy && onCancel && (
+          <button
+            onClick={onCancel}
+            className="flex items-center space-x-1 text-[11px] font-medium text-rose-300 hover:text-rose-200 transition-colors px-2 py-0.5 rounded bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/60 cursor-pointer"
+            title="Cancel current query"
+          >
+            <XSquare className="w-3 h-3" />
+            <span>Cancel</span>
+          </button>
+        )}
       </div>
     </div>
   );

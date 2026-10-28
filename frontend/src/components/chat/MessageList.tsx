@@ -59,12 +59,12 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 text-[10px]">Copied</span>
+              <span className="text-emerald-400 text-[11px]">Copied</span>
             </>
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              <span className="text-[10px]">Copy</span>
+              <span className="text-[11px]">Copy</span>
             </>
           )}
         </button>
@@ -145,6 +145,20 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
               if (!trimmed) {
                 return <div key={lineIdx} className="h-1" />;
               }
+              if (trimmed.startsWith('### ')) {
+                return (
+                  <h4 key={lineIdx} className="font-semibold text-gray-100 text-sm mt-2 mb-0.5">
+                    {renderFormattedInlineText(trimmed.slice(4), isUser)}
+                  </h4>
+                );
+              }
+              if (trimmed.startsWith('## ')) {
+                return (
+                  <h3 key={lineIdx} className="font-bold text-gray-100 text-base mt-2.5 mb-1">
+                    {renderFormattedInlineText(trimmed.slice(3), isUser)}
+                  </h3>
+                );
+              }
               if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
                 return (
                   <div key={lineIdx} className="flex items-start space-x-2 pl-1 my-0.5">
@@ -217,7 +231,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                 <span className={`font-semibold ${isUser ? 'text-indigo-100' : 'text-gray-300'}`}>
                   {isUser ? 'You' : 'CodeSeek Agent'}
                 </span>
-                <span className={isUser ? 'text-indigo-200/80 text-[10px]' : 'text-gray-400 text-[10px]'}>
+                <span className={isUser ? 'text-indigo-200/80 text-[11px]' : 'text-gray-400 text-[11px]'}>
                   {msg.timestamp}
                 </span>
               </div>

@@ -96,7 +96,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   compact = false,
   className = '',
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(!compact);
 
   // Resolve active properties merging explicit props and status object
   const rawState = propState ?? status?.state ?? 'Idle';
@@ -294,7 +294,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       </div>
 
       {/* Expandable Body */}
-      {isExpanded && !compact && (
+      {isExpanded && (
         <div className="p-3 space-y-2.5">
           {/* Active Step Description */}
           {stepMessage && (
@@ -320,7 +320,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                     ? 'bg-gray-950/40 border-gray-800/60 text-gray-300'
                     : step.status === 'error'
                     ? 'bg-rose-950/30 border-rose-800/60 text-rose-300'
-                    : 'bg-gray-950/20 border-gray-900/60 text-gray-500'
+                    : 'bg-gray-950/20 border-gray-900/60 text-gray-400'
                 }`}
               >
                 <div className="flex items-center space-x-2 min-w-0">
@@ -334,7 +334,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                         ? 'text-gray-200'
                         : step.status === 'error'
                         ? 'text-rose-300'
-                        : 'text-gray-500'
+                        : 'text-gray-400'
                     }`}
                   >
                     {step.name}
@@ -343,7 +343,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
 
                 <span
                   data-testid="agent-step-status"
-                  className="text-[10px] uppercase font-mono tracking-wider text-gray-500 shrink-0 ml-1"
+                  className="text-[11px] uppercase font-mono tracking-wider text-gray-400 shrink-0 ml-1"
                 >
                   {step.status}
                 </span>
@@ -357,13 +357,13 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
               data-testid="agent-streaming-output"
               className="mt-2 p-2.5 rounded bg-gray-950 border border-purple-900/40 text-xs font-mono"
             >
-              <div className="flex items-center justify-between pb-1.5 border-b border-gray-800 text-[10px] text-gray-400">
+              <div className="flex items-center justify-between pb-1.5 border-b border-gray-800 text-[11px] text-gray-300">
                 <span className="flex items-center space-x-1 text-purple-400">
                   <Sparkles className="w-3 h-3" />
                   <span>WebLLM Token Stream</span>
                 </span>
                 {tokenCount > 0 && (
-                  <span data-testid="agent-token-count" className="text-gray-500 font-mono">
+                  <span data-testid="agent-token-count" className="text-gray-400 font-mono">
                     {tokenCount} tokens
                   </span>
                 )}
@@ -386,9 +386,9 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                 ) : (
                   <span
                     data-testid="agent-streaming-placeholder"
-                    className="text-gray-500 italic flex items-center space-x-1.5"
+                    className="text-gray-400 italic flex items-center space-x-1.5"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
                     <span>Awaiting initial token from WebLLM SLM engine...</span>
                   </span>
                 )}
