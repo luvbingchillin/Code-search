@@ -1,7 +1,14 @@
-# AI Agents & Brain Directories
+# AI Agents, Agent Memory & Learning Documents (Strictly Local)
 .agents/
 .gemini/
+.impeccable/
 .playwright-mcp/
+GEMINI.md
+AGENTS.md
+DESIGN_SYSTEM.md
+*.agent
+*.agent.md
+agent_memory/
 
 # Node / Vite Frontend
 node_modules/
