@@ -1,0 +1,5 @@
+$0b8770c3-0e22-434c-99b9-432435640093²ƒid ÿÿÿÿÿÿÿÿÿ*string084vector ÿÿÿÿÿÿÿÿÿ*fixed_size_list:float:38408#filePath ÿÿÿÿÿÿÿÿÿ*string08#fileName ÿÿÿÿÿÿÿÿÿ*string08&astNodeType ÿÿÿÿÿÿÿÿÿ*string08%
+identifier ÿÿÿÿÿÿÿÿÿ*string08#	startLine ÿÿÿÿÿÿÿÿÿ*int6408!endLine ÿÿÿÿÿÿÿÿÿ*int6408code ÿÿÿÿÿÿÿÿÿ*string08(relevanceScore	 ÿÿÿÿÿÿÿÿÿ*float08$	docstring
+ ÿÿÿÿÿÿÿÿÿ*string08#
+parameters ÿÿÿÿÿÿÿÿÿ*list08item *string08#
+decorators ÿÿÿÿÿÿÿÿÿ*list08item *string08#language ÿÿÿÿÿÿÿÿÿ*string08'repoFullName ÿÿÿÿÿÿÿÿÿ*string08"summary ÿÿÿÿÿÿÿÿÿ*string08 imports ÿÿÿÿÿÿÿÿÿ*list08item *string08calls ÿÿÿÿÿÿÿÿÿ*list08item *string08

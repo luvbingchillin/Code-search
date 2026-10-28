@@ -35,6 +35,14 @@ This project evolved from the CodeOrient baseline to solve its three critical fl
 - npm or yarn
 - A WebGPU-compatible browser (e.g., Chrome, Edge) for local SLM execution
 
+### Showcase Website
+A dedicated showcase and explanation website featuring the **Casino Roulette Table** theme, interactive AST vs. naive chunking comparison, and empirical benchmark scorecards is located in `showcase/`:
+```bash
+cd showcase
+npm install
+npm run dev
+```
+
 ### Installation
 1. Clone the repository to your local machine.
 2. Navigate into the frontend directory and install the dependencies:

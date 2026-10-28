@@ -1,0 +1,302 @@
+[
+  {
+    "query_id": "Q01",
+    "category": "entity_locating",
+    "query": "Where is the main entrypoint function for sending HTTP GET requests?",
+    "expected_identifiers": ["get", "request"],
+    "expected_files": ["api.py"],
+    "expected_start_line": 62,
+    "expected_end_line": 73,
+    "description": "Top-level get() function in api.py that delegates to request()"
+  },
+  {
+    "query_id": "Q02",
+    "category": "entity_locating",
+    "query": "Where is the core Session.send method defined and how does it delegate to adapters?",
+    "expected_identifiers": ["Session.send"],
+    "expected_files": ["sessions.py"],
+    "expected_start_line": 673,
+    "expected_end_line": 748,
+    "description": "Session.send() method orchestrating hooks, adapters, and redirect resolving"
+  },
+  {
+    "query_id": "Q03",
+    "category": "entity_locating",
+    "query": "Where is the HTTPAdapter connection pool manager initialized?",
+    "expected_identifiers": ["HTTPAdapter.init_poolmanager"],
+    "expected_files": ["adapters.py"],
+    "expected_start_line": 240,
+    "expected_end_line": 264,
+    "description": "HTTPAdapter.init_poolmanager setting up urllib3 PoolManager"
+  },
+  {
+    "query_id": "Q04",
+    "category": "entity_locating",
+    "query": "Where is CaseInsensitiveDict defined and how does it store case-insensitive keys?",
+    "expected_identifiers": ["CaseInsensitiveDict"],
+    "expected_files": ["structures.py"],
+    "expected_start_line": 13,
+    "expected_end_line": 80,
+    "description": "CaseInsensitiveDict data structure in structures.py"
+  },
+  {
+    "query_id": "Q05",
+    "category": "entity_locating",
+    "query": "Where is the basic auth header encoding string helper function?",
+    "expected_identifiers": ["_basic_auth_str"],
+    "expected_files": ["auth.py"],
+    "expected_start_line": 25,
+    "expected_end_line": 66,
+    "description": "Helper _basic_auth_str in auth.py constructing 'Basic ' base64 string"
+  },
+  {
+    "query_id": "Q06",
+    "category": "entity_locating",
+    "query": "Where is the JSON decoding method on the HTTP Response object implemented?",
+    "expected_identifiers": ["Response.json"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 947,
+    "expected_end_line": 980,
+    "description": "Response.json() method parsing response body via complex json decoding"
+  },
+  {
+    "query_id": "Q07",
+    "category": "entity_locating",
+    "query": "Where is the cookie extraction from response headers to a cookiejar defined?",
+    "expected_identifiers": ["extract_cookies_to_jar"],
+    "expected_files": ["cookies.py"],
+    "expected_start_line": 124,
+    "expected_end_line": 137,
+    "description": "extract_cookies_to_jar function handling Set-Cookie headers"
+  },
+  {
+    "query_id": "Q08",
+    "category": "entity_locating",
+    "query": "Where is the Session mount method for registering transport adapters?",
+    "expected_identifiers": ["Session.mount"],
+    "expected_files": ["sessions.py"],
+    "expected_start_line": 799,
+    "expected_end_line": 808,
+    "description": "Session.mount() registering adapters for URL prefixes"
+  },
+  {
+    "query_id": "Q09",
+    "category": "entity_locating",
+    "query": "Where is the system diagnostic and environment info function implemented?",
+    "expected_identifiers": ["info"],
+    "expected_files": ["help.py"],
+    "expected_start_line": 69,
+    "expected_end_line": 125,
+    "description": "info() in help.py collecting OS, OpenSSL, and dependency versions"
+  },
+  {
+    "query_id": "Q10",
+    "category": "entity_locating",
+    "query": "Where is the streaming content generator iter_content defined on Response?",
+    "expected_identifiers": ["Response.iter_content"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 799,
+    "expected_end_line": 855,
+    "description": "Response.iter_content() generating raw or decoded streaming bytes"
+  },
+  {
+    "query_id": "Q11",
+    "category": "architectural_flow",
+    "query": "How does Session.get_adapter select the appropriate transport adapter for a given URL?",
+    "expected_identifiers": ["Session.get_adapter"],
+    "expected_files": ["sessions.py"],
+    "expected_start_line": 781,
+    "expected_end_line": 792,
+    "description": "Session.get_adapter checking mounted adapters dictionary in descending key length"
+  },
+  {
+    "query_id": "Q12",
+    "category": "architectural_flow",
+    "query": "How does the SessionRedirectMixin resolve HTTP 3xx redirects and generate the next request?",
+    "expected_identifiers": ["SessionRedirectMixin.resolve_redirects"],
+    "expected_files": ["sessions.py"],
+    "expected_start_line": 159,
+    "expected_end_line": 280,
+    "description": "SessionRedirectMixin.resolve_redirects handling Location header and status codes"
+  },
+  {
+    "query_id": "Q13",
+    "category": "architectural_flow",
+    "query": "How does PreparedRequest assemble and validate the full target URL including query parameters?",
+    "expected_identifiers": ["PreparedRequest.prepare_url"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 409,
+    "expected_end_line": 481,
+    "description": "PreparedRequest.prepare_url parsing scheme, host, auth, and query params"
+  },
+  {
+    "query_id": "Q14",
+    "category": "architectural_flow",
+    "query": "How does HTTPAdapter.send execute the request using urllib3 and handle connection retries?",
+    "expected_identifiers": ["HTTPAdapter.send"],
+    "expected_files": ["adapters.py"],
+    "expected_start_line": 613,
+    "expected_end_line": 719,
+    "description": "HTTPAdapter.send() wrapping urllib3 urlopen and mapping exceptions"
+  },
+  {
+    "query_id": "Q15",
+    "category": "architectural_flow",
+    "query": "How are authentication credentials prepared and attached to a PreparedRequest?",
+    "expected_identifiers": ["PreparedRequest.prepare_auth"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 588,
+    "expected_end_line": 608,
+    "description": "PreparedRequest.prepare_auth handling tuple, callable, or netrc auth"
+  },
+  {
+    "query_id": "Q16",
+    "category": "architectural_flow",
+    "query": "How does HTTPAdapter construct a Requests Response object from an underlying urllib3 response?",
+    "expected_identifiers": ["HTTPAdapter.build_response"],
+    "expected_files": ["adapters.py"],
+    "expected_start_line": 359,
+    "expected_end_line": 394,
+    "description": "HTTPAdapter.build_response copying status, headers, encoding and raw response"
+  },
+  {
+    "query_id": "Q17",
+    "category": "architectural_flow",
+    "query": "How are cookies converted and formatted into request headers during request preparation?",
+    "expected_identifiers": ["PreparedRequest.prepare_cookies"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 610,
+    "expected_end_line": 628,
+    "description": "PreparedRequest.prepare_cookies formatting Cookie header via cookiejar"
+  },
+  {
+    "query_id": "Q18",
+    "category": "architectural_flow",
+    "query": "How does HTTPDigestAuth calculate and construct the Digest challenge response header?",
+    "expected_identifiers": ["HTTPDigestAuth.build_digest_header"],
+    "expected_files": ["auth.py"],
+    "expected_start_line": 126,
+    "expected_end_line": 234,
+    "description": "HTTPDigestAuth.build_digest_header calculating md5 nonce response"
+  },
+  {
+    "query_id": "Q19",
+    "category": "architectural_flow",
+    "query": "How does HTTPBasicAuth implement the callable interface to attach authentication to requests?",
+    "expected_identifiers": ["HTTPBasicAuth.__call__"],
+    "expected_files": ["auth.py"],
+    "expected_start_line": 94,
+    "expected_end_line": 96,
+    "description": "HTTPBasicAuth.__call__ setting Authorization header on PreparedRequest"
+  },
+  {
+    "query_id": "Q20",
+    "category": "architectural_flow",
+    "query": "How does PreparedRequest.prepare orchestrate the preparation of method, url, headers, auth, and cookies?",
+    "expected_identifiers": ["PreparedRequest.prepare"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 351,
+    "expected_end_line": 377,
+    "description": "PreparedRequest.prepare() executing all prepare_* stages sequentially"
+  },
+  {
+    "query_id": "Q21",
+    "category": "utility_logic",
+    "query": "How does super_len calculate the total byte length of files, streams, and iterators?",
+    "expected_identifiers": ["super_len"],
+    "expected_files": ["utils.py"],
+    "expected_start_line": 136,
+    "expected_end_line": 204,
+    "description": "super_len() inspecting fileno, fstat, seek, and len for body sizing"
+  },
+  {
+    "query_id": "Q22",
+    "category": "utility_logic",
+    "query": "How does should_bypass_proxies check if a URL matches no_proxy environment patterns?",
+    "expected_identifiers": ["should_bypass_proxies"],
+    "expected_files": ["utils.py"],
+    "expected_start_line": 755,
+    "expected_end_line": 813,
+    "description": "should_bypass_proxies() evaluating proxy bypass rules"
+  },
+  {
+    "query_id": "Q23",
+    "category": "utility_logic",
+    "query": "How does dispatch_hook invoke registered callback functions for request events?",
+    "expected_identifiers": ["dispatch_hook"],
+    "expected_files": ["hooks.py"],
+    "expected_start_line": 22,
+    "expected_end_line": 33,
+    "description": "dispatch_hook() executing callbacks in hooks dictionary"
+  },
+  {
+    "query_id": "Q24",
+    "category": "utility_logic",
+    "query": "How is an exception raised when an HTTP response contains a 4xx or 5xx status code?",
+    "expected_identifiers": ["Response.raise_for_status"],
+    "expected_files": ["models.py"],
+    "expected_start_line": 999,
+    "expected_end_line": 1026,
+    "description": "Response.raise_for_status() raising HTTPError on 4xx/5xx"
+  },
+  {
+    "query_id": "Q25",
+    "category": "utility_logic",
+    "query": "How are netrc credentials retrieved for a specific host from the user's home directory?",
+    "expected_identifiers": ["get_netrc_auth"],
+    "expected_files": ["utils.py"],
+    "expected_start_line": 207,
+    "expected_end_line": 248,
+    "description": "get_netrc_auth() reading ~/.netrc file for basic auth"
+  },
+  {
+    "query_id": "Q26",
+    "category": "utility_logic",
+    "query": "How does requote_uri normalize and percent-encode an unquoted URI?",
+    "expected_identifiers": ["requote_uri"],
+    "expected_files": ["utils.py"],
+    "expected_start_line": 650,
+    "expected_end_line": 669,
+    "description": "requote_uri() wrapping quote with safe characters"
+  },
+  {
+    "query_id": "Q27",
+    "category": "utility_logic",
+    "query": "How is a dictionary of key-value cookie pairs converted into a RequestsCookieJar?",
+    "expected_identifiers": ["cookiejar_from_dict"],
+    "expected_files": ["cookies.py"],
+    "expected_start_line": 521,
+    "expected_end_line": 539,
+    "description": "cookiejar_from_dict() setting cookies from Python dict"
+  },
+  {
+    "query_id": "Q28",
+    "category": "utility_logic",
+    "query": "How does unquote_header_value strip surrounding quotes from header parameters?",
+    "expected_identifiers": ["unquote_header_value"],
+    "expected_files": ["utils.py"],
+    "expected_start_line": 432,
+    "expected_end_line": 454,
+    "description": "unquote_header_value() unescaping quotes and backslashes in headers"
+  },
+  {
+    "query_id": "Q29",
+    "category": "utility_logic",
+    "query": "How does CaseInsensitiveDict provide lower-cased item iteration for header lookups?",
+    "expected_identifiers": ["CaseInsensitiveDict.lower_items"],
+    "expected_files": ["structures.py"],
+    "expected_start_line": 63,
+    "expected_end_line": 65,
+    "description": "CaseInsensitiveDict.lower_items() yielding (cased_key.lower(), value)"
+  },
+  {
+    "query_id": "Q30",
+    "category": "utility_logic",
+    "query": "How does Session.close release connection pools and cleanup adapters?",
+    "expected_identifiers": ["Session.close"],
+    "expected_files": ["sessions.py"],
+    "expected_start_line": 794,
+    "expected_end_line": 797,
+    "description": "Session.close() closing all mounted adapters and releasing sockets"
+  }
+]

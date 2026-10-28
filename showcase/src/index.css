@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: #04140d;
+    color: #f4f7f4;
+    overflow-x: hidden;
+    line-height: 1.6;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+    font-feature-settings: 'ss01', 'ss03';
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: 'zero', 'calt';
+  }
+}
+
+/* Subtle hairline border with warm brass tint */
+.brass-border {
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  background-color: #061e14;
+}
+
+.brass-border-hover {
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brass-border-hover:hover {
+  border-color: rgba(217, 119, 6, 0.35);
+  background-color: #082619;
+}
+
+/* Naive chunk alert border */
+.red-border {
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  background-color: #120608;
+}
+
+/* Animated Flowing Circuit Lines */
+@keyframes flowDash {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.flowing-wire {
+  stroke-dasharray: 6 6;
+  animation: flowDash 1.4s linear infinite;
+}
+
+@keyframes pulseGlowTrack {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.4), 0 0 16px rgba(234, 179, 8, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.4);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlowTrack 2s infinite ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowing-wire {
+    animation: none !important;
+  }
+  animateMotion {
+    display: none !important;
+  }
+}
+
+/* Comprehensive Syntax Highlighting for Python AST code blocks */
+.token.comment {
+  color: #64748b;
+  font-style: italic;
+}
+.token.keyword {
+  color: #fbbf24;
+  font-weight: 600;
+}
+.token.string {
+  color: #34d399;
+}
+.token.function {
+  color: #60a5fa;
+  font-weight: 500;
+}
+.token.decorator {
+  color: #f472b6;
+  font-style: italic;
+}
+.token.operator {
+  color: #cbd5e1;
+}
+.token.punctuation {
+  color: #94a3b8;
+}
+.token.class-name {
+  color: #38bdf8;
+  font-weight: 600;
+}
+.token.boolean {
+  color: #fb923c;
+}
+.token.number {
+  color: #f97316;
+}
+.token.builtin {
+  color: #c084fc;
+}

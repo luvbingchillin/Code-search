@@ -187,7 +187,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       case 'thinking':
         return <Brain className="w-3.5 h-3.5 animate-pulse text-amber-400" />;
       case 'searching':
-        return <Search className="w-3.5 h-3.5 animate-bounce text-blue-400" />;
+        return <Search className="w-3.5 h-3.5 animate-pulse text-blue-400" />;
       case 'synthesizing':
         return <Sparkles className="w-3.5 h-3.5 animate-spin text-purple-400" />;
       case 'complete':
@@ -219,7 +219,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   return (
     <div
       data-testid="agent-runner"
-      className={`bg-gray-900/95 border-b border-gray-800/80 transition-all select-none ${className}`}
+      className={`bg-gray-900/95 border-b border-gray-800/80 transition-all ${className}`}
     >
       {/* Top Header / Status Control Bar */}
       <div className="px-3 py-2 flex items-center justify-between border-b border-gray-800/40 bg-gray-950/40">

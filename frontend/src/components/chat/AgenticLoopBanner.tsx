@@ -71,7 +71,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
       case 'Thinking':
         return <Brain className="w-4 h-4 animate-pulse text-amber-400" />;
       case 'Searching AST':
-        return <Search className="w-4 h-4 animate-bounce text-blue-400" />;
+        return <Search className="w-4 h-4 animate-pulse text-blue-400" />;
       case 'Synthesizing':
         return <Cpu className="w-4 h-4 animate-spin text-purple-400" />;
       case 'Complete':

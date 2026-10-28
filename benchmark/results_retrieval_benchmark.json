@@ -1,0 +1,2056 @@
+{
+  "ast": {
+    "system": "Tree-Sitter AST",
+    "total_queries": 30,
+    "recall_1": 46.67,
+    "recall_3": 70.0,
+    "recall_5": 76.67,
+    "mrr": 0.5833,
+    "sbir_percent": 100.0,
+    "avg_latency_ms": 24.15,
+    "total_retrieved_chunks": 150,
+    "valid_syntax_chunks": 150,
+    "category_breakdown": {
+      "entity_locating": {
+        "query_count": 10,
+        "recall_1": 40.0,
+        "recall_3": 70.0,
+        "recall_5": 70.0,
+        "mrr": 0.5167
+      },
+      "architectural_flow": {
+        "query_count": 10,
+        "recall_1": 40.0,
+        "recall_3": 60.0,
+        "recall_5": 70.0,
+        "mrr": 0.525
+      },
+      "utility_logic": {
+        "query_count": 10,
+        "recall_1": 60.0,
+        "recall_3": 80.0,
+        "recall_5": 90.0,
+        "mrr": 0.7083
+      }
+    },
+    "query_details": [
+      {
+        "query_id": "Q01",
+        "query": "Where is the main entrypoint function for sending HTTP GET requests?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 57.55,
+        "top_retrieved": [
+          {
+            "id": "api.py:request:14",
+            "filePath": "api.py",
+            "identifier": "request",
+            "startLine": 14,
+            "endLine": 59,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session:356",
+            "filePath": "sessions.py",
+            "identifier": "Session",
+            "startLine": 356,
+            "endLine": 816,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.__init__:658",
+            "filePath": "models.py",
+            "identifier": "Response.__init__",
+            "startLine": 658,
+            "endLine": 703,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q02",
+        "query": "Where is the core Session.send method defined and how does it delegate to adapters?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 22.4,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:Session.close:794",
+            "filePath": "sessions.py",
+            "identifier": "Session.close",
+            "startLine": 794,
+            "endLine": 797,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:PreparedRequest.prepare_method:393",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest.prepare_method",
+            "startLine": 393,
+            "endLine": 397,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.get_adapter:781",
+            "filePath": "sessions.py",
+            "identifier": "Session.get_adapter",
+            "startLine": 781,
+            "endLine": 792,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q03",
+        "query": "Where is the HTTPAdapter connection pool manager initialized?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 19.13,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:HTTPAdapter.init_poolmanager:240",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.init_poolmanager",
+            "startLine": 240,
+            "endLine": 264,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.get_connection_with_tls_context:446",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.get_connection_with_tls_context",
+            "startLine": 446,
+            "endLine": 493,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.get_connection:495",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.get_connection",
+            "startLine": 495,
+            "endLine": 534,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q04",
+        "query": "Where is CaseInsensitiveDict defined and how does it store case-insensitive keys?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 23.06,
+        "top_retrieved": [
+          {
+            "id": "structures.py:CaseInsensitiveDict.copy:76",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict.copy",
+            "startLine": 76,
+            "endLine": 77,
+            "valid_syntax": true
+          },
+          {
+            "id": "structures.py:CaseInsensitiveDict:13",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict",
+            "startLine": 13,
+            "endLine": 80,
+            "valid_syntax": true
+          },
+          {
+            "id": "structures.py:CaseInsensitiveDict.__eq__:67",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict.__eq__",
+            "startLine": 67,
+            "endLine": 73,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q05",
+        "query": "Where is the basic auth header encoding string helper function?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 21.3,
+        "top_retrieved": [
+          {
+            "id": "_internal_utils.py:to_native_string:25",
+            "filePath": "_internal_utils.py",
+            "identifier": "to_native_string",
+            "startLine": 25,
+            "endLine": 35,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.text:909",
+            "filePath": "models.py",
+            "identifier": "Response.text",
+            "startLine": 909,
+            "endLine": 945,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:parse_list_header:365",
+            "filePath": "utils.py",
+            "identifier": "parse_list_header",
+            "startLine": 365,
+            "endLine": 393,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q06",
+        "query": "Where is the JSON decoding method on the HTTP Response object implemented?",
+        "category": "entity_locating",
+        "hit_rank": 3,
+        "latency_ms": 22.23,
+        "top_retrieved": [
+          {
+            "id": "models.py:Response.__init__:658",
+            "filePath": "models.py",
+            "identifier": "Response.__init__",
+            "startLine": 658,
+            "endLine": 703,
+            "valid_syntax": true
+          },
+          {
+            "id": "exceptions.py:JSONDecodeError.__reduce__:44",
+            "filePath": "exceptions.py",
+            "identifier": "JSONDecodeError.__reduce__",
+            "startLine": 44,
+            "endLine": 52,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.json:947",
+            "filePath": "models.py",
+            "identifier": "Response.json",
+            "startLine": 947,
+            "endLine": 980,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q07",
+        "query": "Where is the cookie extraction from response headers to a cookiejar defined?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 27.99,
+        "top_retrieved": [
+          {
+            "id": "cookies.py:extract_cookies_to_jar:124",
+            "filePath": "cookies.py",
+            "identifier": "extract_cookies_to_jar",
+            "startLine": 124,
+            "endLine": 137,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:dict_from_cookiejar:457",
+            "filePath": "utils.py",
+            "identifier": "dict_from_cookiejar",
+            "startLine": 457,
+            "endLine": 465,
+            "valid_syntax": true
+          },
+          {
+            "id": "cookies.py:cookiejar_from_dict:521",
+            "filePath": "cookies.py",
+            "identifier": "cookiejar_from_dict",
+            "startLine": 521,
+            "endLine": 539,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q08",
+        "query": "Where is the Session mount method for registering transport adapters?",
+        "category": "entity_locating",
+        "hit_rank": 3,
+        "latency_ms": 25.73,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:Session.get_adapter:781",
+            "filePath": "sessions.py",
+            "identifier": "Session.get_adapter",
+            "startLine": 781,
+            "endLine": 792,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.close:794",
+            "filePath": "sessions.py",
+            "identifier": "Session.close",
+            "startLine": 794,
+            "endLine": 797,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.mount:799",
+            "filePath": "sessions.py",
+            "identifier": "Session.mount",
+            "startLine": 799,
+            "endLine": 808,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q09",
+        "query": "Where is the system diagnostic and environment info function implemented?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 27.0,
+        "top_retrieved": [
+          {
+            "id": "help.py:_implementation:34",
+            "filePath": "help.py",
+            "identifier": "_implementation",
+            "startLine": 34,
+            "endLine": 66,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:proxy_bypass:115",
+            "filePath": "utils.py",
+            "identifier": "proxy_bypass",
+            "startLine": 115,
+            "endLine": 124,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.merge_environment_settings:750",
+            "filePath": "sessions.py",
+            "identifier": "Session.merge_environment_settings",
+            "startLine": 750,
+            "endLine": 779,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q10",
+        "query": "Where is the streaming content generator iter_content defined on Response?",
+        "category": "entity_locating",
+        "hit_rank": 2,
+        "latency_ms": 21.6,
+        "top_retrieved": [
+          {
+            "id": "models.py:Response.content:890",
+            "filePath": "models.py",
+            "identifier": "Response.content",
+            "startLine": 890,
+            "endLine": 907,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response:640",
+            "filePath": "models.py",
+            "identifier": "Response",
+            "startLine": 640,
+            "endLine": 1039,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.iter_content:799",
+            "filePath": "models.py",
+            "identifier": "Response.iter_content",
+            "startLine": 799,
+            "endLine": 855,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q11",
+        "query": "How does Session.get_adapter select the appropriate transport adapter for a given URL?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 21.24,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:Session.get_adapter:781",
+            "filePath": "sessions.py",
+            "identifier": "Session.get_adapter",
+            "startLine": 781,
+            "endLine": 792,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.mount:799",
+            "filePath": "sessions.py",
+            "identifier": "Session.mount",
+            "startLine": 799,
+            "endLine": 808,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.close:794",
+            "filePath": "sessions.py",
+            "identifier": "Session.close",
+            "startLine": 794,
+            "endLine": 797,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q12",
+        "query": "How does the SessionRedirectMixin resolve HTTP 3xx redirects and generate the next request?",
+        "category": "architectural_flow",
+        "hit_rank": 2,
+        "latency_ms": 22.03,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:SessionRedirectMixin.get_redirect_target:107",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.get_redirect_target",
+            "startLine": 107,
+            "endLine": 125,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin:106",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin",
+            "startLine": 106,
+            "endLine": 353,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.send:673",
+            "filePath": "sessions.py",
+            "identifier": "Session.send",
+            "startLine": 673,
+            "endLine": 748,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q13",
+        "query": "How does PreparedRequest assemble and validate the full target URL including query parameters?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 19.94,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:SessionRedirectMixin.resolve_redirects:159",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.resolve_redirects",
+            "startLine": 159,
+            "endLine": 280,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.prepare_request:457",
+            "filePath": "sessions.py",
+            "identifier": "Session.prepare_request",
+            "startLine": 457,
+            "endLine": 498,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin:106",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin",
+            "startLine": 106,
+            "endLine": 353,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q14",
+        "query": "How does HTTPAdapter.send execute the request using urllib3 and handle connection retries?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 19.97,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:HTTPAdapter:167",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter",
+            "startLine": 167,
+            "endLine": 719,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.get_connection:495",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.get_connection",
+            "startLine": 495,
+            "endLine": 534,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.get_connection_with_tls_context:446",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.get_connection_with_tls_context",
+            "startLine": 446,
+            "endLine": 493,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q15",
+        "query": "How are authentication credentials prepared and attached to a PreparedRequest?",
+        "category": "architectural_flow",
+        "hit_rank": 2,
+        "latency_ms": 19.67,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:SessionRedirectMixin.rebuild_auth:282",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.rebuild_auth",
+            "startLine": 282,
+            "endLine": 300,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Request.prepare:295",
+            "filePath": "models.py",
+            "identifier": "Request.prepare",
+            "startLine": 295,
+            "endLine": 310,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.prepare_request:457",
+            "filePath": "sessions.py",
+            "identifier": "Session.prepare_request",
+            "startLine": 457,
+            "endLine": 498,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q16",
+        "query": "How does HTTPAdapter construct a Requests Response object from an underlying urllib3 response?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 24.63,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:HTTPAdapter.build_response:359",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.build_response",
+            "startLine": 359,
+            "endLine": 394,
+            "valid_syntax": true
+          },
+          {
+            "id": "cookies.py:extract_cookies_to_jar:124",
+            "filePath": "cookies.py",
+            "identifier": "extract_cookies_to_jar",
+            "startLine": 124,
+            "endLine": 137,
+            "valid_syntax": true
+          },
+          {
+            "id": "api.py:options:76",
+            "filePath": "api.py",
+            "identifier": "options",
+            "startLine": 76,
+            "endLine": 85,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q17",
+        "query": "How are cookies converted and formatted into request headers during request preparation?",
+        "category": "architectural_flow",
+        "hit_rank": 4,
+        "latency_ms": 32.67,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:Session.prepare_request:457",
+            "filePath": "sessions.py",
+            "identifier": "Session.prepare_request",
+            "startLine": 457,
+            "endLine": 498,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin.resolve_redirects:159",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.resolve_redirects",
+            "startLine": 159,
+            "endLine": 280,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin:106",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin",
+            "startLine": 106,
+            "endLine": 353,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q18",
+        "query": "How does HTTPDigestAuth calculate and construct the Digest challenge response header?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 24.42,
+        "top_retrieved": [
+          {
+            "id": "cookies.py:MockResponse:103",
+            "filePath": "cookies.py",
+            "identifier": "MockResponse",
+            "startLine": 103,
+            "endLine": 121,
+            "valid_syntax": true
+          },
+          {
+            "id": "auth.py:HTTPDigestAuth.handle_401:241",
+            "filePath": "auth.py",
+            "identifier": "HTTPDigestAuth.handle_401",
+            "startLine": 241,
+            "endLine": 283,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.build_response:359",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.build_response",
+            "startLine": 359,
+            "endLine": 394,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q19",
+        "query": "How does HTTPBasicAuth implement the callable interface to attach authentication to requests?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 23.12,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:SessionRedirectMixin.rebuild_auth:282",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.rebuild_auth",
+            "startLine": 282,
+            "endLine": 300,
+            "valid_syntax": true
+          },
+          {
+            "id": "auth.py:HTTPProxyAuth:99",
+            "filePath": "auth.py",
+            "identifier": "HTTPProxyAuth",
+            "startLine": 99,
+            "endLine": 104,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin:106",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin",
+            "startLine": 106,
+            "endLine": 353,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q20",
+        "query": "How does PreparedRequest.prepare orchestrate the preparation of method, url, headers, auth, and cookies?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 23.34,
+        "top_retrieved": [
+          {
+            "id": "models.py:PreparedRequest:313",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest",
+            "startLine": 313,
+            "endLine": 637,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.prepare_request:457",
+            "filePath": "sessions.py",
+            "identifier": "Session.prepare_request",
+            "startLine": 457,
+            "endLine": 498,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:PreparedRequest.prepare:351",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest.prepare",
+            "startLine": 351,
+            "endLine": 377,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q21",
+        "query": "How does super_len calculate the total byte length of files, streams, and iterators?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 23.69,
+        "top_retrieved": [
+          {
+            "id": "utils.py:super_len:136",
+            "filePath": "utils.py",
+            "identifier": "super_len",
+            "startLine": 136,
+            "endLine": 204,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:iter_slices:571",
+            "filePath": "utils.py",
+            "identifier": "iter_slices",
+            "startLine": 571,
+            "endLine": 578,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:PreparedRequest.prepare_content_length:572",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest.prepare_content_length",
+            "startLine": 572,
+            "endLine": 586,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q22",
+        "query": "How does should_bypass_proxies check if a URL matches no_proxy environment patterns?",
+        "category": "utility_logic",
+        "hit_rank": 3,
+        "latency_ms": 21.98,
+        "top_retrieved": [
+          {
+            "id": "utils.py:get_environ_proxies:816",
+            "filePath": "utils.py",
+            "identifier": "get_environ_proxies",
+            "startLine": 816,
+            "endLine": 825,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:resolve_proxies:854",
+            "filePath": "utils.py",
+            "identifier": "resolve_proxies",
+            "startLine": 854,
+            "endLine": 878,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:should_bypass_proxies:755",
+            "filePath": "utils.py",
+            "identifier": "should_bypass_proxies",
+            "startLine": 755,
+            "endLine": 813,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q23",
+        "query": "How does dispatch_hook invoke registered callback functions for request events?",
+        "category": "utility_logic",
+        "hit_rank": null,
+        "latency_ms": 27.05,
+        "top_retrieved": [
+          {
+            "id": "models.py:RequestHooksMixin.deregister_hook:218",
+            "filePath": "models.py",
+            "identifier": "RequestHooksMixin.deregister_hook",
+            "startLine": 218,
+            "endLine": 227,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:RequestHooksMixin.register_hook:207",
+            "filePath": "models.py",
+            "identifier": "RequestHooksMixin.register_hook",
+            "startLine": 207,
+            "endLine": 216,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:RequestHooksMixin:206",
+            "filePath": "models.py",
+            "identifier": "RequestHooksMixin",
+            "startLine": 206,
+            "endLine": 227,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q24",
+        "query": "How is an exception raised when an HTTP response contains a 4xx or 5xx status code?",
+        "category": "utility_logic",
+        "hit_rank": 4,
+        "latency_ms": 31.22,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:HTTPAdapter.build_response:359",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.build_response",
+            "startLine": 359,
+            "endLine": 394,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.ok:754",
+            "filePath": "models.py",
+            "identifier": "Response.ok",
+            "startLine": 754,
+            "endLine": 767,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:Response.__bool__:730",
+            "filePath": "models.py",
+            "identifier": "Response.__bool__",
+            "startLine": 730,
+            "endLine": 738,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q25",
+        "query": "How are netrc credentials retrieved for a specific host from the user's home directory?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 24.32,
+        "top_retrieved": [
+          {
+            "id": "utils.py:get_netrc_auth:207",
+            "filePath": "utils.py",
+            "identifier": "get_netrc_auth",
+            "startLine": 207,
+            "endLine": 248,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:HTTPAdapter.build_connection_pool_key_attributes:396",
+            "filePath": "adapters.py",
+            "identifier": "HTTPAdapter.build_connection_pool_key_attributes",
+            "startLine": 396,
+            "endLine": 444,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin.rebuild_auth:282",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.rebuild_auth",
+            "startLine": 282,
+            "endLine": 300,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q26",
+        "query": "How does requote_uri normalize and percent-encode an unquoted URI?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 23.01,
+        "top_retrieved": [
+          {
+            "id": "utils.py:requote_uri:650",
+            "filePath": "utils.py",
+            "identifier": "requote_uri",
+            "startLine": 650,
+            "endLine": 669,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:unquote_unreserved:626",
+            "filePath": "utils.py",
+            "identifier": "unquote_unreserved",
+            "startLine": 626,
+            "endLine": 647,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:SessionRedirectMixin.resolve_redirects:159",
+            "filePath": "sessions.py",
+            "identifier": "SessionRedirectMixin.resolve_redirects",
+            "startLine": 159,
+            "endLine": 280,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q27",
+        "query": "How is a dictionary of key-value cookie pairs converted into a RequestsCookieJar?",
+        "category": "utility_logic",
+        "hit_rank": 2,
+        "latency_ms": 17.77,
+        "top_retrieved": [
+          {
+            "id": "utils.py:add_dict_to_cookiejar:468",
+            "filePath": "utils.py",
+            "identifier": "add_dict_to_cookiejar",
+            "startLine": 468,
+            "endLine": 476,
+            "valid_syntax": true
+          },
+          {
+            "id": "cookies.py:cookiejar_from_dict:521",
+            "filePath": "cookies.py",
+            "identifier": "cookiejar_from_dict",
+            "startLine": 521,
+            "endLine": 539,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:dict_from_cookiejar:457",
+            "filePath": "utils.py",
+            "identifier": "dict_from_cookiejar",
+            "startLine": 457,
+            "endLine": 465,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q28",
+        "query": "How does unquote_header_value strip surrounding quotes from header parameters?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 12.99,
+        "top_retrieved": [
+          {
+            "id": "utils.py:unquote_header_value:432",
+            "filePath": "utils.py",
+            "identifier": "unquote_header_value",
+            "startLine": 432,
+            "endLine": 454,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:check_header_validity:1024",
+            "filePath": "utils.py",
+            "identifier": "check_header_validity",
+            "startLine": 1024,
+            "endLine": 1032,
+            "valid_syntax": true
+          },
+          {
+            "id": "models.py:PreparedRequest.prepare_headers:483",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest.prepare_headers",
+            "startLine": 483,
+            "endLine": 492,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q29",
+        "query": "How does CaseInsensitiveDict provide lower-cased item iteration for header lookups?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 23.16,
+        "top_retrieved": [
+          {
+            "id": "structures.py:CaseInsensitiveDict:13",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict",
+            "startLine": 13,
+            "endLine": 80,
+            "valid_syntax": true
+          },
+          {
+            "id": "structures.py:CaseInsensitiveDict.copy:76",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict.copy",
+            "startLine": 76,
+            "endLine": 77,
+            "valid_syntax": true
+          },
+          {
+            "id": "utils.py:default_headers:890",
+            "filePath": "utils.py",
+            "identifier": "default_headers",
+            "startLine": 890,
+            "endLine": 901,
+            "valid_syntax": true
+          }
+        ]
+      },
+      {
+        "query_id": "Q30",
+        "query": "How does Session.close release connection pools and cleanup adapters?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 20.24,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:Session.close:794",
+            "filePath": "sessions.py",
+            "identifier": "Session.close",
+            "startLine": 794,
+            "endLine": 797,
+            "valid_syntax": true
+          },
+          {
+            "id": "sessions.py:Session.mount:799",
+            "filePath": "sessions.py",
+            "identifier": "Session.mount",
+            "startLine": 799,
+            "endLine": 808,
+            "valid_syntax": true
+          },
+          {
+            "id": "adapters.py:BaseAdapter.close:162",
+            "filePath": "adapters.py",
+            "identifier": "BaseAdapter.close",
+            "startLine": 162,
+            "endLine": 164,
+            "valid_syntax": true
+          }
+        ]
+      }
+    ]
+  },
+  "naive": {
+    "system": "Naive Sliding Window",
+    "total_queries": 30,
+    "recall_1": 43.33,
+    "recall_3": 66.67,
+    "recall_5": 73.33,
+    "mrr": 0.5522,
+    "sbir_percent": 0.67,
+    "avg_latency_ms": 21.94,
+    "total_retrieved_chunks": 150,
+    "valid_syntax_chunks": 1,
+    "category_breakdown": {
+      "entity_locating": {
+        "query_count": 10,
+        "recall_1": 30.0,
+        "recall_3": 60.0,
+        "recall_5": 60.0,
+        "mrr": 0.4333
+      },
+      "architectural_flow": {
+        "query_count": 10,
+        "recall_1": 40.0,
+        "recall_3": 50.0,
+        "recall_5": 70.0,
+        "mrr": 0.49
+      },
+      "utility_logic": {
+        "query_count": 10,
+        "recall_1": 60.0,
+        "recall_3": 90.0,
+        "recall_5": 90.0,
+        "mrr": 0.7333
+      }
+    },
+    "query_details": [
+      {
+        "query_id": "Q01",
+        "query": "Where is the main entrypoint function for sending HTTP GET requests?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 59.63,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_37:444",
+            "filePath": "adapters.py",
+            "identifier": "get_connection_with_tls_context",
+            "startLine": 444,
+            "endLine": 454,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_22:324",
+            "filePath": "models.py",
+            "identifier": "__init__",
+            "startLine": 324,
+            "endLine": 342,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_13:178",
+            "filePath": "adapters.py",
+            "identifier": "and",
+            "startLine": 178,
+            "endLine": 190,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q02",
+        "query": "Where is the core Session.send method defined and how does it delegate to adapters?",
+        "category": "entity_locating",
+        "hit_rank": 2,
+        "latency_ms": 20.92,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_65:791",
+            "filePath": "sessions.py",
+            "identifier": "close",
+            "startLine": 791,
+            "endLine": 805,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_29:348",
+            "filePath": "sessions.py",
+            "identifier": "Session",
+            "startLine": 348,
+            "endLine": 368,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_49:580",
+            "filePath": "adapters.py",
+            "identifier": "the",
+            "startLine": 580,
+            "endLine": 592,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q03",
+        "query": "Where is the HTTPAdapter connection pool manager initialized?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 18.03,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_18:247",
+            "filePath": "adapters.py",
+            "identifier": "chunk_18",
+            "startLine": 247,
+            "endLine": 257,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_17:234",
+            "filePath": "adapters.py",
+            "identifier": "init_poolmanager",
+            "startLine": 234,
+            "endLine": 249,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_42:499",
+            "filePath": "adapters.py",
+            "identifier": "chunk_42",
+            "startLine": 499,
+            "endLine": 510,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q04",
+        "query": "Where is CaseInsensitiveDict defined and how does it store case-insensitive keys?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 22.26,
+        "top_retrieved": [
+          {
+            "id": "structures.py:naive_1:20",
+            "filePath": "structures.py",
+            "identifier": "chunk_1",
+            "startLine": 20,
+            "endLine": 32,
+            "valid_syntax": false
+          },
+          {
+            "id": "structures.py:naive_0:1",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict",
+            "startLine": 1,
+            "endLine": 21,
+            "valid_syntax": false
+          },
+          {
+            "id": "structures.py:naive_4:58",
+            "filePath": "structures.py",
+            "identifier": "__len__",
+            "startLine": 58,
+            "endLine": 73,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q05",
+        "query": "Where is the basic auth header encoding string helper function?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 22.93,
+        "top_retrieved": [
+          {
+            "id": "models.py:naive_68:910",
+            "filePath": "models.py",
+            "identifier": "chunk_68",
+            "startLine": 910,
+            "endLine": 922,
+            "valid_syntax": false
+          },
+          {
+            "id": "_internal_utils.py:naive_2:27",
+            "filePath": "_internal_utils.py",
+            "identifier": "unicode_is_ascii",
+            "startLine": 27,
+            "endLine": 47,
+            "valid_syntax": false
+          },
+          {
+            "id": "_internal_utils.py:naive_1:15",
+            "filePath": "_internal_utils.py",
+            "identifier": "to_native_string",
+            "startLine": 15,
+            "endLine": 28,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q06",
+        "query": "Where is the JSON decoding method on the HTTP Response object implemented?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 24.85,
+        "top_retrieved": [
+          {
+            "id": "models.py:naive_68:910",
+            "filePath": "models.py",
+            "identifier": "chunk_68",
+            "startLine": 910,
+            "endLine": 922,
+            "valid_syntax": false
+          },
+          {
+            "id": "exceptions.py:naive_3:41",
+            "filePath": "exceptions.py",
+            "identifier": "__reduce__",
+            "startLine": 41,
+            "endLine": 52,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_8:127",
+            "filePath": "cookies.py",
+            "identifier": "chunk_8",
+            "startLine": 127,
+            "endLine": 136,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q07",
+        "query": "Where is the cookie extraction from response headers to a cookiejar defined?",
+        "category": "entity_locating",
+        "hit_rank": null,
+        "latency_ms": 23.12,
+        "top_retrieved": [
+          {
+            "id": "cookies.py:naive_7:110",
+            "filePath": "cookies.py",
+            "identifier": "info",
+            "startLine": 110,
+            "endLine": 127,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_38:521",
+            "filePath": "cookies.py",
+            "identifier": "chunk_38",
+            "startLine": 521,
+            "endLine": 534,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_32:449",
+            "filePath": "utils.py",
+            "identifier": "dict_from_cookiejar",
+            "startLine": 449,
+            "endLine": 464,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q08",
+        "query": "Where is the Session mount method for registering transport adapters?",
+        "category": "entity_locating",
+        "hit_rank": 1,
+        "latency_ms": 18.85,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_65:791",
+            "filePath": "sessions.py",
+            "identifier": "close",
+            "startLine": 791,
+            "endLine": 805,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_23:305",
+            "filePath": "adapters.py",
+            "identifier": "chunk_23",
+            "startLine": 305,
+            "endLine": 314,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_11:157",
+            "filePath": "adapters.py",
+            "identifier": "close",
+            "startLine": 157,
+            "endLine": 171,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q09",
+        "query": "Where is the system diagnostic and environment info function implemented?",
+        "category": "entity_locating",
+        "hit_rank": 3,
+        "latency_ms": 18.39,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_61:739",
+            "filePath": "sessions.py",
+            "identifier": "merge_environment_settings",
+            "startLine": 739,
+            "endLine": 757,
+            "valid_syntax": false
+          },
+          {
+            "id": "help.py:naive_1:28",
+            "filePath": "help.py",
+            "identifier": "_implementation",
+            "startLine": 28,
+            "endLine": 43,
+            "valid_syntax": false
+          },
+          {
+            "id": "help.py:naive_4:62",
+            "filePath": "help.py",
+            "identifier": "info",
+            "startLine": 62,
+            "endLine": 83,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q10",
+        "query": "Where is the streaming content generator iter_content defined on Response?",
+        "category": "entity_locating",
+        "hit_rank": 2,
+        "latency_ms": 20.73,
+        "top_retrieved": [
+          {
+            "id": "models.py:naive_67:897",
+            "filePath": "models.py",
+            "identifier": "text",
+            "startLine": 897,
+            "endLine": 911,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_66:880",
+            "filePath": "models.py",
+            "identifier": "content",
+            "startLine": 880,
+            "endLine": 899,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_59:797",
+            "filePath": "models.py",
+            "identifier": "iter_content",
+            "startLine": 797,
+            "endLine": 806,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q11",
+        "query": "How does Session.get_adapter select the appropriate transport adapter for a given URL?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 19.57,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_64:777",
+            "filePath": "sessions.py",
+            "identifier": "get_adapter",
+            "startLine": 777,
+            "endLine": 792,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_65:791",
+            "filePath": "sessions.py",
+            "identifier": "close",
+            "startLine": 791,
+            "endLine": 805,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_11:157",
+            "filePath": "adapters.py",
+            "identifier": "close",
+            "startLine": 157,
+            "endLine": 171,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q12",
+        "query": "How does the SessionRedirectMixin resolve HTTP 3xx redirects and generate the next request?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 17.36,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_14:187",
+            "filePath": "sessions.py",
+            "identifier": "chunk_14",
+            "startLine": 187,
+            "endLine": 200,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_7:109",
+            "filePath": "sessions.py",
+            "identifier": "chunk_7",
+            "startLine": 109,
+            "endLine": 117,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_57:773",
+            "filePath": "models.py",
+            "identifier": "is_permanent_redirect",
+            "startLine": 773,
+            "endLine": 786,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q13",
+        "query": "How does PreparedRequest assemble and validate the full target URL including query parameters?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 24.99,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_55:666",
+            "filePath": "sessions.py",
+            "identifier": "send",
+            "startLine": 666,
+            "endLine": 680,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_37:458",
+            "filePath": "sessions.py",
+            "identifier": "chunk_37",
+            "startLine": 458,
+            "endLine": 470,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_34:419",
+            "filePath": "adapters.py",
+            "identifier": "chunk_34",
+            "startLine": 419,
+            "endLine": 429,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q14",
+        "query": "How does HTTPAdapter.send execute the request using urllib3 and handle connection retries?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 19.29,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_42:499",
+            "filePath": "adapters.py",
+            "identifier": "chunk_42",
+            "startLine": 499,
+            "endLine": 510,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_37:444",
+            "filePath": "adapters.py",
+            "identifier": "get_connection_with_tls_context",
+            "startLine": 444,
+            "endLine": 454,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_31:391",
+            "filePath": "adapters.py",
+            "identifier": "build_connection_pool_key_attributes",
+            "startLine": 391,
+            "endLine": 403,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q15",
+        "query": "How are authentication credentials prepared and attached to a PreparedRequest?",
+        "category": "architectural_flow",
+        "hit_rank": 5,
+        "latency_ms": 21.65,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_23:283",
+            "filePath": "sessions.py",
+            "identifier": "chunk_23",
+            "startLine": 283,
+            "endLine": 294,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_25:370",
+            "filePath": "models.py",
+            "identifier": "__repr__",
+            "startLine": 370,
+            "endLine": 386,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_37:458",
+            "filePath": "sessions.py",
+            "identifier": "chunk_37",
+            "startLine": 458,
+            "endLine": 470,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q16",
+        "query": "How does HTTPAdapter construct a Requests Response object from an underlying urllib3 response?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 20.8,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_28:356",
+            "filePath": "adapters.py",
+            "identifier": "build_response",
+            "startLine": 356,
+            "endLine": 366,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_8:127",
+            "filePath": "cookies.py",
+            "identifier": "chunk_8",
+            "startLine": 127,
+            "endLine": 136,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_30:378",
+            "filePath": "adapters.py",
+            "identifier": "chunk_30",
+            "startLine": 378,
+            "endLine": 394,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q17",
+        "query": "How are cookies converted and formatted into request headers during request preparation?",
+        "category": "architectural_flow",
+        "hit_rank": 5,
+        "latency_ms": 20.74,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_37:458",
+            "filePath": "sessions.py",
+            "identifier": "chunk_37",
+            "startLine": 458,
+            "endLine": 470,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_19:239",
+            "filePath": "sessions.py",
+            "identifier": "chunk_19",
+            "startLine": 239,
+            "endLine": 248,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_18:229",
+            "filePath": "sessions.py",
+            "identifier": "chunk_18",
+            "startLine": 229,
+            "endLine": 240,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q18",
+        "query": "How does HTTPDigestAuth calculate and construct the Digest challenge response header?",
+        "category": "architectural_flow",
+        "hit_rank": null,
+        "latency_ms": 21.32,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_29:365",
+            "filePath": "adapters.py",
+            "identifier": "chunk_29",
+            "startLine": 365,
+            "endLine": 378,
+            "valid_syntax": false
+          },
+          {
+            "id": "api.py:naive_5:40",
+            "filePath": "api.py",
+            "identifier": "chunk_5",
+            "startLine": 40,
+            "endLine": 51,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_8:127",
+            "filePath": "cookies.py",
+            "identifier": "chunk_8",
+            "startLine": 127,
+            "endLine": 136,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q19",
+        "query": "How does HTTPBasicAuth implement the callable interface to attach authentication to requests?",
+        "category": "architectural_flow",
+        "hit_rank": 2,
+        "latency_ms": 20.15,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_23:283",
+            "filePath": "sessions.py",
+            "identifier": "chunk_23",
+            "startLine": 283,
+            "endLine": 294,
+            "valid_syntax": false
+          },
+          {
+            "id": "auth.py:naive_6:92",
+            "filePath": "auth.py",
+            "identifier": "__call__",
+            "startLine": 92,
+            "endLine": 108,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_33:413",
+            "filePath": "sessions.py",
+            "identifier": "chunk_33",
+            "startLine": 413,
+            "endLine": 423,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q20",
+        "query": "How does PreparedRequest.prepare orchestrate the preparation of method, url, headers, auth, and cookies?",
+        "category": "architectural_flow",
+        "hit_rank": 1,
+        "latency_ms": 18.05,
+        "top_retrieved": [
+          {
+            "id": "models.py:naive_20:296",
+            "filePath": "models.py",
+            "identifier": "PreparedRequest",
+            "startLine": 296,
+            "endLine": 313,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_25:370",
+            "filePath": "models.py",
+            "identifier": "__repr__",
+            "startLine": 370,
+            "endLine": 386,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_24:353",
+            "filePath": "models.py",
+            "identifier": "chunk_24",
+            "startLine": 353,
+            "endLine": 373,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q21",
+        "query": "How does super_len calculate the total byte length of files, streams, and iterators?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 20.4,
+        "top_retrieved": [
+          {
+            "id": "utils.py:naive_8:128",
+            "filePath": "utils.py",
+            "identifier": "super_len",
+            "startLine": 128,
+            "endLine": 151,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_12:180",
+            "filePath": "utils.py",
+            "identifier": "chunk_12",
+            "startLine": 180,
+            "endLine": 189,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_13:189",
+            "filePath": "utils.py",
+            "identifier": "chunk_13",
+            "startLine": 189,
+            "endLine": 204,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q22",
+        "query": "How does should_bypass_proxies check if a URL matches no_proxy environment patterns?",
+        "category": "utility_logic",
+        "hit_rank": 2,
+        "latency_ms": 19.29,
+        "top_retrieved": [
+          {
+            "id": "utils.py:naive_59:863",
+            "filePath": "utils.py",
+            "identifier": "chunk_59",
+            "startLine": 863,
+            "endLine": 878,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_55:799",
+            "filePath": "utils.py",
+            "identifier": "get_environ_proxies",
+            "startLine": 799,
+            "endLine": 819,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_62:756",
+            "filePath": "sessions.py",
+            "identifier": "chunk_62",
+            "startLine": 756,
+            "endLine": 766,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q23",
+        "query": "How does dispatch_hook invoke registered callback functions for request events?",
+        "category": "utility_logic",
+        "hit_rank": null,
+        "latency_ms": 28.8,
+        "top_retrieved": [
+          {
+            "id": "models.py:naive_14:213",
+            "filePath": "models.py",
+            "identifier": "deregister_hook",
+            "startLine": 213,
+            "endLine": 230,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_17:246",
+            "filePath": "models.py",
+            "identifier": "__init__",
+            "startLine": 246,
+            "endLine": 266,
+            "valid_syntax": false
+          },
+          {
+            "id": "api.py:naive_0:1",
+            "filePath": "api.py",
+            "identifier": "request",
+            "startLine": 1,
+            "endLine": 19,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q24",
+        "query": "How is an exception raised when an HTTP response contains a 4xx or 5xx status code?",
+        "category": "utility_logic",
+        "hit_rank": 3,
+        "latency_ms": 21.54,
+        "top_retrieved": [
+          {
+            "id": "adapters.py:naive_29:365",
+            "filePath": "adapters.py",
+            "identifier": "chunk_29",
+            "startLine": 365,
+            "endLine": 378,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_30:378",
+            "filePath": "adapters.py",
+            "identifier": "chunk_30",
+            "startLine": 378,
+            "endLine": 394,
+            "valid_syntax": false
+          },
+          {
+            "id": "models.py:naive_46:632",
+            "filePath": "models.py",
+            "identifier": "Response",
+            "startLine": 632,
+            "endLine": 651,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q25",
+        "query": "How are netrc credentials retrieved for a specific host from the user's home directory?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 22.16,
+        "top_retrieved": [
+          {
+            "id": "utils.py:naive_15:217",
+            "filePath": "utils.py",
+            "identifier": "chunk_15",
+            "startLine": 217,
+            "endLine": 238,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_3:50",
+            "filePath": "cookies.py",
+            "identifier": "chunk_3",
+            "startLine": 50,
+            "endLine": 62,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_14:201",
+            "filePath": "utils.py",
+            "identifier": "get_netrc_auth",
+            "startLine": 201,
+            "endLine": 221,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q26",
+        "query": "How does requote_uri normalize and percent-encode an unquoted URI?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 20.6,
+        "top_retrieved": [
+          {
+            "id": "utils.py:naive_44:641",
+            "filePath": "utils.py",
+            "identifier": "requote_uri",
+            "startLine": 641,
+            "endLine": 660,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_45:659",
+            "filePath": "utils.py",
+            "identifier": "chunk_45",
+            "startLine": 659,
+            "endLine": 668,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_16:207",
+            "filePath": "sessions.py",
+            "identifier": "chunk_16",
+            "startLine": 207,
+            "endLine": 219,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q27",
+        "query": "How is a dictionary of key-value cookie pairs converted into a RequestsCookieJar?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 12.83,
+        "top_retrieved": [
+          {
+            "id": "cookies.py:naive_38:521",
+            "filePath": "cookies.py",
+            "identifier": "chunk_38",
+            "startLine": 521,
+            "endLine": 534,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_33:461",
+            "filePath": "utils.py",
+            "identifier": "add_dict_to_cookiejar",
+            "startLine": 461,
+            "endLine": 480,
+            "valid_syntax": false
+          },
+          {
+            "id": "cookies.py:naive_39:531",
+            "filePath": "cookies.py",
+            "identifier": "merge_cookies",
+            "startLine": 531,
+            "endLine": 546,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q28",
+        "query": "How does unquote_header_value strip surrounding quotes from header parameters?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 18.44,
+        "top_retrieved": [
+          {
+            "id": "utils.py:naive_30:427",
+            "filePath": "utils.py",
+            "identifier": "unquote_header_value",
+            "startLine": 427,
+            "endLine": 442,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_69:1019",
+            "filePath": "utils.py",
+            "identifier": "check_header_validity",
+            "startLine": 1019,
+            "endLine": 1037,
+            "valid_syntax": false
+          },
+          {
+            "id": "_internal_utils.py:naive_1:15",
+            "filePath": "_internal_utils.py",
+            "identifier": "to_native_string",
+            "startLine": 15,
+            "endLine": 28,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q29",
+        "query": "How does CaseInsensitiveDict provide lower-cased item iteration for header lookups?",
+        "category": "utility_logic",
+        "hit_rank": 2,
+        "latency_ms": 20.53,
+        "top_retrieved": [
+          {
+            "id": "structures.py:naive_1:20",
+            "filePath": "structures.py",
+            "identifier": "chunk_1",
+            "startLine": 20,
+            "endLine": 32,
+            "valid_syntax": false
+          },
+          {
+            "id": "structures.py:naive_0:1",
+            "filePath": "structures.py",
+            "identifier": "CaseInsensitiveDict",
+            "startLine": 1,
+            "endLine": 21,
+            "valid_syntax": false
+          },
+          {
+            "id": "utils.py:naive_27:381",
+            "filePath": "utils.py",
+            "identifier": "parse_dict_header",
+            "startLine": 381,
+            "endLine": 398,
+            "valid_syntax": false
+          }
+        ]
+      },
+      {
+        "query_id": "Q30",
+        "query": "How does Session.close release connection pools and cleanup adapters?",
+        "category": "utility_logic",
+        "hit_rank": 1,
+        "latency_ms": 19.89,
+        "top_retrieved": [
+          {
+            "id": "sessions.py:naive_65:791",
+            "filePath": "sessions.py",
+            "identifier": "close",
+            "startLine": 791,
+            "endLine": 805,
+            "valid_syntax": false
+          },
+          {
+            "id": "adapters.py:naive_42:499",
+            "filePath": "adapters.py",
+            "identifier": "chunk_42",
+            "startLine": 499,
+            "endLine": 510,
+            "valid_syntax": false
+          },
+          {
+            "id": "sessions.py:naive_29:348",
+            "filePath": "sessions.py",
+            "identifier": "Session",
+            "startLine": 348,
+            "endLine": 368,
+            "valid_syntax": false
+          }
+        ]
+      }
+    ]
+  }
+}

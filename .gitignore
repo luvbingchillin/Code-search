@@ -1,6 +1,7 @@
 # AI Agents & Brain Directories
 .agents/
 .gemini/
+.playwright-mcp/
 
 # Node / Vite Frontend
 node_modules/

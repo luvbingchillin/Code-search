@@ -33,6 +33,16 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
     window.addEventListener('mouseup', handleMouseUp);
   }, []);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setLeftWidthPercent((prev) => Math.max(25, prev - 5));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setLeftWidthPercent((prev) => Math.min(75, prev + 5));
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -48,13 +58,21 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({ leftPane, righ
         {leftPane}
       </div>
 
-      {/* Resizable Gutter / Divider */}
+      {/* Resizable Gutter / Divider with Keyboard & ARIA support */}
       <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-valuenow={Math.round(leftWidthPercent)}
+        aria-valuemin={25}
+        aria-valuemax={75}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
         onMouseDown={handleMouseDown}
-        className="w-1.5 bg-gray-800 hover:bg-purple-600 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0"
+        className="w-1.5 bg-gray-800 hover:bg-indigo-600 focus:bg-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0"
         title="Drag to resize panes"
+        aria-label="Drag to resize panes or use left and right arrow keys"
       >
-        <div className="w-0.5 h-8 bg-gray-600 group-hover:bg-purple-300 rounded-full transition-colors" />
+        <div className="w-0.5 h-8 bg-gray-600 group-hover:bg-indigo-300 rounded-full transition-colors" />
       </div>
 
       {/* Right Code Viewer Pane */}
