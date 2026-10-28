@@ -15,7 +15,7 @@ export const TrackingEye: React.FC<TrackingEyeProps> = ({
 }) => {
   const clipId = useId().replace(/:/g, '');
   const containerRef = useRef<HTMLDivElement>(null);
-  const pupilRef = useRef<SVGCircleElement>(null);
+  const pupilGroupRef = useRef<SVGGElement>(null);
   const lidRef = useRef<SVGGElement>(null);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -61,8 +61,8 @@ export const TrackingEye: React.FC<TrackingEyeProps> = ({
       currentX += (targetX - currentX) * 0.18;
       currentY += (targetY - currentY) * 0.18;
 
-      if (pupilRef.current) {
-        pupilRef.current.style.transform = `translate(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px)`;
+      if (pupilGroupRef.current) {
+        pupilGroupRef.current.style.transform = `translate(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px)`;
       }
 
       rafId = requestAnimationFrame(updatePupil);
@@ -190,41 +190,42 @@ export const TrackingEye: React.FC<TrackingEyeProps> = ({
             {/* Sclera (Almond White/Cream) */}
             <path d={ALMOND} fill="#f8e7bf" stroke="#dad0a7" strokeWidth="0.6" />
 
-            {/* Masked Pupil */}
+            {/* Masked Pupil Group — Contains Pupil, Neon Iris, and Specular Highlight in Unified Translation */}
             <g clipPath={`url(#eyeclip-${clipId})`}>
-              {/* Pupil Circle */}
-              <circle
-                ref={pupilRef}
-                cx={CX}
-                cy={CY}
-                r={PR}
-                fill="#0a1f10"
-                className="transition-none"
-              />
-              {/* Electric Iris Ring */}
-              <circle
-                cx={CX}
-                cy={CY}
-                r={PR * 0.75}
-                fill="none"
-                stroke="#68f12b"
-                strokeWidth="1.2"
-                opacity="0.75"
-                style={{
-                  transform: pupilRef.current?.style.transform
-                }}
-              />
-              {/* Specular Glint */}
-              <circle
-                cx={CX - 3}
-                cy={CY - 3}
-                r={2.5}
-                fill="#ffffff"
-                opacity="0.9"
-                style={{
-                  transform: pupilRef.current?.style.transform
-                }}
-              />
+              <g ref={pupilGroupRef} className="transition-none">
+                {/* Base Pupil Circle */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={PR}
+                  fill="#0a1f10"
+                />
+                {/* Electric Neon Iris Ring — Locked to Pupil */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={PR * 0.72}
+                  fill="none"
+                  stroke="#68f12b"
+                  strokeWidth="1.4"
+                  opacity="0.9"
+                />
+                {/* Inner Iris Specular Rim */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={PR * 0.45}
+                  fill="#0a1f10"
+                />
+                {/* Specular Glint Highlight — Locked to Pupil */}
+                <circle
+                  cx={CX - 3.5}
+                  cy={CY - 3.5}
+                  r={2.2}
+                  fill="#ffffff"
+                  opacity="0.95"
+                />
+              </g>
             </g>
           </g>
         </svg>

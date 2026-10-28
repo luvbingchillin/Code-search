@@ -13,6 +13,7 @@
 
   html {
     color-scheme: light dark;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -35,6 +36,38 @@
     font-family: var(--font-mono);
     font-feature-settings: 'zero', 'calt';
   }
+}
+
+/* Chande Scroll-Velocity Skew (from chande-tilt.js) */
+:root {
+  --scroll-skew: 0deg;
+}
+
+.chande-tilt {
+  transform: skewY(var(--scroll-skew));
+  transform-origin: left center;
+  transition: transform 0.12s ease-out;
+  will-change: transform;
+}
+
+/* Tactile Card Magnetic Elevation & Glow */
+.chande-card-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.chande-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(10, 31, 16, 0.25);
+  border-color: rgba(104, 241, 43, 0.55);
+}
+
+/* Button & Tab Down-press Physics */
+button, .acid-btn, a[role="button"] {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:active, .acid-btn:active {
+  transform: translateY(2px) scale(0.98) !important;
 }
 
 /* Chande Neo-Analog Tactile Cards */
@@ -76,8 +109,8 @@
 
 .acid-btn:hover {
   background-color: #7aff3d;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(104, 241, 43, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(104, 241, 43, 0.4);
 }
 
 /* Animated Flowing Circuit Lines */
@@ -111,6 +144,9 @@
 @media (prefers-reduced-motion: reduce) {
   .flowing-wire {
     animation: none !important;
+  }
+  .chande-tilt {
+    transform: none !important;
   }
   animateMotion {
     display: none !important;

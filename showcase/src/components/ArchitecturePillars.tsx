@@ -54,7 +54,7 @@ export const ArchitecturePillars: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
             <span>[ SPECIMEN ANALYSIS // CORE PILLARS ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4 chande-tilt">
             Four Core Advantages
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
@@ -68,7 +68,7 @@ export const ArchitecturePillars: React.FC = () => {
             <div
               key={pillar.number}
               data-testid={`pillar-card-${pillar.number}`}
-              className="rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 p-8 sm:p-9 flex flex-col justify-between text-[#f4f3eb] shadow-xl hover:border-[#68f12b]/50 transition-all duration-300 relative group overflow-hidden"
+              className="rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 p-8 sm:p-9 flex flex-col justify-between text-[#f4f3eb] shadow-xl chande-card-hover relative group overflow-hidden"
             >
               {/* Subtle radial dot texture overlay */}
               <div

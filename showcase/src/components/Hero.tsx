@@ -25,7 +25,7 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* High-Impact Headline in Phudu */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#0a1f10] font-display uppercase leading-[1.05] mb-6">
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#0a1f10] font-display uppercase leading-[1.05] mb-6 chande-tilt">
           Stop Gambling on <br className="hidden sm:inline" />
           <span className="text-[#143520] underline decoration-[#68f12b] decoration-4 underline-offset-8">Fragmented Codebases</span>
         </h1>
@@ -86,7 +86,7 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* Real Product Preview: Split-Pane Developer Workspace */}
-        <div className="mt-14 text-left max-w-4xl mx-auto rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 overflow-hidden shadow-2xl">
+        <div className="mt-14 text-left max-w-4xl mx-auto rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 overflow-hidden shadow-2xl chande-card-hover">
           {/* Chrome / Window Titlebar */}
           <div className="bg-[#06150b] px-4 py-3 border-b border-[#dad0a7]/20 flex items-center justify-between font-mono text-xs text-[#f4f3eb]">
             <div className="flex items-center space-x-2">

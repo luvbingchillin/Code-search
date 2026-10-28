@@ -51,7 +51,7 @@ python run_retrieval_benchmark.py`
             <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
             <span>[ LOCAL RUNTIME // TERMINAL INSTRUCTIONS ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3 chande-tilt">
             Ready to Run on Your Machine
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">

@@ -8,10 +8,16 @@ export const Navbar: React.FC = () => {
   const [activeSection, setActiveSection] = useState('hero');
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40);
+
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalScroll > 0) {
+        setScrollProgress((window.scrollY / totalScroll) * 100);
+      }
 
       const sections = ['architecture', 'comparison', 'pipeline', 'quickstart'];
       const scrollPos = window.scrollY + 200;
@@ -40,12 +46,19 @@ export const Navbar: React.FC = () => {
   return (
     <div className="sticky top-0 z-50 pt-3 sm:pt-4 px-4 pointer-events-none">
       <header
-        className={`max-w-5xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 border ${
+        className={`max-w-5xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 border relative overflow-hidden ${
           scrolled
             ? 'bg-[#0a1f10]/95 backdrop-blur-md border-[#dad0a7]/30 shadow-[0_12px_36px_rgba(10,31,16,0.25)]'
             : 'bg-[#0a1f10]/90 backdrop-blur-sm border-[#dad0a7]/20 shadow-md'
         }`}
       >
+        {/* Hairline Reading Progress Indicator */}
+        <div className="absolute top-0 left-6 right-6 h-[2px] overflow-hidden rounded-t-full pointer-events-none">
+          <div
+            className="h-full bg-[#68f12b] transition-all duration-100 shadow-[0_0_8px_#68f12b]"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
         {/* Brand Emblem & Context */}
         <a href="#" className="flex items-center space-x-3 group">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#143520] border border-[#68f12b]/40 shadow-inner group-hover:border-[#68f12b] transition-colors">

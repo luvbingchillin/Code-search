@@ -184,7 +184,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
             <span>[ SYNTACTIC FIDELITY // HEAD-TO-HEAD AUDIT ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4 chande-tilt">
             Why Fragmented Code Ruins AI Explanations
           </h2>
           <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
@@ -218,7 +218,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           {/* Left: Naive Slicing (Defect Report / Reject Ticket) */}
           <div
             data-testid="naive-chunk-panel"
-            className="rounded-3xl bg-[#14080a] border-2 border-red-500/30 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-xl relative overflow-hidden"
+            className="rounded-3xl bg-[#14080a] border-2 border-red-500/30 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-xl relative overflow-hidden chande-card-hover"
           >
             <div>
               {/* Header row */}
@@ -274,7 +274,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           {/* Right: Tree-Sitter AST (Certified Engineering Specimen) */}
           <div
             data-testid="ast-chunk-panel"
-            className="rounded-3xl bg-[#0a1f10] border-2 border-[#68f12b]/50 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-2xl relative overflow-hidden"
+            className="rounded-3xl bg-[#0a1f10] border-2 border-[#68f12b]/50 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-2xl relative overflow-hidden chande-card-hover"
           >
             <div>
               {/* Header row */}
