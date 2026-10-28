@@ -103,37 +103,38 @@ export const ArchitectureFlow: React.FC = () => {
   const activeNode = nodes[activeNodeIndex];
 
   return (
-    <section id="pipeline" className="py-24 md:py-32 border-b border-amber-900/20">
-      <div className="max-w-5xl mx-auto px-6 sm:px-8">
+    <section id="pipeline" className="py-24 md:py-32 border-b border-[#dad0a7]/30">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8">
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
           <div className="max-w-2xl">
-            <div className="text-xs font-mono font-medium text-amber-400 uppercase tracking-widest mb-2">
-              Interactive Execution Graph
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0a1f10]/5 border border-[#0a1f10]/15 text-xs font-mono font-bold text-[#0a1f10] uppercase tracking-wider mb-3">
+              <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
+              <span>[ RUNTIME BLUEPRINT // DIRECTED PIPELINE ]</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#f4f7f4] tracking-tight mb-2">
+            <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-3">
               How The Machine Operates
             </h2>
-            <p className="text-base text-[#9cb3a8] leading-relaxed">
+            <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
               Watch information travel across the connected pipeline—from your question to verified code on your screen.
             </p>
           </div>
 
           {/* Animation Controls */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#082a1b] hover:bg-[#0c3824] border border-amber-600/30 text-amber-200 text-xs font-mono transition-colors shadow-sm"
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#0a1f10] hover:bg-[#143520] border border-[#dad0a7]/30 text-[#f4f3eb] text-xs font-mono font-bold transition-all shadow-md"
               title={isPlaying ? 'Pause graph animation' : 'Play graph animation'}
             >
               {isPlaying ? (
                 <>
-                  <Pause className="w-3.5 h-3.5 text-amber-300" />
+                  <Pause className="w-3.5 h-3.5 text-[#68f12b]" />
                   <span>Pause Graph</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                  <Play className="w-3.5 h-3.5 text-[#68f12b] fill-[#68f12b]" />
                   <span>Animate Graph</span>
                 </>
               )}
@@ -143,18 +144,27 @@ export const ArchitectureFlow: React.FC = () => {
                 setActiveNodeIndex(0);
                 setIsPlaying(true);
               }}
-              className="p-1.5 rounded-full bg-[#03130b] text-[#9cb3a8] hover:text-[#f4f7f4] border border-amber-900/30 transition-colors"
+              className="p-2 rounded-xl bg-[#0a1f10] text-[#dad0a7] hover:text-[#68f12b] border border-[#dad0a7]/30 transition-colors shadow-md"
               title="Restart from Step 1"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Interactive Directed Node Graph Canvas */}
-        <div className="rounded-xl brass-border p-4 sm:p-6 mb-8 overflow-hidden bg-[#03110a] relative select-none">
+        {/* Industrial Blueprint Canvas */}
+        <div className="rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 p-5 sm:p-7 mb-8 overflow-hidden shadow-2xl relative select-none">
+          {/* Subtle blueprint grid overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-25"
+            style={{
+              backgroundImage: 'radial-gradient(rgba(104, 241, 43, 0.2) 1px, transparent 1px)',
+              backgroundSize: '24px 24px'
+            }}
+          />
+
           {/* Desktop Canvas */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto relative z-10">
             <div className="min-w-[1040px] h-[260px] relative">
               {/* SVG Canvas with Paths, Arrows, and Moving Glowing Particles */}
               <svg className="w-full h-full absolute inset-0 pointer-events-none" viewBox="0 0 1060 260">
@@ -170,7 +180,7 @@ export const ArchitectureFlow: React.FC = () => {
 
                   {/* Directional Arrowheads */}
                   <marker
-                    id="arrow-amber"
+                    id="arrow-lime"
                     viewBox="0 0 10 10"
                     refX="7"
                     refY="5"
@@ -178,10 +188,10 @@ export const ArchitectureFlow: React.FC = () => {
                     markerHeight="5"
                     orient="auto-start-reverse"
                   >
-                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#d97706" />
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#68f12b" />
                   </marker>
                   <marker
-                    id="arrow-green"
+                    id="arrow-muted"
                     viewBox="0 0 10 10"
                     refX="7"
                     refY="5"
@@ -189,7 +199,7 @@ export const ArchitectureFlow: React.FC = () => {
                     markerHeight="5"
                     orient="auto-start-reverse"
                   >
-                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#dad0a7" opacity="0.6" />
                   </marker>
                 </defs>
 
@@ -197,107 +207,109 @@ export const ArchitectureFlow: React.FC = () => {
                 <path
                   id="path-1-2"
                   d="M 130 130 L 177 130"
-                  stroke="#d97706"
+                  stroke="#68f12b"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  className="flowing-wire opacity-80"
+                  markerEnd="url(#arrow-lime)"
                 />
 
                 {/* 2 -> 3: Branch up to LanceDB Vectors */}
                 <path
                   id="path-2-3"
                   d="M 292 130 C 330 130, 330 65, 362 65"
-                  stroke="#d97706"
+                  stroke="#dad0a7"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  strokeOpacity="0.4"
+                  className="flowing-wire"
+                  markerEnd="url(#arrow-muted)"
                 />
 
                 {/* 2 -> 4: Branch down to Tree-sitter AST */}
                 <path
                   id="path-2-4"
                   d="M 292 130 C 330 130, 330 195, 362 195"
-                  stroke="#d97706"
+                  stroke="#68f12b"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  className="flowing-wire opacity-80"
+                  markerEnd="url(#arrow-lime)"
                 />
 
                 {/* 3 <-> 4: Synchronization bridge between vectors & AST grammar */}
                 <path
                   id="path-3-4"
                   d="M 425 99 L 425 161"
-                  stroke="#10b981"
+                  stroke="#68f12b"
                   strokeWidth="1.5"
                   strokeDasharray="4 4"
-                  className="flowing-wire opacity-50"
+                  className="flowing-wire opacity-60"
                 />
 
                 {/* 3 -> 5: Converge from LanceDB into Symbol Graph */}
                 <path
                   id="path-3-5"
                   d="M 487 65 C 520 65, 520 130, 552 130"
-                  stroke="#d97706"
+                  stroke="#dad0a7"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  strokeOpacity="0.4"
+                  className="flowing-wire"
+                  markerEnd="url(#arrow-muted)"
                 />
 
                 {/* 4 -> 5: Converge from Tree-sitter into Symbol Graph */}
                 <path
                   id="path-4-5"
                   d="M 487 195 C 520 195, 520 130, 552 130"
-                  stroke="#d97706"
+                  stroke="#68f12b"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  className="flowing-wire opacity-80"
+                  markerEnd="url(#arrow-lime)"
                 />
 
                 {/* 5 -> 6: Symbol Graph to WebGPU AI */}
                 <path
                   id="path-5-6"
                   d="M 677 130 L 742 130"
-                  stroke="#d97706"
+                  stroke="#68f12b"
                   strokeWidth="2"
-                  className="flowing-wire opacity-60"
-                  markerEnd="url(#arrow-amber)"
+                  className="flowing-wire opacity-80"
+                  markerEnd="url(#arrow-lime)"
                 />
 
                 {/* 6 -> 7: WebGPU AI into Split-Pane Workspace */}
                 <path
                   id="path-6-7"
                   d="M 857 130 L 912 130"
-                  stroke="#10b981"
+                  stroke="#68f12b"
                   strokeWidth="2"
-                  className="flowing-wire opacity-80"
-                  markerEnd="url(#arrow-green)"
+                  className="flowing-wire opacity-90"
+                  markerEnd="url(#arrow-lime)"
                 />
 
                 {/* Moving Glowing Data Packets along Every Pathway */}
                 {isPlaying && (
                   <>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 130 130 L 177 130" dur="1.2s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#dad0a7" filter="url(#packet-glow)">
                       <animateMotion path="M 292 130 C 330 130, 330 65, 362 65" dur="1.6s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 292 130 C 330 130, 330 195, 362 195" dur="1.6s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="3" fill="#34d399" filter="url(#packet-glow)">
+                    <circle r="3" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 425 99 L 425 161" dur="2s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#dad0a7" filter="url(#packet-glow)">
                       <animateMotion path="M 487 65 C 520 65, 520 130, 552 130" dur="1.6s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 487 195 C 520 195, 520 130, 552 130" dur="1.6s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#fef08a" filter="url(#packet-glow)">
+                    <circle r="4" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 677 130 L 742 130" dur="1.2s" repeatCount="indefinite" />
                     </circle>
-                    <circle r="4" fill="#6ee7b7" filter="url(#packet-glow)">
+                    <circle r="4" fill="#68f12b" filter="url(#packet-glow)">
                       <animateMotion path="M 857 130 L 912 130" dur="1.2s" repeatCount="indefinite" />
                     </circle>
                   </>
@@ -318,32 +330,32 @@ export const ArchitectureFlow: React.FC = () => {
                     }}
                     data-testid={`pipeline-step-btn-${idx}`}
                     style={{ left: `${node.x - 55}px`, top: `${node.y - 34}px` }}
-                    className={`absolute w-[110px] p-2.5 rounded-xl text-center transition-all duration-300 border ${
+                    className={`absolute w-[110px] p-2.5 rounded-2xl text-center transition-all duration-300 border ${
                       isActive
-                        ? 'bg-[#092b1c] border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.25)] scale-105 z-20'
+                        ? 'bg-[#143520] border-[#68f12b] ring-2 ring-[#68f12b]/40 shadow-[0_0_24px_rgba(104,241,43,0.35)] scale-105 z-20'
                         : isPast
-                        ? 'bg-[#051a11] border-emerald-700/60 text-[#d1dfd6] z-10'
-                        : 'bg-[#04140d] border-amber-900/30 text-[#9cb3a8]/70 hover:border-amber-700/60 z-10'
+                        ? 'bg-[#0a1f10] border-[#dad0a7]/40 text-[#f4f3eb] z-10'
+                        : 'bg-[#06150b] border-[#dad0a7]/20 text-[#dad0a7]/70 hover:border-[#68f12b]/40 z-10'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-[11px] font-mono font-bold ${isActive ? 'text-amber-300' : 'text-amber-400/60'}`}>
+                      <span className={`text-[11px] font-mono font-bold ${isActive ? 'text-[#68f12b]' : 'text-[#dad0a7]'}`}>
                         {node.stepNum}
                       </span>
                       <span
                         className={`w-2 h-2 rounded-full ${
                           isActive
-                            ? 'bg-amber-400 animate-pulse'
+                            ? 'bg-[#68f12b] animate-pulse shadow-[0_0_8px_#68f12b]'
                             : isPast
-                            ? 'bg-emerald-400'
+                            ? 'bg-[#68f12b]/60'
                             : 'bg-zinc-700'
                         }`}
                       />
                     </div>
-                    <div className="text-xs font-bold text-[#f4f7f4] truncate">
+                    <div className="text-xs font-bold text-[#f4f3eb] truncate">
                       {node.name}
                     </div>
-                    <div className="text-[10px] font-mono text-amber-300/80 truncate mt-0.5">
+                    <div className="text-[10px] font-mono text-[#dad0a7] truncate mt-0.5">
                       {node.role}
                     </div>
                   </button>
@@ -352,9 +364,9 @@ export const ArchitectureFlow: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Responsive Stepper (Zero Horizontal Scroll Trapping) */}
-          <div className="block md:hidden space-y-2">
-            <div className="text-xs font-mono text-amber-400/80 pb-2 border-b border-amber-900/20">
+          {/* Mobile Responsive Stepper */}
+          <div className="block md:hidden space-y-2 relative z-10">
+            <div className="text-xs font-mono font-bold text-[#68f12b] uppercase tracking-wider pb-2 border-b border-[#dad0a7]/20">
               Interactive Execution Steps:
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -367,22 +379,22 @@ export const ArchitectureFlow: React.FC = () => {
                       setActiveNodeIndex(idx);
                       setIsPlaying(false);
                     }}
-                    className={`p-2.5 rounded-lg text-left transition-all border ${
+                    className={`p-2.5 rounded-xl text-left transition-all border ${
                       isActive
-                        ? 'bg-[#092b1c] border-amber-400 shadow-md ring-1 ring-amber-400/30'
-                        : 'bg-[#04140d] border-amber-900/30 text-[#9cb3a8]'
+                        ? 'bg-[#143520] border-[#68f12b] shadow-md ring-1 ring-[#68f12b]/40'
+                        : 'bg-[#06150b] border-[#dad0a7]/20 text-[#dad0a7]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-mono font-bold text-amber-300">
+                      <span className="text-[11px] font-mono font-bold text-[#68f12b]">
                         {node.stepNum}
                       </span>
-                      <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-amber-400' : 'bg-zinc-700'}`} />
+                      <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#68f12b]' : 'bg-zinc-700'}`} />
                     </div>
-                    <div className="text-xs font-bold text-[#f4f7f4] truncate">
+                    <div className="text-xs font-bold text-[#f4f3eb] truncate">
                       {node.name}
                     </div>
-                    <div className="text-[10px] font-mono text-[#9cb3a8] truncate">
+                    <div className="text-[10px] font-mono text-[#dad0a7] truncate">
                       {node.role}
                     </div>
                   </button>
@@ -393,34 +405,34 @@ export const ArchitectureFlow: React.FC = () => {
         </div>
 
         {/* Live Packet Telemetry & Inspection Card */}
-        <div className="rounded-xl brass-border p-6 sm:p-7">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-amber-900/20">
+        <div className="rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 p-7 sm:p-8 text-[#f4f3eb] shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-dashed border-[#dad0a7]/20">
             <div>
-              <div className="text-xs font-mono text-amber-400 mb-1">
-                Node {activeNode.stepNum} — {activeNode.role}
+              <div className="text-xs font-mono font-bold text-[#68f12b] uppercase tracking-wider mb-1">
+                NODE {activeNode.stepNum} // {activeNode.role}
               </div>
-              <h3 className="text-xl font-bold text-[#f4f7f4]">
+              <h3 className="text-2xl font-black font-display uppercase tracking-tight text-[#f4f3eb]">
                 {activeNode.name}
               </h3>
             </div>
 
-            <div className="px-3 py-1 rounded-md bg-[#03130b] border border-amber-600/30 font-mono text-xs text-amber-200">
-              <span className="text-amber-400/60 mr-1.5 select-none">PACKET DATA:</span>
+            <div className="px-3.5 py-1.5 rounded-xl bg-[#06150b] border border-[#68f12b]/40 font-mono text-xs text-[#68f12b] shadow-inner">
+              <span className="text-[#dad0a7] mr-1.5 select-none">PACKET:</span>
               <span>{activeNode.liveData}</span>
             </div>
           </div>
 
-          <p className="text-sm text-[#9cb3a8] leading-relaxed mb-4">
+          <p className="text-sm sm:text-base text-[#dad0a7] font-sans leading-relaxed mb-6">
             {activeNode.summary}
           </p>
 
-          <div className="flex items-center space-x-2 text-xs font-mono pt-2 border-t border-amber-900/15">
+          <div className="flex items-center space-x-3 text-xs font-mono pt-3 border-t border-[#dad0a7]/15">
             <button
               onClick={() => {
                 setActiveNodeIndex((prev) => (prev > 0 ? prev - 1 : nodes.length - 1));
                 setIsPlaying(false);
               }}
-              className="px-3 py-1.5 rounded bg-[#03130b] text-[#9cb3a8] hover:text-[#f4f7f4] border border-amber-900/30 transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#06150b] text-[#dad0a7] hover:text-[#f4f3eb] border border-[#dad0a7]/30 hover:border-[#68f12b]/40 transition-colors font-bold"
             >
               ← Previous Node
             </button>
@@ -429,7 +441,7 @@ export const ArchitectureFlow: React.FC = () => {
                 setActiveNodeIndex((prev) => (prev < nodes.length - 1 ? prev + 1 : 0));
                 setIsPlaying(false);
               }}
-              className="px-3 py-1.5 rounded bg-amber-400 text-[#04140d] font-bold hover:bg-amber-300 transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#68f12b] text-[#0a1f10] font-bold hover:bg-[#7aff3d] transition-colors shadow-[0_0_12px_rgba(104,241,43,0.3)]"
             >
               Next Node →
             </button>

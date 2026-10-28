@@ -176,83 +176,88 @@ export const ChunkComparisonVisualizer: React.FC = () => {
   const current = examples[activeExampleIndex];
 
   return (
-    <section id="comparison" className="py-24 md:py-32 border-b border-amber-900/20">
-      <div className="max-w-5xl mx-auto px-6 sm:px-8">
+    <section id="comparison" className="py-24 md:py-32 border-b border-[#dad0a7]/30">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8">
         {/* Section Header */}
-        <div className="max-w-2xl mb-12">
-          <div className="text-xs font-mono font-medium text-amber-400 uppercase tracking-widest mb-2">
-            Code & AI Explanation Comparison
+        <div className="max-w-3xl mb-12">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0a1f10]/5 border border-[#0a1f10]/15 text-xs font-mono font-bold text-[#0a1f10] uppercase tracking-wider mb-3">
+            <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
+            <span>[ SYNTACTIC FIDELITY // HEAD-TO-HEAD AUDIT ]</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#f4f7f4] tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
             Why Fragmented Code Ruins AI Explanations
           </h2>
-          <p className="text-base text-[#9cb3a8] leading-relaxed">
+          <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
             When code is sliced by arbitrary character limits, the AI is forced to hallucinate missing logic. When the entire syntax tree is preserved, the AI explains your architecture with 100% precision.
           </p>
         </div>
 
         {/* Example Switcher Tabs */}
-        <div className="flex items-center space-x-2 mb-8">
-          <span className="text-xs font-mono text-[#9cb3a8] mr-2">Sample File:</span>
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0a1f10]/60 mr-2">
+            Target Codebase:
+          </span>
           {examples.map((ex, idx) => (
             <button
               key={idx}
               onClick={() => setActiveExampleIndex(idx)}
               data-testid={`example-btn-${idx}`}
-              className={`px-3 py-1.5 rounded-md text-xs font-mono transition-colors ${
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all shadow-sm ${
                 activeExampleIndex === idx
-                  ? 'bg-amber-400 text-[#04140d] font-bold'
-                  : 'bg-[#062015] text-[#9cb3a8] hover:text-[#f4f7f4] border border-amber-900/30'
+                  ? 'bg-[#0a1f10] text-[#68f12b] border border-[#68f12b]/40 ring-1 ring-[#68f12b]/30'
+                  : 'bg-white text-[#0a1f10] hover:bg-[#f4f3eb] border border-[#0a1f10]/15'
               }`}
             >
-              {ex.title}
+              {ex.title} <span className="opacity-60 text-[10px]">({ex.sourceFile})</span>
             </button>
           ))}
         </div>
 
-        {/* Comparison Panels: Clean, balanced, side-by-side */}
+        {/* Comparison Panels: Industrial Side-by-Side Specimens */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
-          {/* Left: Naive Slicing */}
+          {/* Left: Naive Slicing (Defect Report / Reject Ticket) */}
           <div
             data-testid="naive-chunk-panel"
-            className="rounded-xl red-border p-6 sm:p-7 flex flex-col justify-between"
+            className="rounded-3xl bg-[#14080a] border-2 border-red-500/30 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-xl relative overflow-hidden"
           >
             <div>
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-red-950/60">
+              {/* Header row */}
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-dashed border-red-500/25">
                 <div>
-                  <div className="text-sm font-bold text-red-300">
+                  <div className="text-base sm:text-lg font-black font-display uppercase tracking-tight text-red-400">
                     The Naive Chunker's Gamble
                   </div>
-                  <div className="text-xs text-red-200/70 font-sans mt-0.5">
-                    Cut off midway • Missing context
+                  <div className="text-xs text-red-200/70 font-mono mt-0.5">
+                    Character Boundary Split • Syntax Broken
                   </div>
                 </div>
-                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-900/40">
+                <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-red-950/80 text-red-400 border border-red-800/60 uppercase tracking-wider shadow-inner">
                   {current.naiveChunk.sbirScore}
                 </span>
               </div>
 
               {/* Code Box */}
-              <div className="rounded-lg bg-[#080203] border border-red-950 p-4 font-mono text-xs overflow-y-auto leading-relaxed h-[240px] mb-4">
+              <div className="rounded-2xl bg-[#090204] border border-red-950 p-4 font-mono text-xs overflow-y-auto leading-relaxed h-[230px] mb-5 text-red-100/90 shadow-inner">
                 <pre>
                   <HighlightedPython code={current.naiveChunk.code} />
                 </pre>
               </div>
 
               {/* Bullet Flaws */}
-              <div className="space-y-1.5 text-xs text-red-200/80 pt-2 mb-3">
+              <div className="space-y-2 text-xs text-red-200/90 pt-1 mb-5">
                 {current.naiveChunk.flaws.map((flaw, idx) => (
-                  <div key={idx} className="flex items-start space-x-2">
-                    <span className="text-red-500 font-bold select-none">•</span>
-                    <span>{flaw}</span>
+                  <div key={idx} className="flex items-start space-x-2 font-mono">
+                    <span className="text-red-400 font-bold select-none">✕</span>
+                    <span className="font-sans text-xs leading-normal">{flaw}</span>
                   </div>
                 ))}
               </div>
 
-              {/* AI Explanation Impact */}
-              <div className="p-3 rounded-lg bg-[#18080a] border border-red-900/50 text-xs">
-                <div className="text-red-400 font-bold font-mono text-[11px] mb-1">
-                  ⚠️ AI Explanation Failure:
+              {/* AI Explanation Impact Alert */}
+              <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-800/50 text-xs">
+                <div className="text-red-400 font-bold font-mono text-[11px] uppercase tracking-wider mb-1 flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                  <span>AI Explanation Failure:</span>
                 </div>
                 <p className="font-sans text-[11px] text-red-200/90 leading-relaxed">
                   {current.naiveChunk.aiExplanation}
@@ -260,69 +265,71 @@ export const ChunkComparisonVisualizer: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-3 mt-4 border-t border-red-950/60 text-[11px] font-mono text-red-300/80 flex justify-between">
-              <span>Lines {current.naiveChunk.startLine}–{current.naiveChunk.endLine}</span>
-              <span>Arbitrary Character Cut</span>
+            <div className="pt-4 mt-5 border-t border-red-950/80 text-[11px] font-mono text-red-300/70 flex justify-between">
+              <span>LINES {current.naiveChunk.startLine}–{current.naiveChunk.endLine}</span>
+              <span className="text-red-400 uppercase font-semibold">ARBITRARY CHARACTER CUT</span>
             </div>
           </div>
 
-          {/* Right: Tree-Sitter AST */}
+          {/* Right: Tree-Sitter AST (Certified Engineering Specimen) */}
           <div
             data-testid="ast-chunk-panel"
-            className="rounded-xl brass-border p-6 sm:p-7 flex flex-col justify-between"
+            className="rounded-3xl bg-[#0a1f10] border-2 border-[#68f12b]/50 p-7 sm:p-8 flex flex-col justify-between text-[#f4f3eb] shadow-2xl relative overflow-hidden"
           >
             <div>
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-amber-900/20">
+              {/* Header row */}
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-dashed border-[#dad0a7]/20">
                 <div>
-                  <div className="text-sm font-bold text-amber-200">
+                  <div className="text-base sm:text-lg font-black font-display uppercase tracking-tight text-[#68f12b]">
                     Tree-Sitter AST Determinism
                   </div>
-                  <div className="text-xs text-[#9cb3a8] font-sans mt-0.5">
-                    100% complete function • Nothing missing
+                  <div className="text-xs text-[#dad0a7] font-mono mt-0.5">
+                    Grammar Node Extracted • 100% Intact
                   </div>
                 </div>
-                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40">
+                <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#143520] text-[#68f12b] border border-[#68f12b]/60 uppercase tracking-wider shadow-[0_0_12px_rgba(104,241,43,0.2)]">
                   {current.astChunk.sbirScore}
                 </span>
               </div>
 
               {/* AST Grammar Metadata Pill */}
-              <div className="mb-3 px-3 py-1 rounded bg-[#03140c] border border-emerald-800/30 flex items-center justify-between text-[11px] font-mono text-[#9cb3a8]">
-                <span>Node: <strong className="text-amber-300">{current.astChunk.nodeType}</strong></span>
-                <span>Symbol: <strong className="text-emerald-300">{current.astChunk.identifier}</strong></span>
+              <div className="mb-4 px-3.5 py-1.5 rounded-xl bg-[#06150b] border border-[#dad0a7]/20 flex items-center justify-between text-[11px] font-mono text-[#dad0a7]">
+                <span>NODE: <strong className="text-[#68f12b]">{current.astChunk.nodeType}</strong></span>
+                <span>SYMBOL: <strong className="text-[#68f12b]">{current.astChunk.identifier}</strong></span>
               </div>
 
               {/* Code Box */}
-              <div className="rounded-lg bg-[#03110a] border border-emerald-950 p-4 font-mono text-xs overflow-y-auto leading-relaxed h-[240px] mb-4">
+              <div className="rounded-2xl bg-[#030d06] border border-[#dad0a7]/20 p-4 font-mono text-xs overflow-y-auto leading-relaxed h-[230px] mb-5 text-[#f4f3eb] shadow-inner">
                 <pre>
                   <HighlightedPython code={current.astChunk.code} />
                 </pre>
               </div>
 
               {/* Bullet Guarantees */}
-              <div className="space-y-1.5 text-xs text-[#b8d1c3] pt-2 mb-3">
+              <div className="space-y-2 text-xs text-[#dad0a7] pt-1 mb-5">
                 {current.astChunk.benefits.map((b, idx) => (
-                  <div key={idx} className="flex items-start space-x-2">
-                    <span className="text-amber-400 font-bold select-none">•</span>
-                    <span>{b}</span>
+                  <div key={idx} className="flex items-start space-x-2 font-mono">
+                    <span className="text-[#68f12b] font-bold select-none">✓</span>
+                    <span className="font-sans text-xs leading-normal text-[#f4f3eb]">{b}</span>
                   </div>
                 ))}
               </div>
 
-              {/* AI Explanation Impact */}
-              <div className="p-3 rounded-lg bg-[#041a10] border border-emerald-800/50 text-xs">
-                <div className="text-emerald-300 font-bold font-mono text-[11px] mb-1">
-                  ✅ AI Explanation Success:
+              {/* AI Explanation Impact Alert */}
+              <div className="p-3.5 rounded-xl bg-[#0d2614] border border-[#68f12b]/50 text-xs shadow-sm">
+                <div className="text-[#68f12b] font-bold font-mono text-[11px] uppercase tracking-wider mb-1 flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#68f12b]" />
+                  <span>AI Explanation Success:</span>
                 </div>
-                <p className="font-sans text-[11px] text-emerald-200/90 leading-relaxed">
+                <p className="font-sans text-[11px] text-[#f4f3eb] leading-relaxed">
                   {current.astChunk.aiExplanation}
                 </p>
               </div>
             </div>
 
-            <div className="pt-3 mt-4 border-t border-amber-900/20 text-[11px] font-mono text-[#9cb3a8]/60 flex justify-between">
-              <span>Lines {current.astChunk.startLine}–{current.astChunk.endLine}</span>
-              <span>Complete Python Node</span>
+            <div className="pt-4 mt-5 border-t border-[#dad0a7]/20 text-[11px] font-mono text-[#dad0a7]/70 flex justify-between">
+              <span>LINES {current.astChunk.startLine}–{current.astChunk.endLine}</span>
+              <span className="text-[#68f12b] uppercase font-semibold">COMPLETE PYTHON NODE</span>
             </div>
           </div>
         </div>

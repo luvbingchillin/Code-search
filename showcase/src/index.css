@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Phudu', cursive, system-ui, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
@@ -12,23 +12,23 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light dark;
   }
 
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: #04140d;
-    color: #f4f7f4;
+    background-color: #f4f3eb;
+    color: #0a1f10;
     overflow-x: hidden;
     line-height: 1.6;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    background-image: radial-gradient(rgba(16, 42, 25, 0.08) 1px, transparent 0);
+    background-size: 24px 24px;
   }
 
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.025em;
-    font-feature-settings: 'ss01', 'ss03';
+    letter-spacing: -0.01em;
   }
 
   code, pre, .font-mono {
@@ -37,25 +37,47 @@
   }
 }
 
-/* Subtle hairline border with warm brass tint */
-.brass-border {
-  border: 1px solid rgba(217, 119, 6, 0.18);
-  background-color: #061e14;
+/* Chande Neo-Analog Tactile Cards */
+.chande-dark {
+  background-color: #0a1f10;
+  color: #f4f3eb;
+  border: 1px solid rgba(218, 208, 167, 0.22);
+  box-shadow: 0 8px 30px rgba(10, 31, 16, 0.12);
 }
 
-.brass-border-hover {
-  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.chande-light {
+  background-color: #ffffff;
+  color: #0a1f10;
+  border: 1px solid rgba(16, 42, 25, 0.14);
+  box-shadow: 0 4px 20px rgba(10, 31, 16, 0.04);
 }
 
-.brass-border-hover:hover {
-  border-color: rgba(217, 119, 6, 0.35);
-  background-color: #082619;
+.chande-border {
+  border: 1px solid rgba(16, 42, 25, 0.14);
 }
 
-/* Naive chunk alert border */
-.red-border {
-  border: 1px solid rgba(185, 28, 28, 0.3);
-  background-color: #120608;
+.chande-perforated {
+  border-top: 2px dashed rgba(16, 42, 25, 0.25);
+}
+
+.chande-perforated-dark {
+  border-top: 2px dashed rgba(218, 208, 167, 0.3);
+}
+
+/* Acid Neon Button & Badge */
+.acid-btn {
+  background-color: #68f12b;
+  color: #0a1f10;
+  font-weight: 700;
+  border: 1px solid rgba(10, 31, 16, 0.2);
+  box-shadow: 0 2px 8px rgba(104, 241, 43, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.acid-btn:hover {
+  background-color: #7aff3d;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(104, 241, 43, 0.35);
 }
 
 /* Animated Flowing Circuit Lines */
@@ -75,10 +97,10 @@
 
 @keyframes pulseGlowTrack {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(234, 179, 8, 0.4), 0 0 16px rgba(234, 179, 8, 0.2);
+    box-shadow: 0 0 8px rgba(104, 241, 43, 0.4), 0 0 16px rgba(104, 241, 43, 0.2);
   }
   50% {
-    box-shadow: 0 0 16px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.4);
+    box-shadow: 0 0 16px rgba(104, 241, 43, 0.8), 0 0 24px rgba(104, 241, 43, 0.4);
   }
 }
 
@@ -97,39 +119,39 @@
 
 /* Comprehensive Syntax Highlighting for Python AST code blocks */
 .token.comment {
-  color: #64748b;
+  color: #718096;
   font-style: italic;
 }
 .token.keyword {
-  color: #fbbf24;
-  font-weight: 600;
+  color: #68f12b;
+  font-weight: 700;
 }
 .token.string {
-  color: #34d399;
+  color: #fef08a;
 }
 .token.function {
-  color: #60a5fa;
-  font-weight: 500;
+  color: #6ee7b7;
+  font-weight: 600;
 }
 .token.decorator {
   color: #f472b6;
   font-style: italic;
 }
 .token.operator {
-  color: #cbd5e1;
+  color: #dad0a7;
 }
 .token.punctuation {
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 .token.class-name {
-  color: #38bdf8;
+  color: #67e8f9;
   font-weight: 600;
 }
 .token.boolean {
   color: #fb923c;
 }
 .token.number {
-  color: #f97316;
+  color: #fdba74;
 }
 .token.builtin {
   color: #c084fc;

@@ -45,54 +45,67 @@ export const ArchitecturePillars: React.FC = () => {
   ];
 
   return (
-    <section id="architecture" className="py-24 md:py-32 border-b border-amber-900/20">
-      <div className="max-w-5xl mx-auto px-6 sm:px-8">
+    <section id="architecture" className="py-24 md:py-32 border-b border-[#dad0a7]/30">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8">
         {/* Section Header */}
         <div className="max-w-2xl mb-16">
-          <div className="text-xs font-mono font-medium text-amber-400 uppercase tracking-widest mb-2">
-            Why It Works Better
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0a1f10]/5 border border-[#0a1f10]/15 text-xs font-mono font-bold text-[#0a1f10] uppercase tracking-wider mb-3">
+            <span className="w-2 h-2 rounded-full bg-[#68f12b]" />
+            <span>[ SPECIMEN ANALYSIS // CORE PILLARS ]</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#f4f7f4] tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-black font-display text-[#0a1f10] uppercase tracking-tight mb-4">
             Four Core Advantages
           </h2>
-          <p className="text-base text-[#9cb3a8] leading-relaxed">
-            Engineered from the ground up to eliminate privacy leaks, broken snippets, and browser freezes.
+          <p className="text-base sm:text-lg text-[#0a1f10]/75 leading-relaxed font-sans">
+            Engineered from the ground up to eliminate cloud privacy leaks, broken code fragments, and browser memory crashes.
           </p>
         </div>
 
-        {/* Clean, Uniform Cards (No expanding, no jank, perfectly balanced) */}
+        {/* Tactile Chande-Style Specimen Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {pillars.map((pillar) => (
             <div
               key={pillar.number}
               data-testid={`pillar-card-${pillar.number}`}
-              className="rounded-xl brass-border p-7 sm:p-8 flex flex-col justify-between"
+              className="rounded-3xl bg-[#0a1f10] border border-[#dad0a7]/30 p-8 sm:p-9 flex flex-col justify-between text-[#f4f3eb] shadow-xl hover:border-[#68f12b]/50 transition-all duration-300 relative group overflow-hidden"
             >
-              <div>
+              {/* Subtle radial dot texture overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  backgroundImage: 'radial-gradient(rgba(244, 243, 235, 0.15) 1px, transparent 1px)',
+                  backgroundSize: '16px 16px'
+                }}
+              />
+
+              <div className="relative z-10">
                 {/* Header row: Index & Category Badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs font-bold text-amber-400">
-                    {pillar.number}
-                  </span>
-                  <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#03130b] text-[#9cb3a8] border border-amber-900/30">
+                <div className="flex items-center justify-between pb-4 mb-5 border-b border-dashed border-[#dad0a7]/20">
+                  <div className="flex items-center space-x-2 font-mono text-xs font-bold text-[#68f12b]">
+                    <span>№</span>
+                    <span className="text-base tracking-wider">{pillar.number}</span>
+                    <span className="text-[#dad0a7]/40">//</span>
+                    <span className="text-[11px] text-[#dad0a7] uppercase tracking-wider">SPECIMEN</span>
+                  </div>
+                  <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#143520] text-[#68f12b] border border-[#68f12b]/40 font-semibold tracking-wide">
                     {pillar.techTitle}
                   </span>
                 </div>
 
-                {/* Bold, Impactful Title */}
-                <h3 className="text-xl sm:text-2xl font-bold text-[#f4f7f4] mb-3">
+                {/* Bold Headline in Phudu Display */}
+                <h3 className="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-[#f4f3eb] mb-3 group-hover:text-[#68f12b] transition-colors">
                   {pillar.simpleTitle}
                 </h3>
 
                 {/* Plain-English Explanation */}
-                <p className="text-sm text-[#9cb3a8] leading-relaxed mb-6">
+                <p className="text-sm sm:text-base text-[#dad0a7] font-sans leading-relaxed mb-8">
                   {pillar.simpleDescription}
                 </p>
               </div>
 
-              {/* Bottom Impact Highlight */}
-              <div className="pt-4 border-t border-amber-900/15 flex items-center space-x-2 text-xs font-medium text-emerald-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              {/* Bottom Impact Highlight with Electric Lime Dot */}
+              <div className="relative z-10 pt-4 border-t border-[#dad0a7]/15 flex items-center space-x-2.5 text-xs font-mono font-medium text-[#68f12b]">
+                <span className="w-2 h-2 rounded-full bg-[#68f12b] shadow-[0_0_8px_#68f12b]" />
                 <span>{pillar.impactHighlight}</span>
               </div>
             </div>

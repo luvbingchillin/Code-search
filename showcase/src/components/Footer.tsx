@@ -5,21 +5,21 @@ import { GithubIcon } from './GithubIcon';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="py-16 md:py-20 bg-[#03110a] border-t border-amber-900/20 text-[#9cb3a8] text-xs">
-      <div className="max-w-5xl mx-auto px-6 sm:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+    <footer className="py-16 md:py-24 bg-[#0a1f10] border-t border-[#dad0a7]/30 text-[#dad0a7] text-xs">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-14">
           {/* Brand Column */}
           <div className="md:col-span-2">
-            <div className="flex items-center space-x-2.5 mb-3">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#072418] border border-amber-600/40">
-                <span className="text-[10px] font-bold text-amber-300">0</span>
+            <div className="flex items-center space-x-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-[#68f12b] flex items-center justify-center text-[#0a1f10] font-black font-display text-base shadow-[0_0_12px_rgba(104,241,43,0.3)]">
+                &gt;_
               </div>
-              <span className="text-sm font-bold tracking-tight text-[#f4f7f4]">
+              <span className="font-display font-black text-lg tracking-wider text-[#f4f3eb] uppercase">
                 CODE-SEARCH
               </span>
             </div>
-            <p className="text-xs text-[#9cb3a8] leading-relaxed max-w-sm mb-4">
-              A private, on-device search engine for understanding software codebases without leaking code to the cloud.
+            <p className="text-sm text-[#dad0a7] leading-relaxed max-w-sm mb-6 font-sans">
+              A private, on-device search and architectural explanation engine for understanding software codebases without leaking your code to cloud servers.
             </p>
             <div>
               <a
@@ -27,44 +27,39 @@ export const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="github-footer-link"
-                className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-md bg-[#062015] hover:bg-[#0a2e1f] border border-amber-600/30 text-amber-200 text-xs font-mono transition-colors"
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#143520] hover:bg-[#1e4a2d] border border-[#68f12b]/40 text-[#68f12b] text-xs font-mono font-bold transition-all shadow-sm"
               >
                 <GithubIcon className="w-3.5 h-3.5" />
                 <span>luvbingchillin/Code-search</span>
-                <ExternalLink className="w-3 h-3 opacity-60" />
+                <ExternalLink className="w-3 h-3 opacity-70" />
               </a>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div>
-            <div className="text-xs font-mono font-semibold text-amber-300/90 uppercase tracking-wider mb-3">
+            <div className="text-xs font-mono font-bold text-[#68f12b] uppercase tracking-wider mb-4">
               Navigation
             </div>
-            <ul className="space-y-2 text-[#9cb3a8]">
+            <ul className="space-y-2.5 text-[#dad0a7] font-sans text-sm">
               <li>
-                <a href="#architecture" className="hover:text-[#f4f7f4] transition-colors">
+                <a href="#architecture" className="hover:text-[#68f12b] transition-colors">
                   Key Advantages
                 </a>
               </li>
               <li>
-                <a href="#comparison" className="hover:text-[#f4f7f4] transition-colors">
+                <a href="#comparison" className="hover:text-[#68f12b] transition-colors">
                   Code Comparison
                 </a>
               </li>
               <li>
-                <a href="#benchmarks" className="hover:text-[#f4f7f4] transition-colors">
-                  Accuracy Benchmark
+                <a href="#pipeline" className="hover:text-[#68f12b] transition-colors">
+                  Execution Flow
                 </a>
               </li>
               <li>
-                <a href="#pipeline" className="hover:text-[#f4f7f4] transition-colors">
-                  How It Works
-                </a>
-              </li>
-              <li>
-                <a href="#quickstart" className="hover:text-[#f4f7f4] transition-colors">
-                  Get Started
+                <a href="#quickstart" className="hover:text-[#68f12b] transition-colors">
+                  Terminal Quick Start
                 </a>
               </li>
             </ul>
@@ -72,25 +67,26 @@ export const Footer: React.FC = () => {
 
           {/* Project Details */}
           <div>
-            <div className="text-xs font-mono font-semibold text-amber-300/90 uppercase tracking-wider mb-3">
-              Project Info
+            <div className="text-xs font-mono font-bold text-[#68f12b] uppercase tracking-wider mb-4">
+              Architecture Spec
             </div>
-            <ul className="space-y-2 text-[#9cb3a8]">
+            <ul className="space-y-2.5 text-[#dad0a7] font-mono text-xs">
               <li>Final Year Project (FYP)</li>
-              <li>Runs 100% in Web Browser</li>
-              <li>Open Source MIT License</li>
+              <li>Pure Browser (React 19 / Vite 6)</li>
+              <li>WebGPU SLM (Qwen2.5-Coder)</li>
+              <li>NemoIR Wasm Loop Governor</li>
               <li>Zero External Cloud Transmission</li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 border-t border-amber-900/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] text-[#9cb3a8]/60">
+        <div className="pt-6 border-t border-dashed border-[#dad0a7]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] font-mono text-[#dad0a7]/60">
           <div>
-            © 2026 Code-Search. Free and open source under MIT License.
+            © 2026 CODE-SEARCH. OPEN SOURCE UNDER MIT LICENSE.
           </div>
-          <div>
-            100% Private On-Device Search
+          <div className="text-[#68f12b] font-bold">
+            100% PRIVATE EDGE-COMPUTED PRIVACY
           </div>
         </div>
       </div>
