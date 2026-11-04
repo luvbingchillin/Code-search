@@ -70,12 +70,26 @@ class LanceDBVectorStore(BaseVectorStore):
         if self._table is None:
             self.initialize()
 
-    def add_chunks(self, chunks: List[AstCodeChunk], embeddings: np.ndarray) -> None:
-        """Add AST chunks with their corresponding embedding vectors to LanceDB."""
+    def add_chunks(
+        self,
+        chunks: List[AstCodeChunk],
+        embeddings: np.ndarray,
+        deduplicate: bool = False,
+    ) -> None:
+        """Add AST chunks with their corresponding embedding vectors to LanceDB.
+        
+        Args:
+            chunks: List of AstCodeChunk objects.
+            embeddings: Numpy array of embedding vectors.
+            deduplicate: If True, delete existing records with identical IDs first.
+        """
         if not chunks:
             return
 
         self._ensure_initialized()
+
+        if deduplicate and len(self._table) > 0:
+            self.delete_by_ids([c.id for c in chunks])
 
         records = []
         for chunk, emb in zip(chunks, embeddings):
@@ -88,6 +102,44 @@ class LanceDBVectorStore(BaseVectorStore):
             records.append(row)
 
         self._table.add(records)
+
+    def delete_by_ids(self, chunk_ids: List[str]) -> int:
+        """Delete records matching chunk IDs for idempotent re-indexing."""
+        self._ensure_initialized()
+        if not chunk_ids or len(self._table) == 0:
+            return 0
+        before_count = len(self._table)
+        for i in range(0, len(chunk_ids), 50):
+            batch = chunk_ids[i : i + 50]
+            clause = ", ".join("'" + cid.replace("'", "''") + "'" for cid in batch)
+            try:
+                self._table.delete(f"id IN ({clause})")
+            except Exception:
+                pass
+        return max(0, before_count - len(self._table))
+
+    def upsert_chunks(self, chunks: List[AstCodeChunk], embeddings: np.ndarray) -> None:
+        """Idempotently insert or update chunks, deleting existing chunks with same IDs first."""
+        self.add_chunks(chunks, embeddings, deduplicate=True)
+
+    def create_ann_index(self, metric: str = "cosine") -> bool:
+        """Create an Approximate Nearest Neighbor (ANN) vector index on the table.
+        
+        Requires at least 256 rows to build an IVF-PQ index. Flat scan is optimal
+        for small test tables.
+        """
+        self._ensure_initialized()
+        if len(self._table) < 256:
+            return False
+        try:
+            self._table.create_index(
+                metric=metric,
+                vector_column_name="vector",
+                replace=True,
+            )
+            return True
+        except Exception:
+            return False
 
     def search_semantic(
         self,

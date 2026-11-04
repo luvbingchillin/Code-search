@@ -42,8 +42,8 @@ class MockEmbeddingModel(BaseEmbeddingModel):
     without requiring external model downloads or internet connectivity.
     """
 
-    def __init__(self, dimension: int = 384) -> None:
-        self._dimension = dimension
+    def __init__(self, dimension: int = 384, dim: Optional[int] = None) -> None:
+        self._dimension = dim if dim is not None else dimension
 
     @property
     def dimension(self) -> int:

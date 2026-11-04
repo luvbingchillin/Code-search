@@ -175,6 +175,29 @@ def test_lance_store_semantic_search_and_filtering(
     assert any(r.identifier == "fetch_async" for r in async_results)
 
 
+def test_lance_store_idempotency_and_ann_indexing(
+    lance_store: LanceDBVectorStore,
+    sample_chunks: List[AstCodeChunk],
+    mock_embedder: MockEmbeddingModel,
+):
+    """Verify LanceDB upsert_chunks idempotency (no duplicate rows) and ANN indexing helper."""
+    texts = [c.code for c in sample_chunks]
+    embeddings = mock_embedder.embed_documents(texts)
+
+    # Initial upsert
+    lance_store.upsert_chunks(sample_chunks, embeddings)
+    initial_count = lance_store.count()
+    assert initial_count == len(sample_chunks)
+
+    # Re-upsert identical chunks
+    lance_store.upsert_chunks(sample_chunks, embeddings)
+    assert lance_store.count() == initial_count, "Re-upserting identical chunks caused row duplication!"
+
+    # Test create_ann_index (returns False cleanly when rows < 256)
+    ann_result = lance_store.create_ann_index()
+    assert isinstance(ann_result, bool)
+
+
 # ============================================================================
 # 3. SQLiteVectorStore Tests
 # ============================================================================

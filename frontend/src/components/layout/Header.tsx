@@ -71,15 +71,36 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2.5">
-        {/* WebLLM Engine Badge with Dynamic Progress & Color */}
-        <div
-          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors shadow-xs ${getWebLLMStatusColor()}`}
-          title={webLLM.progressText || (webLLM.error ? `Error: ${webLLM.error}` : 'Local WebLLM Model Status')}
+        {/* Interactive WebLLM Engine Badge with Dynamic Progress & Controls */}
+        <button
+          type="button"
+          data-testid="webllm-load-toggle-btn"
+          onClick={() => {
+            if (webLLM.status === 'unloaded' || webLLM.status === 'error') {
+              webLLM.loadModel();
+            } else if (webLLM.status === 'ready' && typeof webLLM.unload === 'function') {
+              webLLM.unload();
+            }
+          }}
+          disabled={webLLM.status === 'loading'}
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors shadow-xs cursor-pointer disabled:cursor-wait hover:brightness-110 active:scale-95 ${getWebLLMStatusColor()}`}
+          title={
+            webLLM.status === 'unloaded'
+              ? 'Click to initialize and load local WebLLM engine'
+              : webLLM.status === 'ready'
+              ? 'WebLLM ready. Click to unload'
+              : webLLM.progressText || (webLLM.error ? `Error: ${webLLM.error}` : 'Local WebLLM Model Status')
+          }
         >
           {getWebLLMIcon()}
           <span className="text-slate-300 font-medium">WebLLM:</span>
           <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
-        </div>
+          {webLLM.status === 'unloaded' && (
+            <span className="ml-1 px-1.5 py-0.2 rounded bg-indigo-900/60 text-indigo-300 text-[10px] font-mono border border-indigo-700/50">
+              Load
+            </span>
+          )}
+        </button>
 
         {/* Model Selector / Accelerator Indicator */}
         <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs">

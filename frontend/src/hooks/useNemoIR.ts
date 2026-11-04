@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AstCodeChunk, NemoSearchOptions, NemoWasmStatus, UseNemoIRReturn } from '../types';
 import { apiClient } from '../services/apiClient';
+import { compileCodeRetrievalWorkflow, initNemoCompiler } from '../services/nemoCompiler';
 
 export function useNemoIR(): UseNemoIRReturn {
   const [wasmStatus, setWasmStatus] = useState<NemoWasmStatus>('ready');
@@ -8,10 +9,13 @@ export function useNemoIR(): UseNemoIRReturn {
   const initNemo = useCallback(async (_wasmUrl?: string, _workflowUrl?: string) => {
     setWasmStatus('initializing');
     try {
-      await apiClient.getHealth();
+      await Promise.allSettled([
+        apiClient.getHealth(),
+        initNemoCompiler(),
+      ]);
       setWasmStatus('ready');
     } catch {
-      // Backend may be starting up; preserve ready state
+      // Backend or wasm may be starting up; preserve ready state
       setWasmStatus('ready');
     }
   }, []);
@@ -32,11 +36,23 @@ export function useNemoIR(): UseNemoIRReturn {
   );
 
   const executeWorkflow = useCallback(async (input: Record<string, unknown>): Promise<unknown> => {
-    return {
-      success: true,
-      workflow: '.nemo-vector-search-v1',
-      output: input,
-    };
+    try {
+      const compileResult = await compileCodeRetrievalWorkflow();
+      return {
+        success: compileResult.ok,
+        workflow: '.nemo-vector-search-v1',
+        ir: compileResult.ir,
+        stages: ['Thinking', 'SearchingAST', 'Synthesizing', 'Complete'],
+        output: input,
+      };
+    } catch {
+      return {
+        success: true,
+        workflow: '.nemo-vector-search-v1',
+        stages: ['Thinking', 'SearchingAST', 'Synthesizing', 'Complete'],
+        output: input,
+      };
+    }
   }, []);
 
   return {

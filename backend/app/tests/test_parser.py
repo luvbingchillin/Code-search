@@ -558,3 +558,34 @@ def test_codebase_scanner_directory_scan():
         assert "Cls2" in identifiers
         assert "Cls2.method" in identifiers
         assert "ignored" not in identifiers
+
+
+def test_extract_module_level_assignments():
+    """Verify that module-level constants and Assign nodes are extracted with accurate coordinates."""
+    code = """# Configuration constants
+MAX_RETRIES = 5
+API_ENDPOINT = "https://api.example.com/v1"
+DEBUG_MODE = True
+
+def run():
+    pass
+"""
+    extractor = PythonAstExtractor(include_assignments=True)
+    chunks = extractor.parse_source(code, file_path="config.py")
+    
+    assign_chunks = [c for c in chunks if c.astNodeType == "Assign"]
+    assert len(assign_chunks) == 3
+
+    chunk_map = {c.identifier: c for c in assign_chunks}
+    assert "MAX_RETRIES" in chunk_map
+    assert chunk_map["MAX_RETRIES"].startLine == 2
+    assert chunk_map["MAX_RETRIES"].endLine == 2
+    assert chunk_map["MAX_RETRIES"].code == "MAX_RETRIES = 5"
+
+    assert "API_ENDPOINT" in chunk_map
+    assert chunk_map["API_ENDPOINT"].startLine == 3
+    assert chunk_map["API_ENDPOINT"].code == 'API_ENDPOINT = "https://api.example.com/v1"'
+
+    assert "DEBUG_MODE" in chunk_map
+    assert chunk_map["DEBUG_MODE"].startLine == 4
+    assert chunk_map["DEBUG_MODE"].code == "DEBUG_MODE = True"

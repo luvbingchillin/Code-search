@@ -6,6 +6,9 @@
 GEMINI.md
 AGENTS.md
 DESIGN_SYSTEM.md
+CRITIQUE.md
+ARCHITECTURE_TRADE_OFFS.md
+GATE_STATUS.md
 *.agent
 *.agent.md
 agent_memory/

@@ -21,16 +21,23 @@ PY_LANGUAGE = tree_sitter.Language(tree_sitter_python.language())
 class PythonAstExtractor:
     """Extracts structurally complete AstCodeChunk instances from Python source code."""
 
-    def __init__(self) -> None:
+    def __init__(self, include_assignments: bool = False) -> None:
         """Initialize the Tree-sitter parser with the Python grammar."""
         self.parser = tree_sitter.Parser(PY_LANGUAGE)
+        self.include_assignments = include_assignments
 
-    def parse_file(self, file_path: str, repo_root: str = "") -> List[AstCodeChunk]:
+    def parse_file(
+        self,
+        file_path: str,
+        repo_root: str = "",
+        include_assignments: Optional[bool] = None,
+    ) -> List[AstCodeChunk]:
         """Parse a Python source file from disk and return extracted code chunks.
 
         Args:
             file_path: Absolute or relative path to the Python file.
             repo_root: Optional repository root path for computing normalized relative paths.
+            include_assignments: Whether to extract module-level Assign nodes.
 
         Returns:
             List of AstCodeChunk objects extracted from the file.
@@ -44,13 +51,19 @@ class PythonAstExtractor:
             rel_path = os.path.normpath(file_path).replace("\\", "/")
 
         file_name = os.path.basename(file_path)
-        return self.extract_chunks(source_bytes, file_path=rel_path, file_name=file_name)
+        return self.extract_chunks(
+            source_bytes,
+            file_path=rel_path,
+            file_name=file_name,
+            include_assignments=include_assignments,
+        )
 
     def parse_source(
         self,
         source_code: str,
         file_path: str = "snippet.py",
         file_name: Optional[str] = None,
+        include_assignments: Optional[bool] = None,
     ) -> List[AstCodeChunk]:
         """Parse Python source code provided as a string.
 
@@ -58,6 +71,7 @@ class PythonAstExtractor:
             source_code: Python source code string.
             file_path: Optional relative file path identifier.
             file_name: Optional file name identifier.
+            include_assignments: Whether to extract module-level Assign nodes.
 
         Returns:
             List of AstCodeChunk objects extracted from the source string.
@@ -65,13 +79,19 @@ class PythonAstExtractor:
         source_bytes = source_code.encode("utf-8")
         norm_file_path = file_path.replace("\\", "/")
         actual_file_name = file_name or os.path.basename(norm_file_path) or "snippet.py"
-        return self.extract_chunks(source_bytes, file_path=norm_file_path, file_name=actual_file_name)
+        return self.extract_chunks(
+            source_bytes,
+            file_path=norm_file_path,
+            file_name=actual_file_name,
+            include_assignments=include_assignments,
+        )
 
     def extract_chunks(
         self,
         source_bytes: bytes,
         file_path: str,
         file_name: str,
+        include_assignments: Optional[bool] = None,
     ) -> List[AstCodeChunk]:
         """Extract all AST code chunks from raw source bytes.
 
@@ -79,6 +99,7 @@ class PythonAstExtractor:
             source_bytes: UTF-8 encoded Python source bytes.
             file_path: Normalized relative file path.
             file_name: Base file name.
+            include_assignments: Whether to extract module-level Assign nodes.
 
         Returns:
             List of AstCodeChunk objects.
@@ -87,6 +108,8 @@ class PythonAstExtractor:
         source_text = source_bytes.decode("utf-8", errors="replace")
         source_lines = source_text.splitlines()
         file_imports = self._extract_imports(tree.root_node)
+
+        with_assign = self.include_assignments if include_assignments is None else include_assignments
 
         chunks: List[AstCodeChunk] = []
         self._traverse(
@@ -97,6 +120,7 @@ class PythonAstExtractor:
             file_imports=file_imports,
             chunks=chunks,
             parent_scope=[],
+            include_assignments=with_assign,
         )
         return chunks
 
@@ -109,8 +133,47 @@ class PythonAstExtractor:
         file_imports: List[str],
         chunks: List[AstCodeChunk],
         parent_scope: List[str],
+        include_assignments: bool = False,
     ) -> None:
         """Recursively traverse the AST to extract definitions while handling decorators."""
+        if include_assignments and not parent_scope:
+            assign_node = None
+            if node.type == "assignment":
+                assign_node = node
+            elif node.type == "expression_statement":
+                assign_node = next((c for c in node.children if c.type == "assignment"), None)
+
+            if assign_node:
+                left = assign_node.child_by_field_name("left")
+                if left:
+                    var_name = left.text.decode("utf-8").strip()
+                    start_row = node.start_point[0]
+                    end_row = node.end_point[0]
+                    if node.end_point[1] == 0 and end_row > start_row:
+                        end_row -= 1
+                    start_line = start_row + 1
+                    end_line = end_row + 1
+                    code_lines = source_lines[start_row : end_row + 1]
+                    code_text = "\n".join(code_lines)
+                    chunk_id = f"{file_path}:{var_name}:{start_line}"
+                    chunks.append(
+                        AstCodeChunk(
+                            id=chunk_id,
+                            filePath=file_path,
+                            fileName=file_name,
+                            astNodeType="Assign",
+                            identifier=var_name,
+                            startLine=start_line,
+                            endLine=end_line,
+                            code=code_text,
+                            docstring=None,
+                            parameters=[],
+                            decorators=[],
+                            imports=file_imports,
+                            calls=[],
+                        )
+                    )
+                    return
         if node.type == "decorated_definition":
             decorators = [
                 c.text.decode("utf-8").strip()
@@ -161,6 +224,7 @@ class PythonAstExtractor:
                 file_imports=file_imports,
                 chunks=chunks,
                 parent_scope=parent_scope,
+                include_assignments=include_assignments,
             )
 
     def _process_node(

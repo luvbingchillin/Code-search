@@ -43,7 +43,7 @@ def create_app(
             if embedder is not None:
                 app.state.embedder = embedder
             elif app_settings.use_mock_embedder:
-                app.state.embedder = MockEmbeddingModel(dim=app_settings.embedding_dimension)
+                app.state.embedder = MockEmbeddingModel(dimension=app_settings.embedding_dimension)
             else:
                 app.state.embedder = SentenceTransformerEmbedder(model_name=app_settings.model_name)
 

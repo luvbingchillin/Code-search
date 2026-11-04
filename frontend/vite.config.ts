@@ -27,6 +27,29 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@nemoir/compiler-wasm'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('@mlc-ai/web-llm')) {
+            return 'web-llm';
+          }
+          if (id.includes('@nemoir/compiler-wasm') || id.includes('@nemoir/web-ui')) {
+            return 'nemoir-wasm';
+          }
+          if (id.includes('prismjs')) {
+            return 'prism-highlighter';
+          }
+          if (id.includes('lucide-react')) {
+            return 'lucide-icons';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

@@ -220,17 +220,51 @@ export function useReActAgent(
           await new Promise((r) => setTimeout(r, 100));
           if (isCancelledRef.current) throw new Error('Query cancelled by user');
 
-          // 3. Synthesizing phase via WebLLM
+          // Execute compiled NemoIR workflow IR
+          if (nemoIRRef.current && typeof nemoIRRef.current.executeWorkflow === 'function') {
+            try {
+              await nemoIRRef.current.executeWorkflow({ query: trimmed });
+            } catch {
+              // Graceful continuation
+            }
+          }
+
+          // 3. Synthesizing phase via WebLLM with runtime 4,096 token budgeting
           const synthStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Synthesizing',
-            currentStepMessage: 'Synthesizing response with cited AST context via WebLLM...',
+            currentStepMessage: 'Synthesizing response with cited AST context via WebLLM (4,096 token cap)...',
           };
           statusRef.current = synthStatus;
           setAgentStatus(synthStatus);
 
-          const topChunks = matchedChunks.slice(0, 3);
-          const astContext = topChunks
+          // Enforce strict 4,096 token ceiling at runtime
+          const MAX_PROMPT_TOKENS = 3500; // Leave safety headroom for model completion
+          const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
+
+          let currentTokens = estimateTokens(trimmed) + 120;
+          const budgetedChunks: AstCodeChunk[] = [];
+
+          for (const chunk of matchedChunks.slice(0, 5)) {
+            const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${chunk.code}`;
+            const chunkTokens = estimateTokens(chunkRepresentation);
+
+            if (currentTokens + chunkTokens <= MAX_PROMPT_TOKENS) {
+              budgetedChunks.push(chunk);
+              currentTokens += chunkTokens;
+            } else {
+              const remainingChars = Math.max(0, (MAX_PROMPT_TOKENS - currentTokens) * 4);
+              if (remainingChars > 120) {
+                const truncatedCode =
+                  chunk.code.slice(0, remainingChars) +
+                  '\n# ... [Truncated to fit 4,096 token safety budget]';
+                budgetedChunks.push({ ...chunk, code: truncatedCode });
+              }
+              break;
+            }
+          }
+
+          const astContext = budgetedChunks
             .map(
               (c) =>
                 `[Identifier: ${c.identifier}, File: ${c.filePath}:${c.startLine}-${c.endLine}, Type: ${c.astNodeType}]:\n${c.code}`

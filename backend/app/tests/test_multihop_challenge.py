@@ -367,11 +367,10 @@ def test_lancedb_multihop_retrieval_and_exact_match(tmp_path: Path, sample_servi
 
 
 def test_lifespan_use_mock_embedder_bug():
-    """Reproduce the bug in app/main.py:46 where MockEmbeddingModel is initialized with 'dim' instead of 'dimension'.
+    """Verify that MockEmbeddingModel is initialized correctly with 'dimension'.
 
     When create_app() is called without an explicit embedder and use_mock_embedder=True,
-    the lifespan context manager fails on startup with:
-    TypeError: MockEmbeddingModel.__init__() got an unexpected keyword argument 'dim'
+    the lifespan context manager starts up cleanly without TypeError.
     """
     settings = Settings(
         vector_db_type="sqlite",
@@ -381,7 +380,8 @@ def test_lifespan_use_mock_embedder_bug():
     # Do NOT pass embedder, forcing lifespan to execute line 46
     app = create_app(settings=settings, vector_store=None, embedder=None)
 
-    # Calling TestClient with lifespan context manager will trigger the bug
-    with pytest.raises(TypeError, match="unexpected keyword argument 'dim'"):
-        with TestClient(app) as client:
-            client.get("/api/v1/health")
+    # Calling TestClient with lifespan context manager should succeed
+    with TestClient(app) as client:
+        resp = client.get("/api/v1/health")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "healthy"
