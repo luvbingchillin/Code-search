@@ -13,6 +13,7 @@ export interface CodeViewerContainerProps {
   onToggleMaximize?: () => void;
   isMinimized?: boolean;
   onMinimize?: () => void;
+  onOpenConnectRepo?: () => void;
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
@@ -23,6 +24,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   onToggleMaximize,
   isMinimized,
   onMinimize,
+  onOpenConnectRepo,
 }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,7 +101,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
       )}
 
       {/* Prism Syntax Code Display with Line Numbers */}
-      <CodeDisplay chunk={selectedChunk} />
+      <CodeDisplay chunk={selectedChunk} onOpenConnectRepo={onOpenConnectRepo} />
 
       {/* Collapsible AST Metadata Drawer */}
       <ASTMetadataInspector

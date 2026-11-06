@@ -32,6 +32,12 @@ export interface HealthResponse {
   embedding_model: string;
 }
 
+export interface IndexResponse {
+  indexed_files: number;
+  extracted_chunks: number;
+  elapsed_seconds: number;
+}
+
 export interface ApiClientConfig {
   baseUrl?: string;
   timeoutMs?: number;
@@ -116,6 +122,21 @@ export class ApiClient {
       method: 'POST',
       body: JSON.stringify(request),
       signal: options?.signal,
+    });
+  }
+
+  public async indexRepository(
+    sourceDir: string,
+    options?: { forceReindex?: boolean; signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<IndexResponse> {
+    return this.request<IndexResponse>('/api/v1/index', {
+      method: 'POST',
+      body: JSON.stringify({
+        source_dir: sourceDir,
+        force_reindex: options?.forceReindex ?? false,
+      }),
+      signal: options?.signal,
+      timeoutMs: options?.timeoutMs ?? 60000,
     });
   }
 

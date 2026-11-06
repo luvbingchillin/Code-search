@@ -13,6 +13,12 @@ GATE_STATUS.md
 *.agent.md
 agent_memory/
 
+# Databases & Local Data
+data/
+*.lance
+*.db
+*.sqlite
+
 # Node / Vite Frontend
 node_modules/
 dist/

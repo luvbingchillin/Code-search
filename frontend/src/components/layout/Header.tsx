@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn } from '../../types';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   onToggleChatMinimized?: () => void;
   isCodeMinimized?: boolean;
   onToggleCodeMinimized?: () => void;
+  onOpenConnectRepo?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleChatMinimized,
   isCodeMinimized = false,
   onToggleCodeMinimized,
+  onOpenConnectRepo,
 }) => {
   const getWebLLMStatusColor = () => {
     switch (webLLM.status) {
@@ -71,6 +73,20 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2.5">
+        {/* Connect Repository Trigger Button */}
+        {onOpenConnectRepo && (
+          <button
+            type="button"
+            data-testid="connect-repo-btn"
+            onClick={onOpenConnectRepo}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 text-xs text-indigo-300 transition-colors shadow-xs cursor-pointer active:scale-95"
+            title="Connect and index a local Python repository"
+          >
+            <FolderCode className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="font-medium">Connect Repo</span>
+          </button>
+        )}
+
         {/* Interactive WebLLM Engine Badge with Dynamic Progress & Controls */}
         <button
           type="button"

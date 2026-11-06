@@ -136,6 +136,18 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
       });
     }
 
+    if (url.includes('/api/v1/index')) {
+      const data = {
+        indexed_files: 18,
+        extracted_chunks: 284,
+        elapsed_seconds: 1.42,
+      };
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     if (url.includes('/api/v1/search')) {
       let reqQuery = '';
       let topK = 5;

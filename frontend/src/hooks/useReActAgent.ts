@@ -14,26 +14,13 @@ import { mockAstChunks } from '../services/mockAstData';
 export interface UseReActAgentOptions {
   webLLM?: UseWebLLMReturn;
   nemoIR?: UseNemoIRReturn;
+  initialChunks?: AstCodeChunk[];
 }
 
-const initialStatus: AgentStatus = {
-  state: 'Idle',
-  currentStepMessage: 'Ready to query codebase via Edge AI',
-  elapsedMs: 0,
-  activeChunkCount: mockAstChunks.length,
-};
-
-const initialMessages: ChatMessage[] = [
-  {
-    id: 'welcome-msg',
-    role: 'assistant',
-    content:
-      'Welcome to **CodeSeek AI**! Enter a code query or select a suggestion chip to search the AST index using our Edge AI ReAct engine.',
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    reActState: 'Complete',
-    citedChunks: [mockAstChunks[0].id],
-  },
-];
+const isTestEnv =
+  (typeof process !== 'undefined' &&
+    (process.env?.NODE_ENV === 'test' || Boolean(process.env?.VITEST))) ||
+  (typeof window !== 'undefined' && Boolean((window as any).__VITEST_ENVIRONMENT__));
 
 export function useReActAgent(
   options?: UseReActAgentOptions | UseWebLLMReturn
@@ -49,6 +36,37 @@ export function useReActAgent(
   const nemoIRRef = useRef<UseNemoIRReturn | undefined>(nemoIR);
   nemoIRRef.current = nemoIR;
 
+  const defaultChunks =
+    options && 'initialChunks' in options && options.initialChunks !== undefined
+      ? options.initialChunks
+      : isTestEnv
+      ? mockAstChunks
+      : [];
+
+  const initialStatus: AgentStatus = {
+    state: 'Idle',
+    currentStepMessage:
+      defaultChunks.length > 0
+        ? 'Ready to query codebase via Edge AI'
+        : 'Connect a repository to index AST nodes and query via Edge AI',
+    elapsedMs: 0,
+    activeChunkCount: defaultChunks.length,
+  };
+
+  const initialMessages: ChatMessage[] = [
+    {
+      id: 'welcome-msg',
+      role: 'assistant',
+      content:
+        defaultChunks.length > 0
+          ? 'Welcome to **CodeSeek AI**! Enter a code query or select a suggestion chip to search the AST index using our Edge AI ReAct engine.'
+          : 'Welcome to **CodeSeek AI**! Click **Connect Repo** in the header or in the code pane to index a local Python repository into LanceDB.',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      reActState: 'Complete',
+      citedChunks: defaultChunks.length > 0 ? [defaultChunks[0].id] : [],
+    },
+  ];
+
   const [agentStatus, setAgentStatus] = useState<AgentStatus>(initialStatus);
   const statusRef = useRef<AgentStatus>(initialStatus);
   statusRef.current = agentStatus;
@@ -57,14 +75,14 @@ export function useReActAgent(
   const messagesRef = useRef<ChatMessage[]>(initialMessages);
   messagesRef.current = messages;
 
-  const [activeChunks, setActiveChunks] = useState<AstCodeChunk[]>(mockAstChunks);
-  const activeChunksRef = useRef<AstCodeChunk[]>(mockAstChunks);
+  const [activeChunks, setActiveChunksState] = useState<AstCodeChunk[]>(defaultChunks);
+  const activeChunksRef = useRef<AstCodeChunk[]>(defaultChunks);
   activeChunksRef.current = activeChunks;
 
   const [selectedChunkId, setSelectedChunkIdState] = useState<string | null>(
-    mockAstChunks[0]?.id ?? null
+    defaultChunks[0]?.id ?? null
   );
-  const selectedChunkIdRef = useRef<string | null>(mockAstChunks[0]?.id ?? null);
+  const selectedChunkIdRef = useRef<string | null>(defaultChunks[0]?.id ?? null);
   selectedChunkIdRef.current = selectedChunkId;
 
   const [streamingTokens, setStreamingTokens] = useState<string>('');
@@ -87,6 +105,31 @@ export function useReActAgent(
   const setSelectedChunkId = useCallback((id: string) => {
     selectedChunkIdRef.current = id;
     setSelectedChunkIdState(id);
+  }, []);
+
+  const setActiveChunks = useCallback((chunks: AstCodeChunk[]) => {
+    activeChunksRef.current = chunks;
+    setActiveChunksState(chunks);
+    setSelectedChunkIdState((current) => {
+      const nextSelected =
+        current && chunks.some((c) => c.id === current)
+          ? current
+          : chunks.length > 0
+          ? chunks[0].id
+          : null;
+      selectedChunkIdRef.current = nextSelected;
+      return nextSelected;
+    });
+    const updatedStatus: AgentStatus = {
+      ...statusRef.current,
+      activeChunkCount: chunks.length,
+      currentStepMessage:
+        chunks.length > 0
+          ? `Indexed ${chunks.length} AST nodes ready for queries`
+          : statusRef.current.currentStepMessage,
+    };
+    statusRef.current = updatedStatus;
+    setAgentStatus(updatedStatus);
   }, []);
 
   const cancelQuery = useCallback(() => {
@@ -119,7 +162,12 @@ export function useReActAgent(
     setStreamingTokens('');
     streamingTokensRef.current = '';
     const resetStatus: AgentStatus = {
-      ...initialStatus,
+      state: 'Idle',
+      currentStepMessage:
+        activeChunksRef.current.length > 0
+          ? 'Ready to query codebase via Edge AI'
+          : 'Connect a repository to index AST nodes and query via Edge AI',
+      elapsedMs: 0,
       activeChunkCount: activeChunksRef.current.length,
     };
     statusRef.current = resetStatus;
@@ -197,7 +245,7 @@ export function useReActAgent(
             ? await nemoIRRef.current.searchAstChunks(trimmed)
             : simulatorRef.current.searchAstChunks(trimmed);
           activeChunksRef.current = matchedChunks;
-          setActiveChunks(matchedChunks);
+          setActiveChunksState(matchedChunks);
           citedChunksList = matchedChunks;
 
           setSelectedChunkIdState((current) => {
@@ -280,13 +328,26 @@ export function useReActAgent(
           });
           if (isCancelledRef.current) throw new Error('Query cancelled by user');
         } else {
+          // If NemoIR is available, search live LanceDB backend first
+          let liveChunks: AstCodeChunk[] | undefined;
+          if (nemoIRRef.current) {
+            try {
+              const res = await nemoIRRef.current.searchAstChunks(trimmed);
+              if (res && res.length > 0) {
+                liveChunks = res;
+              }
+            } catch {
+              // Graceful fallback to simulator search
+            }
+          }
+
           // Use simulator with live token streaming callback
           const result = await simulatorRef.current.runReActCycle(
             trimmed,
             (state: ReActState, message: string, chunks?: AstCodeChunk[]) => {
               if (chunks && chunks.length > 0) {
                 activeChunksRef.current = chunks;
-                setActiveChunks(chunks);
+                setActiveChunksState(chunks);
                 setSelectedChunkIdState((current) => {
                   const nextSelected =
                     !current || !chunks.some((c) => c.id === current)
@@ -310,7 +371,8 @@ export function useReActAgent(
               if (isCancelledRef.current) return;
               streamingTokensRef.current = accumulated;
               setStreamingTokens(accumulated);
-            }
+            },
+            liveChunks
           );
 
           finalResponseText = result.response;
@@ -405,6 +467,7 @@ export function useReActAgent(
     submitQuery,
     cancelQuery,
     setSelectedChunkId,
+    setActiveChunks,
     reset,
   };
 }

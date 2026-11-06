@@ -114,5 +114,6 @@ export interface UseReActAgentReturn {
   submitQuery: (query: string) => Promise<void>;
   cancelQuery: () => void;
   setSelectedChunkId: (id: string) => void;
+  setActiveChunks?: (chunks: AstCodeChunk[]) => void;
   reset: () => void;
 }

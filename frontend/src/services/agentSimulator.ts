@@ -52,7 +52,8 @@ export class AgentSimulator {
   public async runReActCycle(
     query: string,
     onStateChange: (state: ReActState, message: string, chunks?: AstCodeChunk[]) => void,
-    onTokenStream?: (chunk: string, accumulated: string) => void
+    onTokenStream?: (chunk: string, accumulated: string) => void,
+    providedChunks?: AstCodeChunk[]
   ): Promise<{ response: string; citedChunks: AstCodeChunk[] }> {
     this.isCancelled = false;
 
@@ -66,7 +67,11 @@ export class AgentSimulator {
     await this.delay(500);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
-    const matchedChunks = this.searchAstChunks(query);
+    const matchedChunks =
+      providedChunks && providedChunks.length > 0
+        ? providedChunks
+        : this.searchAstChunks(query);
+
     onStateChange(
       'Searching AST',
       `Found ${matchedChunks.length} relevant AST code chunks (${matchedChunks.map((c) => c.identifier).join(', ')})`,

@@ -6,6 +6,7 @@ import { Header } from './components/layout/Header';
 import { SplitPaneLayout } from './components/layout/SplitPaneLayout';
 import { ChatPane } from './components/chat/ChatPane';
 import { CodeViewerPane } from './components/viewer/CodeViewerPane';
+import { ConnectRepoModal } from './components/repo/ConnectRepoModal';
 
 export const App: React.FC = () => {
   const webLLM = useWebLLM();
@@ -14,6 +15,15 @@ export const App: React.FC = () => {
 
   const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);
   const [isCodeMinimized, setIsCodeMinimized] = React.useState<boolean>(false);
+  const [isConnectRepoOpen, setIsConnectRepoOpen] = React.useState<boolean>(false);
+
+  const handleOpenConnectRepo = React.useCallback(() => {
+    setIsConnectRepoOpen(true);
+  }, []);
+
+  const handleCloseConnectRepo = React.useCallback(() => {
+    setIsConnectRepoOpen(false);
+  }, []);
 
   const toggleChatMinimized = React.useCallback(() => {
     setIsChatMinimized((prev) => !prev);
@@ -74,6 +84,7 @@ export const App: React.FC = () => {
         onToggleChatMinimized={toggleChatMinimized}
         isCodeMinimized={isCodeMinimized}
         onToggleCodeMinimized={toggleCodeMinimized}
+        onOpenConnectRepo={handleOpenConnectRepo}
       />
 
       {/* Main Resilient Split-Pane Interface */}
@@ -105,8 +116,25 @@ export const App: React.FC = () => {
             onToggleMaximize={toggleMaximizeCode}
             isMinimized={isCodeMinimized}
             onMinimize={toggleCodeMinimized}
+            onOpenConnectRepo={handleOpenConnectRepo}
           />
         }
+      />
+
+      {/* Connect Repository Modal */}
+      <ConnectRepoModal
+        isOpen={isConnectRepoOpen}
+        onClose={handleCloseConnectRepo}
+        onIndexed={async () => {
+          try {
+            const initialFound = await nemoIR.searchAstChunks('def ');
+            if (initialFound && initialFound.length > 0 && agent.setActiveChunks) {
+              agent.setActiveChunks(initialFound);
+            }
+          } catch {
+            // ignore
+          }
+        }}
       />
     </div>
   );
