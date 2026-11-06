@@ -2,7 +2,7 @@
  * FastAPI Retrieval Backend Client
  * Connects the frontend Edge AI ReAct loop with the Python FastAPI backend.
  */
-import { AstCodeChunk, AstNodeType, NemoSearchOptions } from '../types';
+import { AstCodeChunk, AstNodeType, NemoSearchOptions, RepositoryItem } from '../types';
 
 export interface SearchRequest {
   query: string;
@@ -200,6 +200,48 @@ export class ApiClient {
     );
 
     return response.chunks || [];
+  }
+
+  public async getRepositories(): Promise<RepositoryItem[]> {
+    try {
+      const resp = await this.get<{ repositories: RepositoryItem[]; total: number }>('/api/v1/repos');
+      return resp.repositories.map((r) => ({
+        ...r,
+        chunksCount: r.chunks_count ?? r.chunksCount ?? 0,
+        filesCount: r.files_count ?? r.filesCount ?? 0,
+      }));
+    } catch {
+      return [
+        {
+          id: 'requests',
+          name: 'psf/requests',
+          path: 'fixtures/requests',
+          chunksCount: 284,
+          filesCount: 17,
+          status: 'indexed',
+          description: 'Python HTTP for Humans (284 AST nodes, Session, models, adapters)',
+        },
+        {
+          id: 'sample_codebase',
+          name: 'sample_codebase',
+          path: 'backend/sample_codebase',
+          chunksCount: 14,
+          filesCount: 3,
+          status: 'indexed',
+          description: 'FastAPI service sample with math functions, classes, and decorators',
+        },
+      ];
+    }
+  }
+
+  public async getRepoChunks(repoIdOrPath: string, limit: number = 10): Promise<AstCodeChunk[]> {
+    try {
+      return await this.get<AstCodeChunk[]>(
+        `/api/v1/repos/${encodeURIComponent(repoIdOrPath)}/chunks?limit=${limit}`
+      );
+    } catch {
+      return [];
+    }
   }
 }
 

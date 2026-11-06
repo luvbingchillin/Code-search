@@ -1,3 +1,17 @@
+export interface RepositoryItem {
+  id: string;
+  name: string;
+  path: string;
+  chunksCount: number;
+  filesCount?: number;
+  chunks_count?: number;
+  files_count?: number;
+  status?: 'indexed' | 'indexing' | 'not_indexed';
+  description?: string;
+  lastIndexed?: string;
+  last_indexed?: string;
+}
+
 export type AstNodeType =
   | 'FunctionDef'
   | 'AsyncFunctionDef'

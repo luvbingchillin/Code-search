@@ -1,11 +1,12 @@
 import React from 'react';
 import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode } from 'lucide-react';
-import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn } from '../../types';
+import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn, RepositoryItem } from '../../types';
 
 interface HeaderProps {
   webLLM: UseWebLLMReturn;
   nemoIR?: UseNemoIRReturn;
   agentStatus: AgentStatus;
+  activeRepo?: RepositoryItem | null;
   isChatMinimized?: boolean;
   onToggleChatMinimized?: () => void;
   isCodeMinimized?: boolean;
@@ -16,6 +17,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   webLLM,
   nemoIR,
+  activeRepo,
   isChatMinimized = false,
   onToggleChatMinimized,
   isCodeMinimized = false,
@@ -73,17 +75,28 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2.5">
-        {/* Connect Repository Trigger Button */}
+        {/* Connect / Switch Repository Trigger Button */}
         {onOpenConnectRepo && (
           <button
             type="button"
             data-testid="connect-repo-btn"
             onClick={onOpenConnectRepo}
             className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 text-xs text-indigo-300 transition-colors shadow-xs cursor-pointer active:scale-95"
-            title="Connect and index a local Python repository"
+            title={
+              activeRepo
+                ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} AST chunks). Click to switch or add.`
+                : 'Open pre-indexed repository or index new Python codebase'
+            }
           >
-            <FolderCode className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="font-medium">Connect Repo</span>
+            <FolderCode className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="font-medium max-w-[130px] truncate">
+              {activeRepo ? activeRepo.name : 'Repositories'}
+            </span>
+            {activeRepo && (
+              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-indigo-900/80 text-[10px] font-mono text-indigo-200">
+                {activeRepo.chunksCount ?? 0}
+              </span>
+            )}
           </button>
         )}
 

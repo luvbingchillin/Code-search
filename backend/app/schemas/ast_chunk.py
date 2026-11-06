@@ -63,6 +63,28 @@ class IndexResponse(BaseModel):
     elapsed_seconds: float = Field(..., description="Total ingestion execution time in seconds")
 
 
+class RepositoryItem(BaseModel):
+    """Metadata schema representing an indexed codebase repository."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(..., description="Unique repository identifier")
+    name: str = Field(..., description="Display name of the repository")
+    path: str = Field(..., description="Local file system path")
+    chunks_count: int = Field(default=0, description="Total AST chunks extracted and stored")
+    files_count: int = Field(default=0, description="Total Python source files scanned")
+    status: str = Field(default="indexed", description="Indexing status: indexed, indexing, or not_indexed")
+    description: Optional[str] = Field(default=None, description="Short summary description")
+    last_indexed: Optional[str] = Field(default=None, description="ISO timestamp of last successful index")
+
+
+class RepositoriesResponse(BaseModel):
+    """Response payload returning list of known and indexed repositories."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    repositories: List[RepositoryItem] = Field(default_factory=list, description="List of repositories")
+    total: int = Field(..., description="Total repository count")
+
+
 __all__ = [
     "AstNodeType",
     "AstCodeChunk",
@@ -72,4 +94,6 @@ __all__ = [
     "HealthResponse",
     "IndexRequest",
     "IndexResponse",
+    "RepositoryItem",
+    "RepositoriesResponse",
 ]

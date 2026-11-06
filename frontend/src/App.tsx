@@ -7,12 +7,15 @@ import { SplitPaneLayout } from './components/layout/SplitPaneLayout';
 import { ChatPane } from './components/chat/ChatPane';
 import { CodeViewerPane } from './components/viewer/CodeViewerPane';
 import { ConnectRepoModal } from './components/repo/ConnectRepoModal';
+import { RepositoryItem } from './types';
+import { apiClient } from './services/apiClient';
 
 export const App: React.FC = () => {
   const webLLM = useWebLLM();
   const nemoIR = useNemoIR();
   const agent = useReActAgent({ webLLM, nemoIR });
 
+  const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);
   const [isCodeMinimized, setIsCodeMinimized] = React.useState<boolean>(false);
   const [isConnectRepoOpen, setIsConnectRepoOpen] = React.useState<boolean>(false);
@@ -24,6 +27,28 @@ export const App: React.FC = () => {
   const handleCloseConnectRepo = React.useCallback(() => {
     setIsConnectRepoOpen(false);
   }, []);
+
+  const handleSelectRepo = React.useCallback(
+    async (repo: RepositoryItem) => {
+      setActiveRepo(repo);
+      try {
+        const chunks = await apiClient.getRepoChunks(repo.id, 10);
+        if (chunks && chunks.length > 0) {
+          if (agent.setActiveChunks) {
+            agent.setActiveChunks(chunks);
+          }
+        } else {
+          const fallback = await nemoIR.searchAstChunks('def ', { filePath: repo.path });
+          if (fallback && fallback.length > 0 && agent.setActiveChunks) {
+            agent.setActiveChunks(fallback);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load repo chunks:', err);
+      }
+    },
+    [agent, nemoIR]
+  );
 
   const toggleChatMinimized = React.useCallback(() => {
     setIsChatMinimized((prev) => !prev);
@@ -80,6 +105,7 @@ export const App: React.FC = () => {
         webLLM={webLLM}
         nemoIR={nemoIR}
         agentStatus={agent.agentStatus}
+        activeRepo={activeRepo}
         isChatMinimized={isChatMinimized}
         onToggleChatMinimized={toggleChatMinimized}
         isCodeMinimized={isCodeMinimized}
@@ -121,13 +147,15 @@ export const App: React.FC = () => {
         }
       />
 
-      {/* Connect Repository Modal */}
+      {/* Codebase Repository Hub Modal */}
       <ConnectRepoModal
         isOpen={isConnectRepoOpen}
         onClose={handleCloseConnectRepo}
-        onIndexed={async () => {
+        activeRepoId={activeRepo?.id}
+        onSelectRepo={handleSelectRepo}
+        onIndexed={async (stats) => {
           try {
-            const initialFound = await nemoIR.searchAstChunks('def ');
+            const initialFound = await nemoIR.searchAstChunks('def ', { filePath: stats.repoPath });
             if (initialFound && initialFound.length > 0 && agent.setActiveChunks) {
               agent.setActiveChunks(initialFound);
             }

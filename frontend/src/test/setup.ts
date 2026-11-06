@@ -136,6 +136,36 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
       });
     }
 
+    if (url.includes('/api/v1/repos')) {
+      const data = {
+        repositories: [
+          {
+            id: 'requests',
+            name: 'psf/requests',
+            path: 'fixtures/requests',
+            chunks_count: 284,
+            files_count: 17,
+            status: 'indexed',
+            description: 'Python HTTP for Humans (284 AST nodes)',
+          },
+          {
+            id: 'sample_codebase',
+            name: 'sample_codebase',
+            path: 'backend/sample_codebase',
+            chunks_count: 14,
+            files_count: 3,
+            status: 'indexed',
+            description: 'FastAPI service sample',
+          },
+        ],
+        total: 2,
+      };
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     if (url.includes('/api/v1/index')) {
       const data = {
         indexed_files: 18,

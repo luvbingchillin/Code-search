@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.api.dependencies import get_ingestion_service
 from app.schemas.ast_chunk import IndexRequest, IndexResponse
 from app.services.ingestion import VectorIngestionService
+from app.services.repo_registry import repo_registry
 
 router = APIRouter()
 
@@ -28,6 +29,13 @@ def trigger_indexing(
     files = ingestion_service.scanner.find_python_files(str(src_path))
     chunks_count = ingestion_service.ingest_directory(str(src_path))
     elapsed = time.perf_counter() - start_time
+
+    # Record indexed repository in registry
+    repo_registry.record_indexed_repository(
+        source_dir=request.source_dir,
+        files_count=len(files),
+        chunks_count=chunks_count,
+    )
 
     return IndexResponse(
         indexed_files=len(files),

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import chunks, entity, health, index, search
+from app.api.v1.endpoints import chunks, entity, health, index, repos, search
 
 api_router = APIRouter()
 
@@ -11,3 +11,4 @@ api_router.include_router(search.router, tags=["search"])
 api_router.include_router(entity.router, tags=["entity"])
 api_router.include_router(chunks.router, tags=["chunks"])
 api_router.include_router(index.router, tags=["index"])
+api_router.include_router(repos.router, tags=["repos"])
