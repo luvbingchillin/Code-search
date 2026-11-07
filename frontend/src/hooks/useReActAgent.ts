@@ -15,6 +15,7 @@ export interface UseReActAgentOptions {
   webLLM?: UseWebLLMReturn;
   nemoIR?: UseNemoIRReturn;
   initialChunks?: AstCodeChunk[];
+  activeRepoPath?: string;
 }
 
 const isTestEnv =
@@ -35,6 +36,13 @@ export function useReActAgent(
       : (options as UseReActAgentOptions)?.nemoIR;
   const nemoIRRef = useRef<UseNemoIRReturn | undefined>(nemoIR);
   nemoIRRef.current = nemoIR;
+
+  const activeRepoPath =
+    options && 'activeRepoPath' in options
+      ? (options as UseReActAgentOptions).activeRepoPath
+      : undefined;
+  const activeRepoPathRef = useRef<string | undefined>(activeRepoPath);
+  activeRepoPathRef.current = activeRepoPath;
 
   const defaultChunks =
     options && 'initialChunks' in options && options.initialChunks !== undefined
@@ -241,8 +249,13 @@ export function useReActAgent(
           statusRef.current = searchingStatus;
           setAgentStatus(searchingStatus);
 
+          const searchOptions = activeRepoPathRef.current
+            ? { filePath: activeRepoPathRef.current }
+            : undefined;
           const matchedChunks = nemoIRRef.current
-            ? await nemoIRRef.current.searchAstChunks(trimmed)
+            ? await (searchOptions
+                ? nemoIRRef.current.searchAstChunks(trimmed, searchOptions)
+                : nemoIRRef.current.searchAstChunks(trimmed))
             : simulatorRef.current.searchAstChunks(trimmed);
           activeChunksRef.current = matchedChunks;
           setActiveChunksState(matchedChunks);
@@ -332,7 +345,12 @@ export function useReActAgent(
           let liveChunks: AstCodeChunk[] | undefined;
           if (nemoIRRef.current) {
             try {
-              const res = await nemoIRRef.current.searchAstChunks(trimmed);
+              const searchOptions = activeRepoPathRef.current
+                ? { filePath: activeRepoPathRef.current }
+                : undefined;
+              const res = await (searchOptions
+                ? nemoIRRef.current.searchAstChunks(trimmed, searchOptions)
+                : nemoIRRef.current.searchAstChunks(trimmed));
               if (res && res.length > 0) {
                 liveChunks = res;
               }

@@ -11,11 +11,15 @@ import { RepositoryItem } from './types';
 import { apiClient } from './services/apiClient';
 
 export const App: React.FC = () => {
+  const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const webLLM = useWebLLM();
   const nemoIR = useNemoIR();
-  const agent = useReActAgent({ webLLM, nemoIR });
+  const agent = useReActAgent({
+    webLLM,
+    nemoIR,
+    activeRepoPath: activeRepo?.path,
+  });
 
-  const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);
   const [isCodeMinimized, setIsCodeMinimized] = React.useState<boolean>(false);
   const [isConnectRepoOpen, setIsConnectRepoOpen] = React.useState<boolean>(false);

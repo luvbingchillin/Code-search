@@ -233,4 +233,106 @@ describe('useReActAgent with NemoIR Ast Chunks Wiring Suite', () => {
     expect(result.current.selectedChunkId).toBe('chunk-test-1');
     expect(result.current.agentStatus.state).toBe('Complete');
   });
+
+  it('scopes searchAstChunks to activeRepoPath when repository is set in WebLLM branch', async () => {
+    const sampleChunks: AstCodeChunk[] = [
+      {
+        id: 'chunk-req-1',
+        filePath: 'fixtures/requests/sessions.py',
+        fileName: 'sessions.py',
+        astNodeType: 'FunctionDef',
+        identifier: 'Session.send',
+        startLine: 600,
+        endLine: 650,
+        code: 'def send(self, request, **kwargs): pass',
+        relevanceScore: 0.98,
+      },
+    ];
+
+    const mockSearch = vi.fn().mockResolvedValue(sampleChunks);
+    const mockNemoIR: UseNemoIRReturn = {
+      wasmStatus: 'ready',
+      isReady: true,
+      initNemo: vi.fn(),
+      searchAstChunks: mockSearch,
+      lookupEntity: vi.fn(),
+      executeWorkflow: vi.fn(),
+    };
+
+    const mockWebLLM: UseWebLLMReturn = {
+      status: 'ready',
+      progress: 1,
+      progressText: 'Ready',
+      currentModel: 'Qwen2.5-Coder',
+      error: null,
+      isWebGPUSupported: true,
+      engine: {},
+      loadModel: vi.fn(),
+      generate: vi.fn().mockResolvedValue('Here is Session.send'),
+      generateStream: vi.fn(),
+      initEngine: vi.fn(),
+      interrupt: vi.fn(),
+      unload: vi.fn(),
+    };
+
+    const { result } = renderHook(() =>
+      useReActAgent({
+        webLLM: mockWebLLM,
+        nemoIR: mockNemoIR,
+        activeRepoPath: 'fixtures/requests',
+      })
+    );
+
+    await act(async () => {
+      await result.current.submitQuery('Where is Session.send');
+    });
+
+    expect(mockSearch).toHaveBeenCalledWith('Where is Session.send', {
+      filePath: 'fixtures/requests',
+    });
+    expect(result.current.activeChunks).toEqual(sampleChunks);
+    expect(result.current.agentStatus.state).toBe('Complete');
+  });
+
+  it('scopes searchAstChunks to activeRepoPath in simulator fallback branch', async () => {
+    const sampleChunks: AstCodeChunk[] = [
+      {
+        id: 'chunk-calc-1',
+        filePath: 'backend/sample_codebase/calculator.py',
+        fileName: 'calculator.py',
+        astNodeType: 'FunctionDef',
+        identifier: 'calculate_statistics',
+        startLine: 10,
+        endLine: 30,
+        code: 'def calculate_statistics(data): pass',
+        relevanceScore: 0.95,
+      },
+    ];
+
+    const mockSearch = vi.fn().mockResolvedValue(sampleChunks);
+    const mockNemoIR: UseNemoIRReturn = {
+      wasmStatus: 'ready',
+      isReady: true,
+      initNemo: vi.fn(),
+      searchAstChunks: mockSearch,
+      lookupEntity: vi.fn(),
+      executeWorkflow: vi.fn(),
+    };
+
+    const { result } = renderHook(() =>
+      useReActAgent({
+        nemoIR: mockNemoIR,
+        activeRepoPath: 'backend/sample_codebase',
+      })
+    );
+
+    await act(async () => {
+      await result.current.submitQuery('calculate_statistics');
+    });
+
+    expect(mockSearch).toHaveBeenCalledWith('calculate_statistics', {
+      filePath: 'backend/sample_codebase',
+    });
+    expect(result.current.activeChunks).toEqual(sampleChunks);
+  });
 });
