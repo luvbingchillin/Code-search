@@ -56,6 +56,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     testTimeout: 15000,
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**', '**/.{idea,git,cache,output,temp}/**'],
   },
 });
 
