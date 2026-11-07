@@ -6,7 +6,7 @@ import { MessageList } from './MessageList';
 import { QuerySuggestions } from './QuerySuggestions';
 import { ChatInput } from './ChatInput';
 
-interface ChatPaneProps {
+export interface ChatPaneProps {
   status: AgentStatus;
   messages: ChatMessage[];
   chunks: AstCodeChunk[];
@@ -18,6 +18,7 @@ interface ChatPaneProps {
   onReset?: () => void;
   isMinimized?: boolean;
   onMinimize?: () => void;
+  activeRepoId?: string;
 }
 
 export const ChatPane: React.FC<ChatPaneProps> = ({
@@ -31,6 +32,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   steps,
   onReset,
   onMinimize,
+  activeRepoId,
 }) => {
   const isBusy =
     status.state === 'Thinking' ||
@@ -56,7 +58,11 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
       <MessageList messages={messages} chunks={chunks} onSelectChunk={onSelectChunk} />
 
       {/* Suggested Quick Queries */}
-      <QuerySuggestions onSelectSuggestion={onSubmit} disabled={isBusy} />
+      <QuerySuggestions
+        onSelectSuggestion={onSubmit}
+        disabled={isBusy}
+        activeRepoId={activeRepoId}
+      />
 
       {/* Multi-line Chat Input with Auto-resize */}
       <ChatInput status={status} onSubmit={onSubmit} onCancel={onCancel} />
