@@ -12,6 +12,7 @@ interface CodeViewerHeaderProps {
   onMinimize?: () => void;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
+  matchCount?: number;
 }
 
 export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
@@ -24,9 +25,16 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   onMinimize,
   searchTerm = '',
   onSearchChange,
+  matchCount = 0,
 }) => {
   const [copied, setCopied] = useState(false);
-  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(Boolean(searchTerm));
+
+  React.useEffect(() => {
+    if (searchTerm) {
+      setIsSearchActive(true);
+    }
+  }, [searchTerm]);
 
   const handleCopy = async () => {
     if (!chunk) return;
@@ -105,13 +113,23 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                 <Search className="w-3 h-3 text-slate-400" />
                 <input
                   type="text"
+                  data-testid="code-search-input"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Find in code..."
                   autoFocus
                   className="bg-transparent text-slate-100 text-xs focus:outline-none w-28 sm:w-36 font-mono placeholder-slate-500"
                 />
+                {searchTerm.trim().length > 0 && (
+                  <span
+                    data-testid="search-match-count"
+                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800 text-amber-300 border border-slate-700 whitespace-nowrap"
+                  >
+                    {matchCount} {matchCount === 1 ? 'match' : 'matches'}
+                  </span>
+                )}
                 <button
+                  data-testid="clear-code-search-btn"
                   onClick={() => {
                     onSearchChange('');
                     setIsSearchActive(false);
@@ -124,6 +142,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               </div>
             ) : (
               <button
+                data-testid="open-code-search-btn"
                 onClick={() => setIsSearchActive(true)}
                 className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                 title="Search in code"

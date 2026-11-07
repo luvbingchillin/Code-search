@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
 import { FolderCode, FolderPlus } from 'lucide-react';
@@ -7,9 +7,65 @@ import { AstCodeChunk } from '../../types';
 interface CodeDisplayProps {
   chunk: AstCodeChunk | null;
   onOpenConnectRepo?: () => void;
+  searchTerm?: string;
+  onMatchCountChange?: (count: number) => void;
 }
 
-export const CodeDisplay: React.FC<CodeDisplayProps> = ({ chunk, onOpenConnectRepo }) => {
+const escapeRegex = (s: string) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+export const CodeDisplay: React.FC<CodeDisplayProps> = ({
+  chunk,
+  onOpenConnectRepo,
+  searchTerm = '',
+  onMatchCountChange,
+}) => {
+  const lines = useMemo(() => {
+    return chunk ? chunk.code.split('\n') : [];
+  }, [chunk?.code]);
+
+  const highlightedHtml = useMemo(() => {
+    if (!chunk?.code) return '';
+    try {
+      if (Prism.languages.python) {
+        return Prism.highlight(chunk.code, Prism.languages.python, 'python');
+      }
+      return chunk.code;
+    } catch (err) {
+      console.error('Prism Python highlighting error:', err);
+      return chunk.code;
+    }
+  }, [chunk?.code]);
+
+  const { safeHtml, matchCount } = useMemo(() => {
+    if (!highlightedHtml || !searchTerm || !searchTerm.trim()) {
+      return { safeHtml: highlightedHtml, matchCount: 0 };
+    }
+    try {
+      const term = searchTerm.trim();
+      const regex = new RegExp(`(${escapeRegex(term)})`, 'gi');
+      let count = 0;
+      const parts = highlightedHtml.split(/(<[^>]+>)/g);
+      for (let i = 0; i < parts.length; i += 2) {
+        const matches = parts[i].match(regex);
+        if (matches) {
+          count += matches.length;
+          parts[i] = parts[i].replace(
+            regex,
+            '<mark class="bg-amber-400/30 text-amber-200 border-b border-amber-400 font-semibold px-0.5 rounded">$1</mark>'
+          );
+        }
+      }
+      return { safeHtml: parts.join(''), matchCount: count };
+    } catch (err) {
+      console.error('Code search highlight error:', err);
+      return { safeHtml: highlightedHtml, matchCount: 0 };
+    }
+  }, [highlightedHtml, searchTerm]);
+
+  useEffect(() => {
+    onMatchCountChange?.(matchCount);
+  }, [matchCount, onMatchCountChange]);
+
   if (!chunk) {
     return (
       <div
@@ -40,22 +96,6 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({ chunk, onOpenConnectRe
     );
   }
 
-  const lines = useMemo(() => {
-    return chunk.code.split('\n');
-  }, [chunk.code]);
-
-  const highlightedHtml = useMemo(() => {
-    try {
-      if (Prism.languages.python) {
-        return Prism.highlight(chunk.code, Prism.languages.python, 'python');
-      }
-      return chunk.code;
-    } catch (err) {
-      console.error('Prism Python highlighting error:', err);
-      return chunk.code;
-    }
-  }, [chunk.code]);
-
   return (
     <div
       data-testid="code-display"
@@ -81,7 +121,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({ chunk, onOpenConnectRe
         <pre className="language-python !bg-transparent !p-0 !m-0 font-mono">
           <code
             className="language-python"
-            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+            dangerouslySetInnerHTML={{ __html: safeHtml }}
           />
         </pre>
       </div>

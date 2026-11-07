@@ -28,6 +28,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [matchCount, setMatchCount] = useState(0);
 
   const selectedChunk =
     chunks.find((c) => c.id === selectedChunkId) ?? (chunks.length > 0 ? chunks[0] : null);
@@ -48,6 +49,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        matchCount={matchCount}
         isMaximized={isMaximized}
         onToggleMaximize={onToggleMaximize}
         isMinimized={isMinimized}
@@ -101,7 +103,12 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
       )}
 
       {/* Prism Syntax Code Display with Line Numbers */}
-      <CodeDisplay chunk={selectedChunk} onOpenConnectRepo={onOpenConnectRepo} />
+      <CodeDisplay
+        chunk={selectedChunk}
+        onOpenConnectRepo={onOpenConnectRepo}
+        searchTerm={searchTerm}
+        onMatchCountChange={setMatchCount}
+      />
 
       {/* Collapsible AST Metadata Drawer */}
       <ASTMetadataInspector
