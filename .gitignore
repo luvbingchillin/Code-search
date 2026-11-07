@@ -9,12 +9,14 @@ DESIGN_SYSTEM.md
 CRITIQUE.md
 ARCHITECTURE_TRADE_OFFS.md
 GATE_STATUS.md
+PROGRESS_AUDIT_REPORT.md
 *.agent
 *.agent.md
 agent_memory/
 
 # Databases & Local Data
 data/
+backend/data/
 *.lance
 *.db
 *.sqlite

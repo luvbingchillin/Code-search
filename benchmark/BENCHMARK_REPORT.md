@@ -11,7 +11,7 @@ Empirical comparison of the proposed **Tree-sitter Python AST Ingestion Engine**
 | **Recall@5** | 73.33% | **76.67%** | +3.34% |
 | **Mean Reciprocal Rank (MRR)** | 0.5522 | **0.5833** | +5.6% |
 | **Semantic Boundary Integrity (SBIR)** | 0.67% | **100.00%** | **+99.33% (Complete Nodes)** |
-| **Average Query Latency** | 21.94 ms | **24.15 ms** | -2.21 ms |
+| **Average Query Latency** | 26.51 ms | **26.94 ms** | -0.43 ms |
 
 ## 2. Analysis of the Three Critical Baseline Flaws
 

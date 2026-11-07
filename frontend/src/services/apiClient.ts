@@ -204,8 +204,8 @@ export class ApiClient {
 
   public async getRepositories(): Promise<RepositoryItem[]> {
     try {
-      const resp = await this.get<{ repositories: RepositoryItem[]; total: number }>('/api/v1/repos');
-      return resp.repositories.map((r) => ({
+      const resp = await this.request<{ repositories: RepositoryItem[]; total: number }>('/api/v1/repos');
+      return resp.repositories.map((r: RepositoryItem) => ({
         ...r,
         chunksCount: r.chunks_count ?? r.chunksCount ?? 0,
         filesCount: r.files_count ?? r.filesCount ?? 0,
@@ -236,7 +236,7 @@ export class ApiClient {
 
   public async getRepoChunks(repoIdOrPath: string, limit: number = 10): Promise<AstCodeChunk[]> {
     try {
-      return await this.get<AstCodeChunk[]>(
+      return await this.request<AstCodeChunk[]>(
         `/api/v1/repos/${encodeURIComponent(repoIdOrPath)}/chunks?limit=${limit}`
       );
     } catch {
