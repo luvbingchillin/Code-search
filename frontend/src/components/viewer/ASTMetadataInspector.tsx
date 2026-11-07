@@ -6,12 +6,14 @@ interface ASTMetadataInspectorProps {
   chunk: AstCodeChunk | null;
   isOpen: boolean;
   onClose: () => void;
+  onSelectCall?: (callIdentifier: string) => void;
 }
 
 export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
   chunk,
   isOpen,
   onClose,
+  onSelectCall,
 }) => {
   if (!isOpen || !chunk) return null;
 
@@ -99,6 +101,48 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
                 className="px-2 py-0.5 rounded bg-pink-950 text-pink-300 border border-pink-700/60 text-[11px]"
               >
                 {dec}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {chunk.calls && chunk.calls.length > 0 && (
+        <div className="pt-1" data-testid="ast-calls-section">
+          <div className="text-slate-400 flex items-center space-x-1 mb-1">
+            <GitBranch className="w-3 h-3 text-emerald-400" />
+            <span>Called Functions ({chunk.calls.length}):</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {chunk.calls.map((call, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onSelectCall?.(call)}
+                data-testid={`call-badge-${call}`}
+                className="px-2 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 border border-emerald-700/60 hover:border-emerald-500 text-[11px] font-mono cursor-pointer transition-colors inline-flex items-center"
+              >
+                {call} ↗
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {chunk.imports && chunk.imports.length > 0 && (
+        <div className="pt-1" data-testid="ast-imports-section">
+          <div className="text-slate-400 flex items-center space-x-1 mb-1">
+            <Layers className="w-3 h-3 text-sky-400" />
+            <span>Imports ({chunk.imports.length}):</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {chunk.imports.map((imp, i) => (
+              <span
+                key={i}
+                data-testid={`import-badge-${imp}`}
+                className="px-2 py-0.5 rounded bg-slate-950 text-sky-300 border border-slate-700 text-[11px] font-mono"
+              >
+                {imp}
               </span>
             ))}
           </div>

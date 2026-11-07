@@ -9,6 +9,7 @@ export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
   selectedChunkId: string | null;
   onSelectChunk: (chunkId: string) => void;
+  onSelectCall?: (callIdentifier: string) => void;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
   isMinimized?: boolean;
@@ -20,6 +21,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   chunks,
   selectedChunkId,
   onSelectChunk,
+  onSelectCall,
   isMaximized,
   onToggleMaximize,
   isMinimized,
@@ -32,6 +34,25 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
   const selectedChunk =
     chunks.find((c) => c.id === selectedChunkId) ?? (chunks.length > 0 ? chunks[0] : null);
+
+  const handleSelectCall = (callIdentifier: string) => {
+    if (onSelectCall) {
+      onSelectCall(callIdentifier);
+    } else {
+      const cleanName = callIdentifier.replace(/^self\./, '');
+      const match = chunks.find(
+        (c) =>
+          c.identifier === callIdentifier ||
+          c.identifier === cleanName ||
+          c.identifier.endsWith(`.${cleanName}`) ||
+          cleanName.endsWith(`.${c.identifier}`) ||
+          (callIdentifier.startsWith('self.') && c.identifier.endsWith(cleanName))
+      );
+      if (match) {
+        onSelectChunk(match.id);
+      }
+    }
+  };
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-[#070a12]">
@@ -115,6 +136,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         chunk={selectedChunk}
         isOpen={isInspectorOpen}
         onClose={() => setIsInspectorOpen(false)}
+        onSelectCall={handleSelectCall}
       />
     </div>
   );

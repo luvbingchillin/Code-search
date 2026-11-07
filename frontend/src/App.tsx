@@ -71,6 +71,44 @@ export const App: React.FC = () => {
     setIsCodeMinimized(false);
   }, []);
 
+  const handleSelectCall = React.useCallback(
+    async (callIdentifier: string) => {
+      const cleanName = callIdentifier.replace(/^self\./, '');
+
+      // Step 1: Check if callee is already present in agent.activeChunks
+      const localMatch = agent.activeChunks.find(
+        (c) =>
+          c.identifier === callIdentifier ||
+          c.identifier === cleanName ||
+          c.identifier.endsWith(`.${cleanName}`) ||
+          cleanName.endsWith(`.${c.identifier}`) ||
+          (callIdentifier.startsWith('self.') && c.identifier.endsWith(cleanName))
+      );
+
+      if (localMatch) {
+        agent.setSelectedChunkId(localMatch.id);
+        return;
+      }
+
+      // Step 2: If not in active chunks, invoke apiClient.lookupEntity(cleanName)
+      try {
+        const resp = await apiClient.lookupEntity(cleanName);
+        if (resp && resp.chunks && resp.chunks.length > 0) {
+          const newChunks = resp.chunks.filter(
+            (rc) => !agent.activeChunks.some((c) => c.id === rc.id)
+          );
+          if (agent.setActiveChunks && newChunks.length > 0) {
+            agent.setActiveChunks([...agent.activeChunks, ...newChunks]);
+          }
+          agent.setSelectedChunkId(resp.chunks[0].id);
+        }
+      } catch (err) {
+        console.warn(`Entity lookup failed for ${callIdentifier}:`, err);
+      }
+    },
+    [agent]
+  );
+
   // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,6 +181,7 @@ export const App: React.FC = () => {
             chunks={agent.activeChunks}
             selectedChunkId={agent.selectedChunkId}
             onSelectChunk={agent.setSelectedChunkId}
+            onSelectCall={handleSelectCall}
             isMaximized={isChatMinimized && !isCodeMinimized}
             onToggleMaximize={toggleMaximizeCode}
             isMinimized={isCodeMinimized}
