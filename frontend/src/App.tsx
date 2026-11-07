@@ -12,6 +12,7 @@ import { apiClient } from './services/apiClient';
 
 export const App: React.FC = () => {
   const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
+  const [healthRefreshTrigger, setHealthRefreshTrigger] = React.useState<number>(0);
   const webLLM = useWebLLM();
   const nemoIR = useNemoIR();
   const agent = useReActAgent({
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
   const handleSelectRepo = React.useCallback(
     async (repo: RepositoryItem) => {
       setActiveRepo(repo);
+      setHealthRefreshTrigger((prev) => prev + 1);
       try {
         const chunks = await apiClient.getRepoChunks(repo.id, 10);
         if (chunks && chunks.length > 0) {
@@ -148,6 +150,7 @@ export const App: React.FC = () => {
         nemoIR={nemoIR}
         agentStatus={agent.agentStatus}
         activeRepo={activeRepo}
+        healthRefreshTrigger={healthRefreshTrigger}
         isChatMinimized={isChatMinimized}
         onToggleChatMinimized={toggleChatMinimized}
         isCodeMinimized={isCodeMinimized}
@@ -198,6 +201,7 @@ export const App: React.FC = () => {
         activeRepoId={activeRepo?.id}
         onSelectRepo={handleSelectRepo}
         onIndexed={async (stats) => {
+          setHealthRefreshTrigger((prev) => prev + 1);
           try {
             const initialFound = await nemoIR.searchAstChunks('def ', { filePath: stats.repoPath });
             if (initialFound && initialFound.length > 0 && agent.setActiveChunks) {

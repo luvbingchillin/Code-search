@@ -1,12 +1,15 @@
 import React from 'react';
 import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn, RepositoryItem } from '../../types';
+import { apiClient as defaultApiClient, HealthResponse } from '../../services/apiClient';
 
 interface HeaderProps {
   webLLM: UseWebLLMReturn;
   nemoIR?: UseNemoIRReturn;
   agentStatus: AgentStatus;
   activeRepo?: RepositoryItem | null;
+  healthRefreshTrigger?: number;
+  apiClient?: { getHealth: (options?: { signal?: AbortSignal }) => Promise<HealthResponse> };
   isChatMinimized?: boolean;
   onToggleChatMinimized?: () => void;
   isCodeMinimized?: boolean;
@@ -18,12 +21,41 @@ export const Header: React.FC<HeaderProps> = ({
   webLLM,
   nemoIR,
   activeRepo,
+  healthRefreshTrigger = 0,
+  apiClient: apiClientProp,
   isChatMinimized = false,
   onToggleChatMinimized,
   isCodeMinimized = false,
   onToggleCodeMinimized,
   onOpenConnectRepo,
 }) => {
+  const client = apiClientProp ?? defaultApiClient;
+  const [health, setHealth] = React.useState<HealthResponse | null>(null);
+  const [isBackendHealthy, setIsBackendHealthy] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const checkHealth = async () => {
+      try {
+        const resp = await client.getHealth();
+        if (!isMounted) return;
+        const healthy = Boolean(resp && (resp.status === 'healthy' || resp.status === 'ok'));
+        setHealth(resp);
+        setIsBackendHealthy(healthy);
+      } catch {
+        if (!isMounted) return;
+        setHealth(null);
+        setIsBackendHealthy(false);
+      }
+    };
+
+    checkHealth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [client, healthRefreshTrigger, activeRepo]);
   const getWebLLMStatusColor = () => {
     switch (webLLM.status) {
       case 'ready':
@@ -99,6 +131,33 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
         )}
+
+        {/* Live Backend Health & LanceDB Status Indicator */}
+        <div
+          data-testid="backend-health-pill"
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs shadow-xs font-mono select-none ${
+            isBackendHealthy
+              ? 'bg-emerald-950/50 text-emerald-300 border-emerald-600/70'
+              : 'bg-amber-950/50 text-amber-300 border-amber-600/70'
+          }`}
+          title={
+            isBackendHealthy
+              ? `Backend API connected at localhost:8000 (${health?.total_chunks ?? 0} indexed chunks in LanceDB)`
+              : 'Backend API offline - operating in local simulator mode'
+          }
+        >
+          <span
+            data-testid="backend-health-dot"
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              isBackendHealthy ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+            }`}
+          />
+          <span data-testid="backend-health-label" className="font-semibold">
+            {isBackendHealthy
+              ? `API:8000 (LanceDB: ${health?.total_chunks ?? 0})`
+              : 'API: Offline (Simulator)'}
+          </span>
+        </div>
 
         {/* Interactive WebLLM Engine Badge with Dynamic Progress & Controls */}
         <button
