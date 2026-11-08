@@ -206,6 +206,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
         return (
           <div
             key={msg.id}
+            data-testid={`chat-message-${msg.id}`}
             className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
           >
             {/* Avatar */}
