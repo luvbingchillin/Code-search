@@ -54,9 +54,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({ status, onSubmit, onCancel
           onKeyDown={handleKeyDown}
           placeholder="Ask a question about the Python codebase..."
           rows={1}
-          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none leading-relaxed transition-colors"
+          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none leading-relaxed transition-colors"
           disabled={isBusy}
         />
+        {!input && !isBusy && (
+          <kbd
+            data-testid="chat-focus-shortcut"
+            className="hidden sm:inline-flex items-center absolute right-3 top-2.5 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700 rounded shadow-xs pointer-events-none select-none"
+            title="Focus chat input"
+          >
+            {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
+          </kbd>
+        )}
       </div>
 
       {isBusy ? (

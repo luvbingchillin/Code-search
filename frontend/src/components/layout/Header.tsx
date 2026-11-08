@@ -191,13 +191,16 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Model Selector / Accelerator Indicator */}
-        <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs">
+        {/* Model Indicator with Informative Tooltip */}
+        <div
+          data-testid="model-indicator-badge"
+          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs"
+          title="Edge SLM: Qwen2.5-Coder-1.5B running locally on WebGPU"
+        >
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="font-mono font-medium truncate max-w-[150px]">{webLLM.currentModel ?? 'Qwen2.5-Coder'}</span>
-          <kbd className="ml-1 px-1.5 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-300 border border-slate-600 rounded shadow-xs" title="Search Shortcut">
-            {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
-          </kbd>
+          <span className="font-mono font-medium truncate max-w-[150px]">
+            {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
+          </span>
         </div>
 
         {/* Layout Pane Visibility Controls (Toggle Chat / Toggle Code Viewer) */}
