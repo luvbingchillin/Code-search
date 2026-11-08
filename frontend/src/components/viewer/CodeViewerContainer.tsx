@@ -77,52 +77,6 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onMinimize={onMinimize}
       />
 
-      {/* Sticky First-Class AST Symbol Context Strip */}
-      {selectedChunk && (
-        <div className="bg-slate-900/90 border-b border-slate-800 px-3.5 py-1.5 flex flex-wrap items-center gap-2 text-xs font-mono shrink-0">
-          <div className="flex items-center space-x-1.5">
-            <span className="font-bold text-slate-100 text-xs flex items-center space-x-1">
-              <span className="text-purple-400 font-semibold">{selectedChunk.astNodeType.toLowerCase().includes('class') ? 'class' : 'def'}</span>
-              <span className="text-sky-300 font-semibold">{selectedChunk.identifier}</span>
-            </span>
-          </div>
-
-          {selectedChunk.parameters && selectedChunk.parameters.length > 0 && (
-            <div className="hidden sm:flex items-center space-x-1.5">
-              <span className="text-slate-400 text-xs">params:</span>
-              <div className="flex items-center space-x-1">
-                {selectedChunk.parameters.slice(0, 3).map((param, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded bg-slate-950 text-sky-300 border border-slate-700 text-xs font-mono">
-                    {param}
-                  </span>
-                ))}
-                {selectedChunk.parameters.length > 3 && (
-                  <span className="text-slate-400 text-xs font-mono">+{selectedChunk.parameters.length - 3}</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {selectedChunk.decorators && selectedChunk.decorators.length > 0 && (
-            <div className="hidden lg:flex items-center space-x-1">
-              {selectedChunk.decorators.slice(0, 2).map((dec, i) => (
-                <span key={i} className="px-2 py-0.5 rounded bg-pink-950 text-pink-300 border border-pink-700/60 text-xs font-mono">
-                  {dec}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {selectedChunk.docstring && (
-            <div className="hidden md:flex items-center space-x-1 text-slate-300 text-xs font-sans ml-auto" title={selectedChunk.docstring}>
-              <span className="text-amber-400 font-mono">"""</span>
-              <span className="italic text-slate-300">Docstring available</span>
-              <span className="text-amber-400 font-mono">"""</span>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Prism Syntax Code Display with Line Numbers */}
       <CodeDisplay
         chunk={selectedChunk}
