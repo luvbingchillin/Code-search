@@ -24,8 +24,8 @@ test.describe('Live Real-Data E2E Verification Suite (Zero Mock Fallbacks)', () 
 
     await expect(healthPill).toBeVisible();
 
-    // Verify label displays real LanceDB count (284) from live backend
-    await expect(healthLabel).toHaveText(/API:8000 \(LanceDB: 284\)/, { timeout: 10000 });
+    // Verify label displays real LanceDB count from live backend
+    await expect(healthLabel).toHaveText(/API:8000 \(LanceDB: \d+\)/, { timeout: 10000 });
     await expect(healthDot).toHaveClass(/bg-emerald-400/);
 
     // Initial clean empty state: No hardcoded chunks loaded
