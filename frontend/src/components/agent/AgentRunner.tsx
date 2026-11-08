@@ -229,7 +229,9 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   return (
     <div
       data-testid="agent-runner"
-      className={`bg-slate-900 border-b border-slate-800 transition-all ${className}`}
+      className={`bg-slate-900 border-b border-slate-800 transition-all ${className} ${
+        embedded && normState === 'idle' && !isExpanded ? 'hidden' : ''
+      }`}
     >
       {/* Top Header / Status Control Bar */}
       <div className="px-3 py-1.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70">
