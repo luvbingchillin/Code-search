@@ -119,6 +119,30 @@ export interface UseNemoIRReturn {
   executeWorkflow: (input: Record<string, unknown>) => Promise<unknown>;
 }
 
+export interface RepositoryTreeResponse {
+  repo_id: string;
+  repo_name: string;
+  total_files: number;
+  total_symbols: number;
+  tree: FileTreeNode[];
+}
+
+export interface FileTreeNode {
+  filePath: string;
+  fileName: string;
+  symbolsCount: number;
+  symbols: FileSymbolNode[];
+}
+
+export interface FileSymbolNode {
+  id: string;
+  identifier: string;
+  astNodeType: string;
+  startLine: number;
+  endLine: number;
+  parameters?: string[];
+}
+
 export interface UseReActAgentReturn {
   agentStatus: AgentStatus;
   messages: ChatMessage[];

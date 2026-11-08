@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose } from 'lucide-react';
+import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 interface CodeViewerHeaderProps {
   chunk: AstCodeChunk | null;
   onToggleInspector?: () => void;
   isInspectorOpen?: boolean;
+  onToggleExplorer?: () => void;
+  isExplorerOpen?: boolean;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
   isMinimized?: boolean;
@@ -19,6 +21,8 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   chunk,
   onToggleInspector,
   isInspectorOpen,
+  onToggleExplorer,
+  isExplorerOpen,
   isMaximized,
   onToggleMaximize,
   isMinimized,
@@ -161,6 +165,23 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               </button>
             )}
           </div>
+        )}
+
+        {onToggleExplorer && (
+          <button
+            type="button"
+            data-testid="toggle-explorer-btn"
+            onClick={onToggleExplorer}
+            className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
+              isExplorerOpen
+                ? 'bg-indigo-950 text-indigo-300 border-indigo-600/70'
+                : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
+            }`}
+            title="Toggle Repository Explorer Tree"
+          >
+            <FolderTree className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Explorer</span>
+          </button>
         )}
 
         {onToggleInspector && (

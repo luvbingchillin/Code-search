@@ -2,7 +2,7 @@
  * FastAPI Retrieval Backend Client
  * Connects the frontend Edge AI ReAct loop with the Python FastAPI backend.
  */
-import { AstCodeChunk, AstNodeType, NemoSearchOptions, RepositoryItem } from '../types';
+import { AstCodeChunk, AstNodeType, NemoSearchOptions, RepositoryItem, RepositoryTreeResponse } from '../types';
 
 export interface SearchRequest {
   query: string;
@@ -241,6 +241,16 @@ export class ApiClient {
       );
     } catch {
       return [];
+    }
+  }
+
+  public async getRepoTree(repoId: string): Promise<RepositoryTreeResponse | null> {
+    try {
+      return await this.request<RepositoryTreeResponse>(
+        `/api/v1/repos/${encodeURIComponent(repoId)}/tree`
+      );
+    } catch {
+      return null;
     }
   }
 }

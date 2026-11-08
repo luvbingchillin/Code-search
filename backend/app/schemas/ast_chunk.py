@@ -85,6 +85,39 @@ class RepositoriesResponse(BaseModel):
     total: int = Field(..., description="Total repository count")
 
 
+class FileSymbolNode(BaseModel):
+    """Compact AST symbol metadata for file tree explorer."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(..., description="Unique AST chunk identifier")
+    identifier: str = Field(..., description="Function, method, or class name")
+    ast_node_type: str = Field(..., alias="astNodeType", description="AST Node type (ClassDef, FunctionDef)")
+    start_line: int = Field(..., alias="startLine", description="Starting source line number")
+    end_line: int = Field(..., alias="endLine", description="Ending source line number")
+    parameters: List[str] = Field(default_factory=list, description="Method parameter names")
+
+
+class FileTreeNode(BaseModel):
+    """File node grouping all extracted AST symbols within a source file."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    file_path: str = Field(..., alias="filePath", description="Relative or normalized file path")
+    file_name: str = Field(..., alias="fileName", description="Base file name")
+    symbols_count: int = Field(default=0, alias="symbolsCount", description="Count of AST symbols in file")
+    symbols: List[FileSymbolNode] = Field(default_factory=list, description="Nested AST symbols")
+
+
+class RepositoryTreeResponse(BaseModel):
+    """Hierarchical AST symbol tree for a repository."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    repo_id: str = Field(..., description="Unique repository identifier")
+    repo_name: str = Field(..., description="Repository display name")
+    total_files: int = Field(..., description="Count of source files")
+    total_symbols: int = Field(..., description="Count of total AST symbols")
+    tree: List[FileTreeNode] = Field(default_factory=list, description="List of file nodes with nested symbols")
+
+
 __all__ = [
     "AstNodeType",
     "AstCodeChunk",
@@ -96,4 +129,7 @@ __all__ = [
     "IndexResponse",
     "RepositoryItem",
     "RepositoriesResponse",
+    "FileSymbolNode",
+    "FileTreeNode",
+    "RepositoryTreeResponse",
 ]

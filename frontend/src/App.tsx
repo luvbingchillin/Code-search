@@ -126,6 +126,18 @@ export const App: React.FC = () => {
     [agent]
   );
 
+  const handleAddChunk = React.useCallback(
+    (newChunk: any) => {
+      if (!agent.activeChunks.some((c) => c.id === newChunk.id)) {
+        if (agent.setActiveChunks) {
+          agent.setActiveChunks([...agent.activeChunks, newChunk]);
+        }
+      }
+      agent.setSelectedChunkId(newChunk.id);
+    },
+    [agent]
+  );
+
   // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -206,6 +218,8 @@ export const App: React.FC = () => {
             onMinimize={toggleCodeMinimized}
             onOpenConnectRepo={handleOpenConnectRepo}
             onCloseChunk={handleCloseChunk}
+            activeRepoId={activeRepo?.id}
+            onAddChunk={handleAddChunk}
           />
         }
       />

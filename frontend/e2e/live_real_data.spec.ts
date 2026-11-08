@@ -197,4 +197,41 @@ test.describe('Live Real-Data E2E Verification Suite (Zero Mock Fallbacks)', () 
     await citationButtons.first().click();
     await expect(page.getByTestId('code-display')).toBeVisible();
   });
+
+  // =========================================================================
+  // Journey 6: Interactive Repository File & Symbol Tree Explorer
+  // =========================================================================
+  test('Journey 6: Opens Repository Explorer, browses file tree, and selects nested AST symbol', async ({ page }) => {
+    await page.goto('/');
+
+    // 1. Connect psf/requests repo
+    await page.getByTestId('connect-repo-btn').click();
+    await page.getByTestId('open-repo-btn-requests').click();
+
+    // 2. Open Explorer via Code Viewer Header
+    const explorerToggle = page.getByTestId('toggle-explorer-btn');
+    await expect(explorerToggle).toBeVisible();
+    await explorerToggle.click();
+
+    // 3. Explorer tree sidebar should mount and show file nodes
+    const fileTree = page.getByTestId('repo-file-tree');
+    await expect(fileTree).toBeVisible();
+
+    // Verify requests files are listed
+    await expect(page.getByTestId('tree-file-sessions.py')).toBeVisible();
+    await expect(page.getByTestId('tree-file-adapters.py')).toBeVisible();
+
+    // 4. Filter the tree for "send"
+    const filterInput = page.getByTestId('file-tree-filter-input');
+    await filterInput.fill('send');
+
+    // 5. Click a symbol in the tree (e.g. Session.send)
+    const sendSymbol = page.getByTestId('tree-symbol-Session.send');
+    await expect(sendSymbol).toBeVisible();
+    await sendSymbol.click();
+
+    // Verify CodeViewer updates to show Session.send
+    await expect(page.getByTestId('code-display')).toBeVisible();
+    await expect(page.getByTestId('chunk-file-path')).toContainText('Session.send');
+  });
 });

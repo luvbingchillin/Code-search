@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { AstCodeChunk } from '../../types';
+import { AstCodeChunk, FileSymbolNode } from '../../types';
 import { CodeViewerHeader } from './CodeViewerHeader';
 import { ChunkSelectorTabs } from './ChunkSelectorTabs';
 import { CodeDisplay } from './CodeDisplay';
 import { ASTMetadataInspector } from './ASTMetadataInspector';
+import { RepoFileTree } from './RepoFileTree';
+import { apiClient } from '../../services/apiClient';
 
 export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
@@ -16,6 +18,8 @@ export interface CodeViewerContainerProps {
   onMinimize?: () => void;
   onOpenConnectRepo?: () => void;
   onCloseChunk?: (id: string) => void;
+  activeRepoId?: string | null;
+  onAddChunk?: (chunk: AstCodeChunk) => void;
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
@@ -29,8 +33,11 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   onMinimize,
   onOpenConnectRepo,
   onCloseChunk,
+  activeRepoId,
+  onAddChunk,
 }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
 
@@ -56,6 +63,42 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
     }
   };
 
+  const handleSelectTreeSymbol = async (symbol: FileSymbolNode) => {
+    // 1. Check if chunk already loaded locally
+    const local = chunks.find((c) => c.id === symbol.id || c.identifier === symbol.identifier);
+    if (local) {
+      onSelectChunk(local.id);
+      return;
+    }
+
+    // 2. Fetch specific chunk by unique ID
+    try {
+      const fetched = await apiClient.getChunkById(symbol.id);
+      if (fetched) {
+        if (onAddChunk) {
+          onAddChunk(fetched);
+        }
+        onSelectChunk(fetched.id);
+        return;
+      }
+    } catch {
+      // Fallback to lookupEntity
+    }
+
+    // 3. Fallback to exact entity lookup
+    try {
+      const resp = await apiClient.lookupEntity(symbol.identifier);
+      if (resp && resp.chunks && resp.chunks.length > 0) {
+        if (onAddChunk) {
+          onAddChunk(resp.chunks[0]);
+        }
+        onSelectChunk(resp.chunks[0].id);
+      }
+    } catch (err) {
+      console.warn('Failed to load symbol from tree:', err);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden bg-[#070a12]">
       {/* Chunk Tabs */}
@@ -66,11 +109,13 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onCloseChunk={onCloseChunk}
       />
 
-      {/* Code Header with Breadcrumbs and Copy */}
+      {/* Code Header with Breadcrumbs, Search, Explorer Toggle and Actions */}
       <CodeViewerHeader
         chunk={selectedChunk}
         isInspectorOpen={isInspectorOpen}
         onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
+        isExplorerOpen={isExplorerOpen}
+        onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         matchCount={matchCount}
@@ -80,21 +125,35 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onMinimize={onMinimize}
       />
 
-      {/* Prism Syntax Code Display with Line Numbers */}
-      <CodeDisplay
-        chunk={selectedChunk}
-        onOpenConnectRepo={onOpenConnectRepo}
-        searchTerm={searchTerm}
-        onMatchCountChange={setMatchCount}
-      />
+      {/* Main Content Area (Optional Left Explorer + Code Display) */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {isExplorerOpen && (
+          <RepoFileTree
+            repoId={activeRepoId ?? null}
+            activeChunkId={selectedChunk?.id ?? null}
+            onSelectSymbol={handleSelectTreeSymbol}
+            onClose={() => setIsExplorerOpen(false)}
+          />
+        )}
 
-      {/* Collapsible AST Metadata Drawer */}
-      <ASTMetadataInspector
-        chunk={selectedChunk}
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        onSelectCall={handleSelectCall}
-      />
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Prism Syntax Code Display with Line Numbers */}
+          <CodeDisplay
+            chunk={selectedChunk}
+            onOpenConnectRepo={onOpenConnectRepo}
+            searchTerm={searchTerm}
+            onMatchCountChange={setMatchCount}
+          />
+
+          {/* Collapsible AST Metadata Drawer */}
+          <ASTMetadataInspector
+            chunk={selectedChunk}
+            isOpen={isInspectorOpen}
+            onClose={() => setIsInspectorOpen(false)}
+            onSelectCall={handleSelectCall}
+          />
+        </div>
+      </div>
     </div>
   );
 };

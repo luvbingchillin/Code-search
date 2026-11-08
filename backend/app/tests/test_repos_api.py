@@ -51,3 +51,18 @@ def test_get_repository_by_id(repo_test_client: TestClient):
 
     not_found = repo_test_client.get("/api/v1/repos/nonexistent_repo_id")
     assert not_found.status_code == 404
+
+
+def test_get_repository_tree(repo_test_client: TestClient):
+    """Verify GET /api/v1/repos/{repo_id}/tree returns hierarchical file tree."""
+    resp = repo_test_client.get("/api/v1/repos/requests/tree")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["repo_id"] == "requests"
+    assert "total_files" in data
+    assert "total_symbols" in data
+    assert "tree" in data
+    assert isinstance(data["tree"], list)
+
+    not_found = repo_test_client.get("/api/v1/repos/nonexistent_repo/tree")
+    assert not_found.status_code == 404
