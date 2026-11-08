@@ -15,6 +15,7 @@ export interface CodeViewerContainerProps {
   isMinimized?: boolean;
   onMinimize?: () => void;
   onOpenConnectRepo?: () => void;
+  onCloseChunk?: (id: string) => void;
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
@@ -27,6 +28,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   isMinimized,
   onMinimize,
   onOpenConnectRepo,
+  onCloseChunk,
 }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +63,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         chunks={chunks}
         selectedChunkId={selectedChunk?.id ?? null}
         onSelectChunk={onSelectChunk}
+        onCloseChunk={onCloseChunk}
       />
 
       {/* Code Header with Breadcrumbs and Copy */}

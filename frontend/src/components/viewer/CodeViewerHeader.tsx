@@ -66,15 +66,23 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
       data-testid="code-viewer-header"
       className="h-10 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between text-xs select-none"
     >
-      <div className="flex items-center space-x-2.5 overflow-hidden">
+      <div className="flex items-center space-x-2 overflow-hidden">
         <FileCode className="w-4 h-4 text-purple-400 shrink-0" />
-        <span
+        <div
           data-testid="chunk-file-path"
-          className="font-mono text-slate-200 truncate max-w-[280px] font-medium"
-          title={chunk?.filePath}
+          className="font-mono text-slate-200 truncate max-w-[340px] font-medium flex items-center space-x-1"
+          title={chunk ? `${chunk.filePath} > ${chunk.identifier}` : 'No file selected'}
         >
-          {chunk ? chunk.filePath : 'No file selected'}
-        </span>
+          {chunk ? (
+            <>
+              <span className="text-slate-400 truncate">{chunk.filePath}</span>
+              <span className="text-slate-600 font-bold shrink-0">&gt;</span>
+              <span className="text-sky-300 font-semibold truncate">{chunk.identifier}</span>
+            </>
+          ) : (
+            'No file selected'
+          )}
+        </div>
 
         {chunk && (
           <>
@@ -83,6 +91,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium ${getNodeTypeBadgeColor(
                 chunk.astNodeType
               )}`}
+              title={`AST Node: ${chunk.astNodeType}`}
             >
               {chunk.astNodeType}
             </span>
@@ -97,6 +106,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             <span
               data-testid="chunk-relevance-score"
               className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
+              title="Vector semantic similarity score calculated by LanceDB"
             >
               Relevance {(chunk.relevanceScore * 100).toFixed(0)}%
             </span>

@@ -111,6 +111,21 @@ export const App: React.FC = () => {
     [agent]
   );
 
+  const handleCloseChunk = React.useCallback(
+    (chunkIdToClose: string) => {
+      const remaining = agent.activeChunks.filter((c) => c.id !== chunkIdToClose);
+      if (agent.setActiveChunks) {
+        agent.setActiveChunks(remaining);
+      }
+      if (agent.selectedChunkId === chunkIdToClose) {
+        if (remaining.length > 0) {
+          agent.setSelectedChunkId(remaining[0].id);
+        }
+      }
+    },
+    [agent]
+  );
+
   // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -190,6 +205,7 @@ export const App: React.FC = () => {
             isMinimized={isCodeMinimized}
             onMinimize={toggleCodeMinimized}
             onOpenConnectRepo={handleOpenConnectRepo}
+            onCloseChunk={handleCloseChunk}
           />
         }
       />
