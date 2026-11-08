@@ -83,7 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
   const getWebLLMLabel = () => {
     if (webLLM.status === 'ready') return 'WebGPU';
     if (webLLM.status === 'loading') {
-      return webLLM.progress > 0 ? `${Math.round(webLLM.progress * 100)}%` : 'loading';
+      const clampedPct = Math.min(100, Math.max(0, Math.round(webLLM.progress)));
+      return clampedPct > 0 ? `${clampedPct}%` : 'loading';
     }
     return webLLM.status;
   };
