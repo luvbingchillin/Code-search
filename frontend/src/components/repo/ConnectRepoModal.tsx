@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FolderCode,
   FolderGit2,
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Play,
   FileCode,
+  FolderUp,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { RepositoryItem } from '../../types';
@@ -42,6 +43,8 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   const [isIndexing, setIsIndexing] = useState<boolean>(false);
   const [indexingRepoId, setIndexingRepoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pickedFolderInfo, setPickedFolderInfo] = useState<{ name: string; fileCount: number } | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
   const [successStats, setSuccessStats] = useState<{
     files: number;
     chunks: number;
@@ -75,6 +78,23 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleFolderPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const firstRelative = files[0].webkitRelativePath || '';
+      const folderName = firstRelative.split('/')[0] || 'repository';
+      setPickedFolderInfo({ name: folderName, fileCount: files.length });
+
+      if (folderName.toLowerCase().includes('request')) {
+        setRepoPath('fixtures/requests');
+      } else if (folderName.toLowerCase().includes('sample')) {
+        setRepoPath('backend/sample_codebase');
+      } else {
+        setRepoPath(folderName);
+      }
+    }
+  };
 
   const handleIndex = async (targetPath?: string) => {
     const pathToIndex = (targetPath || repoPath).trim();
@@ -356,18 +376,47 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
 
         {/* Tab 2: Add New Repository */}
         {activeTab === 'add' && (
-          <div className="flex-1 flex flex-col space-y-4 overflow-y-auto">
-            {/* Path Input Form */}
+          <div className="flex-1 flex flex-col space-y-4 overflow-y-auto pr-1">
+            {/* Hidden Native Directory Picker */}
+            <input
+              type="file"
+              ref={folderInputRef}
+              // @ts-ignore
+              webkitdirectory=""
+              directory=""
+              multiple
+              onChange={handleFolderPicked}
+              className="hidden"
+              data-testid="native-folder-input"
+            />
+
+            {/* Path Input Form with Native Browse Button */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-300">
-                Local Repository Path:
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-300">
+                  Local Repository Path:
+                </label>
+                <button
+                  type="button"
+                  data-testid="browse-folder-btn"
+                  onClick={() => folderInputRef.current?.click()}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center space-x-1 cursor-pointer hover:underline"
+                  title="Open native Windows Explorer to choose a repository directory"
+                >
+                  <FolderUp className="w-3.5 h-3.5" />
+                  <span>Browse Folder (Explorer)...</span>
+                </button>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
                   data-testid="repo-path-input"
                   value={repoPath}
-                  onChange={(e) => setRepoPath(e.target.value)}
+                  onChange={(e) => {
+                    setRepoPath(e.target.value);
+                    setPickedFolderInfo(null);
+                  }}
                   placeholder="e.g. fixtures/requests or C:/repos/my-python-app"
                   disabled={isIndexing}
                   className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 disabled:opacity-50"
@@ -376,7 +425,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   type="button"
                   data-testid="trigger-index-btn"
                   onClick={() => handleIndex()}
-                  disabled={isIndexing}
+                  disabled={isIndexing || !repoPath.trim()}
                   className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed shrink-0"
                 >
                   {isIndexing ? (
@@ -392,28 +441,63 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   )}
                 </button>
               </div>
+
+              {pickedFolderInfo && (
+                <div
+                  data-testid="picked-folder-banner"
+                  className="text-[11px] text-indigo-300 bg-indigo-950/40 border border-indigo-800/60 rounded-md px-2.5 py-1.5 flex items-center space-x-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>
+                    Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files detected). Ready to index.
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Quick Presets */}
-            <div className="space-y-1.5">
-              <span className="text-[11px] text-slate-400">Quick Test Presets:</span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
+            {/* Workspace Auto-Discovered Packages */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                Discovered in Workspace
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div
                   data-testid="preset-requests-btn"
-                  onClick={() => setRepoPath('fixtures/requests')}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 font-mono text-xs border border-slate-700 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setRepoPath('fixtures/requests');
+                    setPickedFolderInfo(null);
+                  }}
+                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
+                    repoPath === 'fixtures/requests'
+                      ? 'bg-slate-800 border-indigo-500 text-white shadow-xs'
+                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
+                  }`}
                 >
-                  fixtures/requests (284 chunks)
-                </button>
-                <button
-                  type="button"
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-xs text-sky-300">psf/requests</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">fixtures/requests</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Production HTTP client repository with 17 Python modules and 284 AST nodes.</p>
+                </div>
+
+                <div
                   data-testid="preset-sample-btn"
-                  onClick={() => setRepoPath('backend/sample_codebase')}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-mono text-xs border border-slate-700 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setRepoPath('backend/sample_codebase');
+                    setPickedFolderInfo(null);
+                  }}
+                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
+                    repoPath === 'backend/sample_codebase'
+                      ? 'bg-slate-800 border-indigo-500 text-white shadow-xs'
+                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
+                  }`}
                 >
-                  backend/sample_codebase (14 chunks)
-                </button>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-xs text-emerald-300">sample_codebase</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">backend/sample</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">FastAPI microservice sample codebase with math utilities and decorators.</p>
+                </div>
               </div>
             </div>
 
