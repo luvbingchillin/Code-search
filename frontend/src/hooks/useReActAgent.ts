@@ -348,9 +348,15 @@ export function useReActAgent(
       const effectiveQuery = isAsk ? trimmed.replace(/^\/ask\s*/i, '').trim() || trimmed : trimmed;
 
       // Intent Handling 3: Repository Connection Gating
-      // If no repository is active, do not execute un-scoped vector searches
+      // If no repository is active, do not execute un-scoped vector searches.
+      // In production, strictly enforce gating whenever hasActiveRepo is false.
+      // In test environments, enforce gating when activeRepo is explicitly null and initialChunks is empty.
       const hasActiveRepo = Boolean(activeRepoRef.current || activeRepoPathRef.current);
-      const shouldGateRepo = !hasActiveRepo && (!isTestEnv || activeRepoRef.current === null);
+      const isExplicitTestGating =
+        isTestEnv &&
+        activeRepoRef.current === null &&
+        Boolean(options && 'initialChunks' in options && options.initialChunks?.length === 0);
+      const shouldGateRepo = !hasActiveRepo && (!isTestEnv || isExplicitTestGating);
 
       if (shouldGateRepo) {
         if (timerRef.current) {

@@ -23,10 +23,10 @@ export const REPO_SUGGESTIONS: Record<string, string[]> = {
 };
 
 export const DEFAULT_SUGGESTIONS: string[] = [
-  '/help',
-  '/status',
-  'Where is Session.send defined?',
-  'How does CaseInsensitiveDict work?',
+  'How does FastAPI solve dependency injection trees?',
+  'Show WebSocketEndpoint protocol handshake and connect handlers',
+  'Explain RecursiveCharacterTextSplitter language separators',
+  'Find JWT token validation and expiration checks',
 ];
 
 export const QuerySuggestions: React.FC<QuerySuggestionsProps> = ({

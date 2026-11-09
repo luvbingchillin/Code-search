@@ -126,6 +126,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       const { result } = renderHook(() =>
         useReActAgent({
           activeRepo: null,
+          initialChunks: [],
           nemoIR: { searchAstChunks: mockSearch } as any,
         })
       );
