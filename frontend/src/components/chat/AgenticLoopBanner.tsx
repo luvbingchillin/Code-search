@@ -56,7 +56,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
       case 'Searching AST':
         return 'text-sky-300 bg-sky-950/80 border-sky-600/70 shadow-sky-950/30';
       case 'Synthesizing':
-        return 'text-purple-300 bg-purple-950/80 border-purple-600/70 shadow-purple-950/30';
+        return 'text-teal-300 bg-teal-950/80 border-teal-600/70 shadow-teal-950/30';
       case 'Complete':
         return 'text-emerald-300 bg-emerald-950/80 border-emerald-600/70 shadow-emerald-950/30';
       case 'Error':
@@ -74,7 +74,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
       case 'Searching AST':
         return <Search className="w-4 h-4 animate-pulse text-sky-400" />;
       case 'Synthesizing':
-        return <Cpu className="w-4 h-4 animate-spin text-purple-400" />;
+        return <Cpu className="w-4 h-4 animate-spin text-teal-400" />;
       case 'Complete':
         return <CheckCircle className="w-4 h-4 text-emerald-400" />;
       case 'Error':
@@ -125,7 +125,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
                     stepStatus === 'completed'
                       ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/70'
                       : stepStatus === 'current'
-                      ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/50'
+                      ? 'bg-sky-600 text-white shadow-xs shadow-sky-500/50'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}
                 >
@@ -136,7 +136,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({ status, on
                     stepStatus === 'completed'
                       ? 'text-emerald-300 font-medium'
                       : stepStatus === 'current'
-                      ? 'text-indigo-300 font-semibold'
+                      ? 'text-sky-300 font-semibold'
                       : 'text-slate-400'
                   }`}
                 >

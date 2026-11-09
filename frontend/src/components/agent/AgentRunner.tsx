@@ -14,6 +14,7 @@ import {
   Layers,
   Sparkles,
   Zap,
+  Code2,
 } from 'lucide-react';
 import { AgentStatus, ReActState } from '../../types';
 import { WorkflowTraceDrawer } from '@nemoir/web-ui';
@@ -180,7 +181,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       case 'searching':
         return 'text-sky-300 bg-sky-950/80 border-sky-600/70 shadow-sky-950/30';
       case 'synthesizing':
-        return 'text-purple-300 bg-purple-950/80 border-purple-600/70 shadow-purple-950/30';
+        return 'text-teal-300 bg-teal-950/80 border-teal-600/70 shadow-teal-950/30';
       case 'complete':
         return 'text-emerald-300 bg-emerald-950/80 border-emerald-600/70 shadow-emerald-950/30';
       case 'error':
@@ -198,7 +199,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       case 'searching':
         return <Search className="w-3.5 h-3.5 animate-pulse text-sky-400" />;
       case 'synthesizing':
-        return <Sparkles className="w-3.5 h-3.5 animate-spin text-purple-400" />;
+        return <Code2 className="w-3.5 h-3.5 animate-pulse text-teal-400" />;
       case 'complete':
         return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
       case 'error':
@@ -214,7 +215,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       case 'completed':
         return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
       case 'running':
-        return <Cpu className="w-3.5 h-3.5 text-purple-400 animate-spin" />;
+        return <Cpu className="w-3.5 h-3.5 text-sky-400 animate-spin" />;
       case 'error':
         return <AlertCircle className="w-3.5 h-3.5 text-rose-400" />;
       case 'pending':
@@ -248,7 +249,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                 </span>
               )}
               <div className="flex items-center space-x-1.5 text-xs">
-                <Terminal className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <Terminal className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                 <span className="font-mono text-[11px] text-slate-300 font-medium">
                   {normState === 'idle' ? 'Execution Traces & Engine Metrics' : `${displayLabel} Pipeline`}
                 </span>
@@ -351,7 +352,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                 data-step-id={step.id || `step-${idx}`}
                 className={`flex items-center justify-between p-2 rounded text-xs border transition-colors ${
                   step.status === 'running'
-                    ? 'bg-purple-950/60 border-purple-600/70 text-purple-200 shadow-xs'
+                    ? 'bg-sky-950/60 border-sky-600/70 text-sky-200 shadow-xs'
                     : step.status === 'completed'
                     ? 'bg-slate-900 border-slate-700/80 text-slate-200'
                     : step.status === 'error'
@@ -365,7 +366,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                     data-testid={`agent-step-name-${step.id || idx}`}
                     className={`truncate font-medium text-xs ${
                       step.status === 'running'
-                        ? 'text-purple-300 font-semibold'
+                        ? 'text-sky-300 font-semibold'
                         : step.status === 'completed'
                         ? 'text-slate-200'
                         : step.status === 'error'
@@ -391,11 +392,11 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           {(Boolean(streamingTokens) || normState === 'synthesizing') && (
             <div
               data-testid="agent-streaming-output"
-              className="mt-2 p-2.5 rounded bg-slate-950 border border-purple-600/60 text-xs font-mono shadow-xs"
+              className="mt-2 p-2.5 rounded bg-slate-950 border border-slate-700/80 text-xs font-mono shadow-xs"
             >
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px] text-slate-300">
-                <span className="flex items-center space-x-1 text-purple-400 font-semibold">
-                  <Sparkles className="w-3.5 h-3.5" />
+                <span className="flex items-center space-x-1.5 text-sky-400 font-semibold">
+                  <Terminal className="w-3.5 h-3.5" />
                   <span>WebLLM Token Stream</span>
                 </span>
                 {tokenCount > 0 && (
@@ -415,7 +416,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                     {isBusy && (
                       <span
                         data-testid="streaming-cursor"
-                        className="inline-block w-1.5 h-3.5 ml-0.5 bg-purple-400 animate-pulse align-middle"
+                        className="inline-block w-1.5 h-3.5 ml-0.5 bg-sky-400 animate-pulse align-middle"
                       />
                     )}
                   </>
@@ -424,7 +425,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                     data-testid="agent-streaming-placeholder"
                     className="text-slate-400 italic flex items-center space-x-1.5"
                   >
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
                     <span>Awaiting initial token from WebLLM SLM engine...</span>
                   </span>
                 )}
