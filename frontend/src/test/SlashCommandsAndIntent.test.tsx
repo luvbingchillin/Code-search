@@ -9,7 +9,6 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
     name: 'psf/requests',
     path: 'C:/repos/requests',
     chunksCount: 284,
-    astNodeCount: 284,
   };
 
   beforeEach(() => {
@@ -194,7 +193,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       const { ChatInput } = await import('../components/chat/ChatInput');
       render(
         <ChatInput
-          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0, elapsedMs: 0 }}
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
           hasActiveRepo={false}
@@ -214,7 +213,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       const { ChatInput } = await import('../components/chat/ChatInput');
       render(
         <ChatInput
-          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0, elapsedMs: 0 }}
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
           hasActiveRepo={true}
@@ -236,7 +235,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
 
       render(
         <ChatInput
-          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0, elapsedMs: 0 }}
           onSubmit={handleSubmit}
           onCancel={vi.fn()}
         />
@@ -261,7 +260,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
 
       render(
         <ChatInput
-          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0, elapsedMs: 0 }}
           onSubmit={handleSubmit}
           onCancel={vi.fn()}
         />
@@ -283,7 +282,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
 
       render(
         <ChatInput
-          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0, elapsedMs: 0 }}
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
         />
@@ -329,6 +328,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
         state: 'Idle' as const,
         currentStepMessage: 'Ready',
         activeChunkCount: 0,
+        elapsedMs: 0,
       };
 
       render(
@@ -375,6 +375,7 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
         state: 'Idle' as const,
         currentStepMessage: 'Ready',
         activeChunkCount: 0,
+        elapsedMs: 0,
       };
 
       render(

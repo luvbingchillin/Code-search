@@ -233,15 +233,14 @@ test.describe('Sequential Improvements Automated Browser E2E Suite (Milestone 6)
 
     await page.goto('/');
 
-    // 1. Initial query without active repository -> file_path should be undefined
+    // 1. Initial query without active repository -> Gated with friendly onboarding card (zero blind search)
     const chatInput = page.getByTestId('chat-input-textarea');
     await chatInput.fill('General question without repository');
     await page.getByTestId('chat-send-btn').click();
 
-    await expect(async () => {
-      expect(capturedSearchPayload).not.toBeNull();
-      expect(capturedSearchPayload.file_path).toBeUndefined();
-    }).toPass();
+    const messageList = page.getByTestId('message-list');
+    await expect(messageList).toContainText('No Active Repository Connected');
+    expect(capturedSearchPayload).toBeNull();
 
     // 2. Connect psf/requests repo
     await page.getByTestId('connect-repo-btn').click();
@@ -377,5 +376,57 @@ test.describe('Sequential Improvements Automated Browser E2E Suite (Milestone 6)
 
     await expect(label).toHaveText('API: Offline (Simulator)');
     await expect(dot).toHaveClass(/bg-amber-400/);
+  });
+
+  // =========================================================================
+  // Feature 6: Slash Commands, Conversational Intent & Repository Gating
+  // =========================================================================
+  test('Feature 6: Gating on unselected repo, slash command popover, and instant /help & /status responses', async ({ page }) => {
+    await page.goto('/');
+
+    const chatInput = page.getByTestId('chat-input-textarea');
+    await expect(chatInput).toHaveAttribute(
+      'placeholder',
+      'Connect a repository to search AST code, or type /help...'
+    );
+
+    // 1. Submit blind query before connecting a repo -> gated onboarding card
+    await chatInput.fill('dd');
+    await chatInput.press('Enter');
+
+    const messageList = page.getByTestId('message-list');
+    await expect(messageList).toContainText('No Active Repository Connected');
+    await expect(messageList).toContainText('Please select or connect a Python repository');
+
+    // 2. Type '/' -> shows command suggestions popover
+    await chatInput.fill('/');
+    const popover = page.getByTestId('slash-commands-popover');
+    await expect(popover).toBeVisible();
+    await expect(page.getByTestId('slash-cmd-help')).toBeVisible();
+    await expect(page.getByTestId('slash-cmd-status')).toBeVisible();
+
+    // 3. Click /status -> instant status card without vector search
+    await page.getByTestId('slash-cmd-status').click();
+    await expect(messageList).toContainText('System & Repository Status');
+    await expect(messageList).toContainText('Active Repository');
+
+    // 4. Conversational intent: "what repo am i in"
+    await chatInput.fill('what repo am i in');
+    await chatInput.press('Enter');
+    await expect(messageList).toContainText('None connected');
+
+    // 5. Connect psf/requests -> placeholder updates
+    await page.getByTestId('connect-repo-btn').click();
+    await page.getByTestId('open-repo-btn-requests').click();
+
+    await expect(chatInput).toHaveAttribute(
+      'placeholder',
+      'Ask a question about psf/requests (or type /help, /status)...'
+    );
+
+    // 6. Conversational intent: "what repo am i in" now returns psf/requests
+    await chatInput.fill('what repo am i in');
+    await chatInput.press('Enter');
+    await expect(messageList).toContainText('psf/requests');
   });
 });
