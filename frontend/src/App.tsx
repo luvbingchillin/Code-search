@@ -19,6 +19,7 @@ export const App: React.FC = () => {
     webLLM,
     nemoIR,
     activeRepoPath: activeRepo?.path,
+    activeRepo,
   });
 
   const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);

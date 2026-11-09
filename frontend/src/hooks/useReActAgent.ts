@@ -7,6 +7,7 @@ import {
   UseReActAgentReturn,
   UseWebLLMReturn,
   UseNemoIRReturn,
+  RepositoryItem,
 } from '../types';
 import { AgentSimulator } from '../services/agentSimulator';
 import { mockAstChunks } from '../services/mockAstData';
@@ -16,12 +17,62 @@ export interface UseReActAgentOptions {
   nemoIR?: UseNemoIRReturn;
   initialChunks?: AstCodeChunk[];
   activeRepoPath?: string;
+  activeRepo?: RepositoryItem | null;
 }
 
 const isTestEnv =
   (typeof process !== 'undefined' &&
     (process.env?.NODE_ENV === 'test' || Boolean(process.env?.VITEST))) ||
   (typeof window !== 'undefined' && Boolean((window as any).__VITEST_ENVIRONMENT__));
+
+function getHelpContent(): string {
+  return `### 💡 CodeSeek AI Command & Workflow Guide
+
+**CodeSeek AI** is a 100% edge-computed code intelligence assistant powered by Tree-sitter AST extraction, LanceDB vector storage, and local SLM inference (Qwen2.5-Coder on WebGPU).
+
+#### 🛠️ Available Commands
+- \`/help\` — Display this command reference and workflow guide.
+- \`/status\` (or \`/repo\`) — Check current repository, indexed AST nodes, and edge engine status.
+- \`/ask <query>\` — Query the codebase AST index and synthesize an answer.
+
+#### 🚀 Getting Started
+1. **Connect a Repository**: Click **Repositories** in the header to open \`psf/requests\` or index your local codebase.
+2. **Load WebLLM**: Click **WebLLM: Load** in the header to activate real-time local neural code synthesis via WebGPU.
+3. **Query AST Structure**: Ask natural language questions like *"Where is Session.send defined?"* or *"How does CaseInsensitiveDict work?"*.`;
+}
+
+function getStatusContent(
+  activeRepo: RepositoryItem | null | undefined,
+  activeRepoPath: string | undefined,
+  activeChunksCount: number,
+  webLLM: UseWebLLMReturn | undefined
+): string {
+  const repoName = activeRepo?.name || (activeRepoPath ? activeRepoPath.split(/[\\/]/).pop() : null);
+  const repoPath = activeRepo?.path || activeRepoPath || null;
+  const chunksCount = activeRepo?.chunksCount ?? activeRepo?.chunks_count ?? activeChunksCount;
+  const isWebLLMReady = webLLM?.status === 'ready';
+  const modelName = webLLM?.currentModel || 'Qwen2.5-Coder (1.5B)';
+
+  if (!repoName) {
+    return `### 📊 System & Repository Status
+
+- **Active Repository**: *None connected*
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
+- **AST Nodes Loaded**: ${activeChunksCount}
+
+*Click **Repositories** in the top header to connect \`psf/requests\` or index a local codebase.*`;
+  }
+
+  return `### 📊 System & Repository Status
+
+- **Active Repository**: **${repoName}** (\`${repoPath}\`)
+- **Indexed AST Nodes**: **${chunksCount}** nodes (functions, classes, methods)
+- **Active Code Tabs**: **${activeChunksCount}** loaded in viewer
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
+- **NemoIR WebAssembly JIT**: Ready & compiled
+
+${!isWebLLMReady ? '> 💡 *Tip: Click **WebLLM: Load** in the top header to switch from template simulation to real-time neural edge inference on your GPU.*' : ''}`;
+}
 
 export function useReActAgent(
   options?: UseReActAgentOptions | UseWebLLMReturn
@@ -37,10 +88,18 @@ export function useReActAgent(
   const nemoIRRef = useRef<UseNemoIRReturn | undefined>(nemoIR);
   nemoIRRef.current = nemoIR;
 
-  const activeRepoPath =
+  const activeRepo =
+    options && 'activeRepo' in options
+      ? (options as UseReActAgentOptions).activeRepo
+      : undefined;
+  const activeRepoRef = useRef<RepositoryItem | null | undefined>(activeRepo);
+  activeRepoRef.current = activeRepo;
+
+  const rawActiveRepoPath =
     options && 'activeRepoPath' in options
       ? (options as UseReActAgentOptions).activeRepoPath
       : undefined;
+  const activeRepoPath = rawActiveRepoPath || activeRepo?.path;
   const activeRepoPathRef = useRef<string | undefined>(activeRepoPath);
   activeRepoPathRef.current = activeRepoPath;
 
@@ -203,6 +262,135 @@ export function useReActAgent(
       setStreamingTokens('');
       streamingTokensRef.current = '';
 
+      const lower = trimmed.toLowerCase();
+      const isHelp = lower === '/help' || lower === 'help';
+      const isStatus =
+        lower === '/status' ||
+        lower === '/repo' ||
+        lower === 'status' ||
+        /^(what\s+repo(\s+am\s+i\s+in)?|which\s+repo|current\s+repo|repo\s+info|info)$/i.test(lower);
+      const isAsk = lower.startsWith('/ask ') || lower.startsWith('/ask');
+
+      // Intent Handling 1: /help or help
+      if (isHelp) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const helpContent = getHelpContent();
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: helpContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Complete',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 12,
+            tokensGenerated: helpContent.split(/\s+/).filter(Boolean).length,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const idleStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: 'Ready to query codebase via Edge AI',
+        };
+        statusRef.current = idleStatus;
+        setAgentStatus(idleStatus);
+        return;
+      }
+
+      // Intent Handling 2: /status, /repo, or "what repo am i in"
+      if (isStatus) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const statusContent = getStatusContent(
+          activeRepoRef.current,
+          activeRepoPathRef.current,
+          activeChunksRef.current.length,
+          webLLMRef.current
+        );
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: statusContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Complete',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 15,
+            tokensGenerated: statusContent.split(/\s+/).filter(Boolean).length,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const idleStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: activeRepoRef.current
+            ? `Active repository: ${activeRepoRef.current.name}`
+            : 'Ready to query codebase via Edge AI',
+        };
+        statusRef.current = idleStatus;
+        setAgentStatus(idleStatus);
+        return;
+      }
+
+      // Strip /ask prefix if user explicitly invoked /ask command
+      const effectiveQuery = isAsk ? trimmed.replace(/^\/ask\s*/i, '').trim() || trimmed : trimmed;
+
+      // Intent Handling 3: Repository Connection Gating
+      // If no repository is active, do not execute un-scoped vector searches
+      const hasActiveRepo = Boolean(activeRepoRef.current || activeRepoPathRef.current);
+      const shouldGateRepo = !hasActiveRepo && (!isTestEnv || activeRepoRef.current === null);
+
+      if (shouldGateRepo) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const gatingContent = `### ⚠️ No Active Repository Connected
+
+Please select or connect a Python repository before querying AST code chunks.
+
+- Click **Repositories** in the top header or select an auto-discovered codebase (**psf/requests** or **sample_codebase**).
+- Once connected, you can search function definitions, class structures, and call graphs.
+- Type \`/status\` to check environment details or \`/help\` for available commands.`;
+
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: gatingContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Complete',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 10,
+            tokensGenerated: gatingContent.split(/\s+/).filter(Boolean).length,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const idleStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: 'Connect a repository to index AST nodes and query via Edge AI',
+        };
+        statusRef.current = idleStatus;
+        setAgentStatus(idleStatus);
+        return;
+      }
+
       // Set initial Thinking state synchronously
       const startTime = Date.now();
       const thinkingStatus: AgentStatus = {
@@ -254,9 +442,9 @@ export function useReActAgent(
             : undefined;
           const matchedChunks = nemoIRRef.current
             ? await (searchOptions
-                ? nemoIRRef.current.searchAstChunks(trimmed, searchOptions)
-                : nemoIRRef.current.searchAstChunks(trimmed))
-            : simulatorRef.current.searchAstChunks(trimmed);
+                ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
+                : nemoIRRef.current.searchAstChunks(effectiveQuery))
+            : simulatorRef.current.searchAstChunks(effectiveQuery);
           activeChunksRef.current = matchedChunks;
           setActiveChunksState(matchedChunks);
           citedChunksList = matchedChunks;
@@ -284,7 +472,7 @@ export function useReActAgent(
           // Execute compiled NemoIR workflow IR
           if (nemoIRRef.current && typeof nemoIRRef.current.executeWorkflow === 'function') {
             try {
-              await nemoIRRef.current.executeWorkflow({ query: trimmed });
+              await nemoIRRef.current.executeWorkflow({ query: effectiveQuery });
             } catch {
               // Graceful continuation
             }
@@ -303,7 +491,7 @@ export function useReActAgent(
           const MAX_PROMPT_TOKENS = 3500; // Leave safety headroom for model completion
           const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
-          let currentTokens = estimateTokens(trimmed) + 120;
+          let currentTokens = estimateTokens(effectiveQuery) + 120;
           const budgetedChunks: AstCodeChunk[] = [];
 
           for (const chunk of matchedChunks.slice(0, 5)) {
@@ -332,7 +520,7 @@ export function useReActAgent(
             )
             .join('\n\n');
 
-          const prompt = `Context AST nodes:\n${astContext}\n\nUser Question: ${trimmed}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
+          const prompt = `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
 
           finalResponseText = await currentLLM.generate(prompt, (chunk, accumulated) => {
             if (isCancelledRef.current) return;
@@ -349,8 +537,8 @@ export function useReActAgent(
                 ? { filePath: activeRepoPathRef.current }
                 : undefined;
               const res = await (searchOptions
-                ? nemoIRRef.current.searchAstChunks(trimmed, searchOptions)
-                : nemoIRRef.current.searchAstChunks(trimmed));
+                ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
+                : nemoIRRef.current.searchAstChunks(effectiveQuery));
               if (res && res.length > 0) {
                 liveChunks = res;
               }
@@ -361,7 +549,7 @@ export function useReActAgent(
 
           // Use simulator with live token streaming callback
           const result = await simulatorRef.current.runReActCycle(
-            trimmed,
+            effectiveQuery,
             (state: ReActState, message: string, chunks?: AstCodeChunk[]) => {
               if (chunks && chunks.length > 0) {
                 activeChunksRef.current = chunks;
@@ -393,7 +581,10 @@ export function useReActAgent(
             liveChunks
           );
 
-          finalResponseText = result.response;
+          finalResponseText =
+            result.response +
+            '\n\n> 💡 *Note: Synthesized using deterministic AST Simulator. Click **WebLLM: Load** in the header to activate real-time local neural code synthesis (Qwen2.5-Coder on WebGPU).*';
+          citedChunksList = result.citedChunks;
           citedChunksList = result.citedChunks;
         }
 
