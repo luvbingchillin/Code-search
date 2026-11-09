@@ -55,7 +55,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
     switch (nodeType) {
       case 'FunctionDef':
       case 'AsyncFunctionDef':
-        return 'bg-purple-950 text-purple-300 border-purple-600/70 shadow-xs';
+        return 'bg-teal-950 text-teal-300 border-teal-600/70 shadow-xs';
       case 'ClassDef':
         return 'bg-blue-950 text-blue-300 border-blue-600/70 shadow-xs';
       case 'Module':
@@ -71,7 +71,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
       className="h-10 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between text-xs select-none"
     >
       <div className="flex items-center space-x-2 overflow-hidden">
-        <FileCode className="w-4 h-4 text-purple-400 shrink-0" />
+        <FileCode className="w-4 h-4 text-sky-400 shrink-0" />
         <div
           data-testid="chunk-file-path"
           className="font-mono text-slate-200 truncate max-w-[340px] font-medium flex items-center space-x-1"
@@ -174,7 +174,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             onClick={onToggleExplorer}
             className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
               isExplorerOpen
-                ? 'bg-indigo-950 text-indigo-300 border-indigo-600/70'
+                ? 'bg-sky-950 text-sky-300 border-sky-600/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title="Toggle Repository Explorer Tree"
@@ -190,7 +190,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             onClick={onToggleInspector}
             className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
               isInspectorOpen
-                ? 'bg-purple-950 text-purple-300 border-purple-600/70'
+                ? 'bg-slate-800 text-sky-300 border-sky-500/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title="Toggle AST Metadata Inspector"

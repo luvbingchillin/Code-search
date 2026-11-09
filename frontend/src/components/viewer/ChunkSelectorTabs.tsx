@@ -47,7 +47,7 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
             title={`${chunk.identifier} (${isClass ? 'Class' : 'Function'})\nFile: ${chunk.filePath}\nSemantic Match: ${scorePct}%`}
             className={`group px-3 py-1.5 text-xs font-mono rounded-t-md border-t border-x flex items-center space-x-2 transition-all shrink-0 cursor-pointer select-none ${
               isSelected
-                ? 'bg-slate-800 border-t-2 border-t-indigo-400 border-x-slate-700 border-b-slate-800 text-white shadow-sm font-semibold'
+                ? 'bg-slate-800 border-t-2 border-t-sky-400 border-x-slate-700 border-b-slate-800 text-white shadow-sm font-semibold'
                 : 'bg-slate-900/70 hover:bg-slate-800/80 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -55,7 +55,7 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
             {isClass ? (
               <Layers className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-sky-400' : 'text-slate-500 group-hover:text-sky-400'}`} />
             ) : (
-              <Code2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-purple-400' : 'text-slate-500 group-hover:text-purple-400'}`} />
+              <Code2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-teal-400' : 'text-slate-500 group-hover:text-teal-400'}`} />
             )}
 
             {/* Symbol Identifier */}

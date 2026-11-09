@@ -24,7 +24,7 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
     >
       <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
         <div className="flex items-center space-x-1.5 text-slate-100 font-semibold">
-          <Layers className="w-3.5 h-3.5 text-purple-400" />
+          <Layers className="w-3.5 h-3.5 text-sky-400" />
           <span>AST Metadata Inspector</span>
         </div>
         <button
@@ -38,7 +38,7 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-200">
         <div>
           <span className="text-slate-400">AST Node:</span>{' '}
-          <span className="text-purple-300 font-semibold">{chunk.astNodeType}</span>
+          <span className="text-cyan-300 font-semibold">{chunk.astNodeType}</span>
         </div>
 
         <div>

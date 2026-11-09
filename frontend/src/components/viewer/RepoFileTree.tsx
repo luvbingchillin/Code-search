@@ -118,7 +118,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
       {/* Explorer Header */}
       <div className="h-10 px-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/80 shrink-0">
         <div className="flex items-center space-x-2 text-slate-200 font-semibold font-sans">
-          <FolderTree className="w-4 h-4 text-indigo-400" />
+          <FolderTree className="w-4 h-4 text-sky-400" />
           <span>Explorer</span>
           {treeData && (
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
@@ -149,7 +149,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
             placeholder="Filter files & symbols..."
-            className="w-full bg-slate-900 border border-slate-800 rounded pl-7 pr-2 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-slate-900 border border-slate-800 rounded pl-7 pr-2 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
           />
           {filterQuery && (
             <button
@@ -167,12 +167,12 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
       <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
         {isLoading ? (
           <div className="flex items-center justify-center py-10 text-slate-400 space-x-2">
-            <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
             <span>Scanning AST symbols...</span>
           </div>
         ) : !repoId ? (
           <div className="p-4 text-center text-slate-500 font-sans">
-            <FolderOpen className="w-6 h-6 mx-auto mb-2 opacity-50 text-indigo-400" />
+            <FolderOpen className="w-6 h-6 mx-auto mb-2 opacity-50 text-sky-400" />
             <p className="text-[11px]">Connect a repository to browse source files & AST symbols.</p>
           </div>
         ) : filteredTree.length === 0 ? (
@@ -197,7 +197,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                     ) : (
                       <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />
                     )}
-                    <FileCode className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <FileCode className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate font-medium">{fileNode.fileName}</span>
                   </div>
                   <span className="text-[10px] text-slate-500 group-hover:text-slate-400 font-sans">
@@ -219,7 +219,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                           onClick={() => onSelectSymbol(symbol, fileNode.filePath)}
                           className={`flex items-center justify-between px-2 py-0.5 rounded cursor-pointer transition-colors ${
                             isSymbolActive
-                              ? 'bg-indigo-950/80 border border-indigo-700/60 text-indigo-200 font-semibold'
+                              ? 'bg-sky-950/70 border border-sky-600/60 text-sky-200 font-semibold'
                               : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
                           }`}
                           title={`${symbol.identifier} (${isClass ? 'Class' : 'Function'}, Lines ${symbol.startLine}-${symbol.endLine})`}
@@ -228,7 +228,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                             {isClass ? (
                               <Layers className="w-3 h-3 text-sky-400 shrink-0" />
                             ) : (
-                              <Code2 className="w-3 h-3 text-purple-400 shrink-0" />
+                              <Code2 className="w-3 h-3 text-teal-400 shrink-0" />
                             )}
                             <span className="truncate">{symbol.identifier}</span>
                           </div>

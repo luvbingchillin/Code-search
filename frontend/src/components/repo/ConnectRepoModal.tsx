@@ -14,6 +14,7 @@ import {
   Play,
   FileCode,
   FolderUp,
+  FolderPlus,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { RepositoryItem } from '../../types';
@@ -173,7 +174,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-950 border border-indigo-700/60 flex items-center justify-center text-indigo-400 shadow-inner">
+            <div className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-700/80 flex items-center justify-center text-sky-400 shadow-inner">
               <FolderGit2 className="w-5 h-5" />
             </div>
             <div>
@@ -209,7 +210,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             }}
             className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'existing'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-sky-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
@@ -218,7 +219,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             <span
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeTab === 'existing'
-                  ? 'bg-indigo-700/80 text-white'
+                  ? 'bg-sky-700/80 text-white'
                   : 'bg-slate-800 text-slate-400'
               }`}
             >
@@ -235,7 +236,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             }}
             className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'add'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-sky-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
@@ -256,7 +257,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Filter repositories by name or path..."
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500"
               />
             </div>
 
@@ -264,7 +265,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
               {isLoadingRepos ? (
                 <div className="flex items-center justify-center py-12 text-slate-400 space-x-2 text-xs">
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                  <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
                   <span>Loading indexed repositories...</span>
                 </div>
               ) : filteredRepos.length === 0 ? (
@@ -274,7 +275,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveTab('add')}
-                    className="mt-3 text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
+                    className="mt-3 text-sky-400 hover:text-sky-300 font-medium underline cursor-pointer"
                   >
                     Index a new repository now
                   </button>
@@ -290,7 +291,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                       data-testid={`repo-card-${repo.id}`}
                       className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         isActive
-                          ? 'bg-indigo-950/30 border-indigo-500/70 shadow-sm shadow-indigo-950/50'
+                          ? 'bg-sky-950/20 border-sky-500/60 shadow-sm shadow-sky-950/30'
                           : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
                       }`}
                     >
@@ -298,7 +299,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                         <div
                           className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
                             isActive
-                              ? 'bg-indigo-900/60 border-indigo-500/80 text-indigo-300'
+                              ? 'bg-sky-900/40 border-sky-500/70 text-sky-300'
                               : 'bg-slate-900 border-slate-800 text-slate-400'
                           }`}
                         >
@@ -358,8 +359,8 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                           onClick={() => handleOpenRepo(repo)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1.5 cursor-pointer ${
                             isActive
-                              ? 'bg-slate-800 text-indigo-300 border border-indigo-700/50 hover:bg-slate-700'
-                              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs'
+                              ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
+                              : 'bg-sky-600 hover:bg-sky-500 text-white shadow-xs'
                           }`}
                         >
                           <Play className="w-3 h-3 fill-current" />
@@ -400,7 +401,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   type="button"
                   data-testid="browse-folder-btn"
                   onClick={() => folderInputRef.current?.click()}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center space-x-1 cursor-pointer hover:underline"
+                  className="text-xs text-sky-400 hover:text-sky-300 flex items-center space-x-1 cursor-pointer hover:underline"
                   title="Open native Windows Explorer to choose a repository directory"
                 >
                   <FolderUp className="w-3.5 h-3.5" />
@@ -419,14 +420,14 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   }}
                   placeholder="e.g. fixtures/requests or C:/repos/my-python-app"
                   disabled={isIndexing}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 disabled:opacity-50"
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   data-testid="trigger-index-btn"
                   onClick={() => handleIndex()}
                   disabled={isIndexing || !repoPath.trim()}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed shrink-0"
+                  className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed shrink-0"
                 >
                   {isIndexing ? (
                     <>
@@ -435,7 +436,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <FolderPlus className="w-3.5 h-3.5" />
                       <span>Index Repo</span>
                     </>
                   )}
@@ -445,9 +446,9 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               {pickedFolderInfo && (
                 <div
                   data-testid="picked-folder-banner"
-                  className="text-[11px] text-indigo-300 bg-indigo-950/40 border border-indigo-800/60 rounded-md px-2.5 py-1.5 flex items-center space-x-1.5"
+                  className="text-[11px] text-sky-300 bg-sky-950/40 border border-sky-800/60 rounded-md px-2.5 py-1.5 flex items-center space-x-1.5"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                   <span>
                     Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files detected). Ready to index.
                   </span>
@@ -469,7 +470,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   }}
                   className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
                     repoPath === 'fixtures/requests'
-                      ? 'bg-slate-800 border-indigo-500 text-white shadow-xs'
+                      ? 'bg-slate-800 border-sky-500 text-white shadow-xs'
                       : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
                   }`}
                 >
@@ -488,7 +489,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   }}
                   className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
                     repoPath === 'backend/sample_codebase'
-                      ? 'bg-slate-800 border-indigo-500 text-white shadow-xs'
+                      ? 'bg-slate-800 border-sky-500 text-white shadow-xs'
                       : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
                   }`}
                 >
@@ -503,8 +504,8 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
 
             {/* Indexing Feedback */}
             {isIndexing && (
-              <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-800/60 flex items-center space-x-2.5 text-xs text-indigo-300">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-400 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-sky-950/40 border border-sky-800/60 flex items-center space-x-2.5 text-xs text-sky-300">
+                <Loader2 className="w-4 h-4 animate-spin text-sky-400 shrink-0" />
                 <span>
                   Scanning directory, extracting complete function/class nodes via Tree-sitter, and persisting vectors into LanceDB...
                 </span>
