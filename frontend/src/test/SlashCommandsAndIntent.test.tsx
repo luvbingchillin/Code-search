@@ -186,4 +186,114 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       expect(mockSearch).toHaveBeenCalledWith('where is Session.send', expect.anything());
     });
   });
+
+  describe('4. ChatInput Slash Command Menu & Dynamic Placeholders', () => {
+    it('displays disconnected repository placeholder when hasActiveRepo is false', async () => {
+      const { render, screen } = await import('@testing-library/react');
+      const { ChatInput } = await import('../components/chat/ChatInput');
+      render(
+        <ChatInput
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+          hasActiveRepo={false}
+          activeRepoName={null}
+        />
+      );
+
+      const textarea = screen.getByTestId('chat-input-textarea');
+      expect(textarea).toHaveAttribute(
+        'placeholder',
+        'Connect a repository to search AST code, or type /help...'
+      );
+    });
+
+    it('displays connected repository placeholder when activeRepoName is provided', async () => {
+      const { render, screen } = await import('@testing-library/react');
+      const { ChatInput } = await import('../components/chat/ChatInput');
+      render(
+        <ChatInput
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+          hasActiveRepo={true}
+          activeRepoName="psf/requests"
+        />
+      );
+
+      const textarea = screen.getByTestId('chat-input-textarea');
+      expect(textarea).toHaveAttribute(
+        'placeholder',
+        'Ask a question about psf/requests (or type /help, /status)...'
+      );
+    });
+
+    it('opens slash command popover menu when input starts with "/" and selects command', async () => {
+      const { render, screen, fireEvent } = await import('@testing-library/react');
+      const { ChatInput } = await import('../components/chat/ChatInput');
+      const handleSubmit = vi.fn();
+
+      render(
+        <ChatInput
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          onSubmit={handleSubmit}
+          onCancel={vi.fn()}
+        />
+      );
+
+      const textarea = screen.getByTestId('chat-input-textarea');
+      fireEvent.change(textarea, { target: { value: '/' } });
+
+      expect(screen.getByTestId('slash-commands-popover')).toBeInTheDocument();
+      expect(screen.getByTestId('slash-cmd-help')).toBeInTheDocument();
+      expect(screen.getByTestId('slash-cmd-status')).toBeInTheDocument();
+
+      // Click /status
+      fireEvent.click(screen.getByTestId('slash-cmd-status'));
+      expect(handleSubmit).toHaveBeenCalledWith('/status');
+    });
+
+    it('navigates popover with ArrowDown and selects with Enter', async () => {
+      const { render, screen, fireEvent } = await import('@testing-library/react');
+      const { ChatInput } = await import('../components/chat/ChatInput');
+      const handleSubmit = vi.fn();
+
+      render(
+        <ChatInput
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          onSubmit={handleSubmit}
+          onCancel={vi.fn()}
+        />
+      );
+
+      const textarea = screen.getByTestId('chat-input-textarea');
+      fireEvent.change(textarea, { target: { value: '/' } });
+
+      // Arrow down to /status (index 1)
+      fireEvent.keyDown(textarea, { key: 'ArrowDown' });
+      fireEvent.keyDown(textarea, { key: 'Enter' });
+
+      expect(handleSubmit).toHaveBeenCalledWith('/status');
+    });
+
+    it('dismisses popover on Escape key', async () => {
+      const { render, screen, fireEvent } = await import('@testing-library/react');
+      const { ChatInput } = await import('../components/chat/ChatInput');
+
+      render(
+        <ChatInput
+          status={{ state: 'Idle', currentStepMessage: 'Idle', activeChunkCount: 0 }}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      );
+
+      const textarea = screen.getByTestId('chat-input-textarea');
+      fireEvent.change(textarea, { target: { value: '/' } });
+      expect(screen.getByTestId('slash-commands-popover')).toBeInTheDocument();
+
+      fireEvent.keyDown(textarea, { key: 'Escape' });
+      expect(screen.queryByTestId('slash-commands-popover')).not.toBeInTheDocument();
+    });
+  });
 });

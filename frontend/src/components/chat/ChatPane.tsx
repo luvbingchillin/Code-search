@@ -19,6 +19,7 @@ export interface ChatPaneProps {
   isMinimized?: boolean;
   onMinimize?: () => void;
   activeRepoId?: string;
+  activeRepoName?: string | null;
 }
 
 export const ChatPane: React.FC<ChatPaneProps> = ({
@@ -33,6 +34,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   onReset,
   onMinimize,
   activeRepoId,
+  activeRepoName,
 }) => {
   const isBusy =
     status.state === 'Thinking' ||
@@ -65,7 +67,13 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
       />
 
       {/* Multi-line Chat Input with Auto-resize */}
-      <ChatInput status={status} onSubmit={onSubmit} onCancel={onCancel} />
+      <ChatInput
+        status={status}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        activeRepoName={activeRepoName}
+        hasActiveRepo={Boolean(activeRepoId || activeRepoName)}
+      />
     </div>
   );
 };

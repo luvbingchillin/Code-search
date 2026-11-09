@@ -205,6 +205,7 @@ export const App: React.FC = () => {
             isMinimized={isChatMinimized}
             onMinimize={toggleChatMinimized}
             activeRepoId={activeRepo?.id}
+            activeRepoName={activeRepo?.name}
           />
         }
         rightPane={
