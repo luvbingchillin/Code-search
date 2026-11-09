@@ -54,7 +54,7 @@ export const QuerySuggestions: React.FC<QuerySuggestionsProps> = ({
             data-testid="query-suggestion-chip"
             disabled={disabled}
             onClick={() => onSelectSuggestion(text)}
-            className="text-xs px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/60 text-slate-200 hover:text-white transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-indigo-400 focus:outline-none active:scale-95 cursor-pointer shadow-xs shrink-0"
+            className="text-xs px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/60 text-slate-200 hover:text-white transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none active:scale-95 cursor-pointer shadow-xs shrink-0"
           >
             {text}
           </button>

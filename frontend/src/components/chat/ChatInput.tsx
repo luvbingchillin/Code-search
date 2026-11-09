@@ -54,7 +54,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ status, onSubmit, onCancel
           onKeyDown={handleKeyDown}
           placeholder="Ask a question about the Python codebase..."
           rows={1}
-          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none leading-relaxed transition-colors"
+          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 resize-none leading-relaxed transition-colors"
           disabled={isBusy}
         />
         {!input && !isBusy && (
@@ -83,7 +83,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ status, onSubmit, onCancel
           type="button"
           data-testid="chat-send-btn"
           onClick={handleSubmit}
-          className="h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-indigo-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer"
+          className="h-9 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer"
         >
           <Send className="w-3.5 h-3.5" />
           <span>Search</span>
