@@ -296,4 +296,93 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       expect(screen.queryByTestId('slash-commands-popover')).not.toBeInTheDocument();
     });
   });
+
+  describe('5. WebLLM Status Guidance in Header', () => {
+    it('shows "WebLLM: Offline" with "Click to Load" and explanatory tooltip when unloaded', async () => {
+      const { render, screen } = await import('@testing-library/react');
+      const { Header } = await import('../components/layout/Header');
+      const mockWebLLM = {
+        status: 'unloaded' as const,
+        progress: 0,
+        progressText: '',
+        currentModel: 'Qwen2.5-Coder (1.5B)',
+        error: null,
+        isWebGPUSupported: true,
+        engine: null,
+        loadModel: vi.fn(),
+        generate: vi.fn(),
+        generateStream: vi.fn(),
+        initEngine: vi.fn(),
+        interrupt: vi.fn(),
+        unload: vi.fn(),
+      };
+      const mockNemoIR = {
+        wasmStatus: 'ready' as const,
+        isReady: true,
+        initNemo: vi.fn(),
+        searchAstChunks: vi.fn(),
+        lookupEntity: vi.fn(),
+        executeWorkflow: vi.fn(),
+      };
+      const mockStatus = {
+        state: 'Idle' as const,
+        currentStepMessage: 'Ready',
+        activeChunkCount: 0,
+      };
+
+      render(
+        <Header webLLM={mockWebLLM} nemoIR={mockNemoIR} agentStatus={mockStatus} />
+      );
+
+      const btn = screen.getByTestId('webllm-load-toggle-btn');
+      expect(btn).toHaveTextContent('WebLLM:');
+      expect(btn).toHaveTextContent('Offline');
+      expect(btn).toHaveTextContent('Click to Load');
+      expect(btn).toHaveAttribute(
+        'title',
+        expect.stringContaining('WebLLM is currently offline')
+      );
+    });
+
+    it('shows "WebLLM: Ready" when ready', async () => {
+      const { render, screen } = await import('@testing-library/react');
+      const { Header } = await import('../components/layout/Header');
+      const mockWebLLM = {
+        status: 'ready' as const,
+        progress: 100,
+        progressText: 'Ready',
+        currentModel: 'Qwen2.5-Coder (1.5B)',
+        error: null,
+        isWebGPUSupported: true,
+        engine: {},
+        loadModel: vi.fn(),
+        generate: vi.fn(),
+        generateStream: vi.fn(),
+        initEngine: vi.fn(),
+        interrupt: vi.fn(),
+        unload: vi.fn(),
+      };
+      const mockNemoIR = {
+        wasmStatus: 'ready' as const,
+        isReady: true,
+        initNemo: vi.fn(),
+        searchAstChunks: vi.fn(),
+        lookupEntity: vi.fn(),
+        executeWorkflow: vi.fn(),
+      };
+      const mockStatus = {
+        state: 'Idle' as const,
+        currentStepMessage: 'Ready',
+        activeChunkCount: 0,
+      };
+
+      render(
+        <Header webLLM={mockWebLLM} nemoIR={mockNemoIR} agentStatus={mockStatus} />
+      );
+
+      const btn = screen.getByTestId('webllm-load-toggle-btn');
+      expect(btn).toHaveTextContent('WebLLM:');
+      expect(btn).toHaveTextContent('Ready');
+    });
+  });
 });

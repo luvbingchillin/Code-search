@@ -81,7 +81,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const getWebLLMLabel = () => {
-    if (webLLM.status === 'ready') return 'WebGPU';
+    if (webLLM.status === 'ready') return 'Ready';
+    if (webLLM.status === 'unloaded') return 'Offline';
     if (webLLM.status === 'loading') {
       const clampedPct = Math.min(100, Math.max(0, Math.round(webLLM.progress)));
       return clampedPct > 0 ? `${clampedPct}%` : 'loading';
@@ -175,9 +176,9 @@ export const Header: React.FC<HeaderProps> = ({
           className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors shadow-xs cursor-pointer disabled:cursor-wait hover:brightness-110 active:scale-95 ${getWebLLMStatusColor()}`}
           title={
             webLLM.status === 'unloaded'
-              ? 'Click to initialize and load local WebLLM engine'
+              ? 'WebLLM is currently offline (using template simulator). Click to load Qwen2.5-Coder for real-time edge AI inference on WebGPU.'
               : webLLM.status === 'ready'
-              ? 'WebLLM ready. Click to unload'
+              ? 'WebLLM ready (Qwen2.5-Coder running on WebGPU). Click to unload.'
               : webLLM.progressText || (webLLM.error ? `Error: ${webLLM.error}` : 'Local WebLLM Model Status')
           }
         >
@@ -186,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
           {webLLM.status === 'unloaded' && (
             <span className="ml-1 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[10px] font-mono border border-sky-700/50">
-              Load
+              Click to Load
             </span>
           )}
         </button>
