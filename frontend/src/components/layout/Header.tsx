@@ -93,13 +93,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between select-none">
       <div className="flex items-center space-x-3">
         {/* Distinctive Developer Brand Icon */}
-        <div className="w-8 h-8 rounded-lg bg-slate-950 border border-indigo-500/50 flex items-center justify-center shadow-md shadow-indigo-950/40">
-          <Terminal className="w-4 h-4 text-indigo-400" />
+        <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-700/80 flex items-center justify-center shadow-xs">
+          <Terminal className="w-4 h-4 text-sky-400" />
         </div>
         <div>
           <div className="flex items-center space-x-2">
             <span className="font-bold text-slate-100 tracking-tight text-base font-sans">CodeSeek AI</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-600/60 font-mono font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700 font-mono font-medium">
               Edge AI v1.0
             </span>
           </div>
@@ -114,19 +114,19 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             data-testid="connect-repo-btn"
             onClick={onOpenConnectRepo}
-            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 text-xs text-indigo-300 transition-colors shadow-xs cursor-pointer active:scale-95"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer active:scale-95"
             title={
               activeRepo
                 ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} AST chunks). Click to switch or add.`
                 : 'Open pre-indexed repository or index new Python codebase'
             }
           >
-            <FolderCode className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <FolderCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
             <span className="font-medium max-w-[130px] truncate">
               {activeRepo ? activeRepo.name : 'Repositories'}
             </span>
             {activeRepo && (
-              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-indigo-900/80 text-[10px] font-mono text-indigo-200">
+              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-slate-900 text-[10px] font-mono text-slate-300 border border-slate-700/60">
                 {activeRepo.chunksCount ?? 0}
               </span>
             )}
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-slate-300 font-medium">WebLLM:</span>
           <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
           {webLLM.status === 'unloaded' && (
-            <span className="ml-1 px-1.5 py-0.2 rounded bg-indigo-900/60 text-indigo-300 text-[10px] font-mono border border-indigo-700/50">
+            <span className="ml-1 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[10px] font-mono border border-sky-700/50">
               Load
             </span>
           )}
@@ -197,7 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs"
           title="Edge SLM: Qwen2.5-Coder-1.5B running locally on WebGPU"
         >
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <Cpu className="w-3.5 h-3.5 text-sky-400" />
           <span className="font-mono font-medium truncate max-w-[150px]">
             {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
           </span>
@@ -213,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onToggleChatMinimized}
                 className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
                   !isChatMinimized
-                    ? 'bg-slate-800 text-indigo-300 border border-slate-700 hover:bg-slate-700'
+                    ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
                 }`}
                 title={isChatMinimized ? 'Restore Chat Pane (Ctrl+B)' : 'Minimize Chat Pane (Ctrl+B)'}
@@ -230,7 +230,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onToggleCodeMinimized}
                 className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
                   !isCodeMinimized
-                    ? 'bg-slate-800 text-indigo-300 border border-slate-700 hover:bg-slate-700'
+                    ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
                 }`}
                 title={isCodeMinimized ? 'Restore AST Code Viewer' : 'Minimize AST Code Viewer'}

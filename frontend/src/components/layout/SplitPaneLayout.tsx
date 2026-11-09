@@ -98,7 +98,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
           }}
           className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'chat' && !isChatMinimized
-              ? 'border-indigo-400 text-white bg-slate-950/80'
+              ? 'border-sky-400 text-white bg-slate-950/80'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -112,7 +112,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
           }}
           className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'code' && !isCodeMinimized
-              ? 'border-indigo-400 text-white bg-slate-950/80'
+              ? 'border-sky-400 text-white bg-slate-950/80'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -132,7 +132,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               type="button"
               data-testid="restore-chat-btn"
               onClick={handleToggleChatMinimized}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors cursor-pointer shadow-xs group"
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-300 transition-colors cursor-pointer shadow-xs group"
               title="Restore Chat Pane (Ctrl+B)"
               aria-label="Restore Chat Pane"
             >
@@ -176,11 +176,11 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
             tabIndex={0}
             onKeyDown={handleKeyDown}
             onMouseDown={handleMouseDown}
-            className="w-1.5 bg-slate-800 hover:bg-indigo-500 focus:bg-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0 z-10"
+            className="w-1.5 bg-slate-800 hover:bg-sky-500 focus:bg-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0 z-10"
             title="Drag to resize panes"
             aria-label="Drag to resize panes or use left and right arrow keys"
           >
-            <div className="w-0.5 h-8 bg-slate-600 group-hover:bg-indigo-200 rounded-full transition-colors" />
+            <div className="w-0.5 h-8 bg-slate-600 group-hover:bg-sky-300 rounded-full transition-colors" />
           </div>
         )}
 
@@ -190,8 +190,8 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
             data-testid="both-minimized-canvas"
             className="flex-1 h-full flex flex-col items-center justify-center bg-[#070a12] p-6 text-center select-none"
           >
-            <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 shadow-lg shadow-indigo-950/20">
-              <Columns className="w-7 h-7 text-indigo-400" />
+            <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 shadow-lg shadow-slate-950/20">
+              <Columns className="w-7 h-7 text-sky-400" />
             </div>
             <h3 className="text-base font-semibold text-slate-100 mb-1.5">
               Focus Mode: All Panes Minimized
@@ -204,7 +204,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                 type="button"
                 data-testid="canvas-restore-chat-btn"
                 onClick={handleToggleChatMinimized}
-                className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>Open Chat (Ctrl+B)</span>
@@ -251,7 +251,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               type="button"
               data-testid="restore-code-btn"
               onClick={handleToggleCodeMinimized}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors cursor-pointer shadow-xs group"
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-300 transition-colors cursor-pointer shadow-xs group"
               title="Restore AST Code Viewer"
               aria-label="Restore AST Code Viewer"
             >
