@@ -484,56 +484,60 @@ Please select or connect a Python repository before querying AST code chunks.
             }
           }
 
-          // 3. Synthesizing phase via WebLLM with runtime 4,096 token budgeting
-          const synthStatus: AgentStatus = {
-            ...statusRef.current,
-            state: 'Synthesizing',
-            currentStepMessage: 'Synthesizing response with cited AST context via WebLLM (4,096 token cap)...',
-          };
-          statusRef.current = synthStatus;
-          setAgentStatus(synthStatus);
+          if (matchedChunks.length === 0) {
+            finalResponseText = `### 🔍 No Matching AST Nodes Found for "${effectiveQuery}"\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse the indexed file tree and AST symbols.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
+          } else {
+            // 3. Synthesizing phase via WebLLM with runtime 4,096 token budgeting
+            const synthStatus: AgentStatus = {
+              ...statusRef.current,
+              state: 'Synthesizing',
+              currentStepMessage: 'Synthesizing response with cited AST context via WebLLM (4,096 token cap)...',
+            };
+            statusRef.current = synthStatus;
+            setAgentStatus(synthStatus);
 
-          // Enforce strict 4,096 token ceiling at runtime
-          const MAX_PROMPT_TOKENS = 3500; // Leave safety headroom for model completion
-          const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
+            // Enforce strict 4,096 token ceiling at runtime
+            const MAX_PROMPT_TOKENS = 3500; // Leave safety headroom for model completion
+            const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
-          let currentTokens = estimateTokens(effectiveQuery) + 120;
-          const budgetedChunks: AstCodeChunk[] = [];
+            let currentTokens = estimateTokens(effectiveQuery) + 120;
+            const budgetedChunks: AstCodeChunk[] = [];
 
-          for (const chunk of matchedChunks.slice(0, 5)) {
-            const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${chunk.code}`;
-            const chunkTokens = estimateTokens(chunkRepresentation);
+            for (const chunk of matchedChunks.slice(0, 5)) {
+              const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${chunk.code}`;
+              const chunkTokens = estimateTokens(chunkRepresentation);
 
-            if (currentTokens + chunkTokens <= MAX_PROMPT_TOKENS) {
-              budgetedChunks.push(chunk);
-              currentTokens += chunkTokens;
-            } else {
-              const remainingChars = Math.max(0, (MAX_PROMPT_TOKENS - currentTokens) * 4);
-              if (remainingChars > 120) {
-                const truncatedCode =
-                  chunk.code.slice(0, remainingChars) +
-                  '\n# ... [Truncated to fit 4,096 token safety budget]';
-                budgetedChunks.push({ ...chunk, code: truncatedCode });
+              if (currentTokens + chunkTokens <= MAX_PROMPT_TOKENS) {
+                budgetedChunks.push(chunk);
+                currentTokens += chunkTokens;
+              } else {
+                const remainingChars = Math.max(0, (MAX_PROMPT_TOKENS - currentTokens) * 4);
+                if (remainingChars > 120) {
+                  const truncatedCode =
+                    chunk.code.slice(0, remainingChars) +
+                    '\n# ... [Truncated to fit 4,096 token safety budget]';
+                  budgetedChunks.push({ ...chunk, code: truncatedCode });
+                }
+                break;
               }
-              break;
             }
+
+            const astContext = budgetedChunks
+              .map(
+                (c) =>
+                  `[Identifier: ${c.identifier}, File: ${c.filePath}:${c.startLine}-${c.endLine}, Type: ${c.astNodeType}]:\n${c.code}`
+              )
+              .join('\n\n');
+
+            const prompt = `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
+
+            finalResponseText = await currentLLM.generate(prompt, (chunk, accumulated) => {
+              if (isCancelledRef.current) return;
+              streamingTokensRef.current = accumulated;
+              setStreamingTokens(accumulated);
+            });
+            if (isCancelledRef.current) throw new Error('Query cancelled by user');
           }
-
-          const astContext = budgetedChunks
-            .map(
-              (c) =>
-                `[Identifier: ${c.identifier}, File: ${c.filePath}:${c.startLine}-${c.endLine}, Type: ${c.astNodeType}]:\n${c.code}`
-            )
-            .join('\n\n');
-
-          const prompt = `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
-
-          finalResponseText = await currentLLM.generate(prompt, (chunk, accumulated) => {
-            if (isCancelledRef.current) return;
-            streamingTokensRef.current = accumulated;
-            setStreamingTokens(accumulated);
-          });
-          if (isCancelledRef.current) throw new Error('Query cancelled by user');
         } else {
           // If NemoIR is available, search live LanceDB backend first
           let liveChunks: AstCodeChunk[] | undefined;
@@ -545,7 +549,7 @@ Please select or connect a Python repository before querying AST code chunks.
               const res = await (searchOptions
                 ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
                 : nemoIRRef.current.searchAstChunks(effectiveQuery));
-              if (res && res.length > 0) {
+              if (res) {
                 liveChunks = res;
               }
             } catch {
@@ -557,13 +561,13 @@ Please select or connect a Python repository before querying AST code chunks.
           const result = await simulatorRef.current.runReActCycle(
             effectiveQuery,
             (state: ReActState, message: string, chunks?: AstCodeChunk[]) => {
-              if (chunks && chunks.length > 0) {
+              if (chunks !== undefined) {
                 activeChunksRef.current = chunks;
                 setActiveChunksState(chunks);
                 setSelectedChunkIdState((current) => {
                   const nextSelected =
                     !current || !chunks.some((c) => c.id === current)
-                      ? chunks[0].id
+                      ? chunks[0]?.id ?? null
                       : current;
                   selectedChunkIdRef.current = nextSelected;
                   return nextSelected;

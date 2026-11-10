@@ -68,9 +68,18 @@ export class AgentSimulator {
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
     const matchedChunks =
-      providedChunks && providedChunks.length > 0
+      providedChunks !== undefined
         ? providedChunks
         : this.searchAstChunks(query);
+
+    if (matchedChunks.length === 0) {
+      onStateChange('Complete', 'No matching AST code chunks found', []);
+      const emptyResponse = `### 🔍 No Matching AST Nodes Found for "${query}"\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse the indexed file tree and AST symbols.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
+      return {
+        response: emptyResponse,
+        citedChunks: [],
+      };
+    }
 
     onStateChange(
       'Searching AST',
