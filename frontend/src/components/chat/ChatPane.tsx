@@ -20,6 +20,7 @@ export interface ChatPaneProps {
   onMinimize?: () => void;
   activeRepoId?: string;
   activeRepoName?: string | null;
+  onClearChat?: () => void;
 }
 
 export const ChatPane: React.FC<ChatPaneProps> = ({
@@ -35,6 +36,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   onMinimize,
   activeRepoId,
   activeRepoName,
+  onClearChat,
 }) => {
   const isBusy =
     status.state === 'Thinking' ||
@@ -44,7 +46,12 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   return (
     <div className="h-full flex flex-col justify-between overflow-hidden">
       {/* Top ReAct Agentic Loop Stepper & Status Banner */}
-      <AgenticLoopBanner status={status} onCancel={onCancel} onMinimize={onMinimize} />
+      <AgenticLoopBanner
+        status={status}
+        onCancel={onCancel}
+        onMinimize={onMinimize}
+        onClearChat={onClearChat}
+      />
 
       {/* NemoIR ReAct AgentRunner Orchestrator */}
       <AgentRunner

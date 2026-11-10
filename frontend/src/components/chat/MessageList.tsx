@@ -273,6 +273,8 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                       const chunk = getChunkById(chunkId);
                       const label = chunk
                         ? `${chunk.fileName}:${chunk.identifier}`
+                        : chunkId.includes(':')
+                        ? chunkId.split(':').slice(0, 2).join(':')
                         : chunkId;
 
                       return (

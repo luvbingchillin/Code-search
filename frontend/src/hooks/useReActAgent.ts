@@ -241,6 +241,18 @@ export function useReActAgent(
     setAgentStatus(resetStatus);
   }, [cancelQuery]);
 
+  const clearMessages = useCallback(() => {
+    messagesRef.current = [];
+    setMessages([]);
+    reset();
+  }, [reset]);
+
+  const addMessage = useCallback((msg: ChatMessage) => {
+    const updated = [...messagesRef.current, msg];
+    messagesRef.current = updated;
+    setMessages(updated);
+  }, []);
+
   const submitQuery = useCallback(
     async (query: string): Promise<void> => {
       const trimmed = query.trim();
@@ -688,5 +700,7 @@ Please select or connect a Python repository before querying AST code chunks.
     setSelectedChunkId,
     setActiveChunks,
     reset,
+    clearMessages,
+    addMessage,
   };
 }

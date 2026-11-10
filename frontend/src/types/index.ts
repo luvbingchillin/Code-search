@@ -154,4 +154,6 @@ export interface UseReActAgentReturn {
   setSelectedChunkId: (id: string) => void;
   setActiveChunks?: (chunks: AstCodeChunk[]) => void;
   reset: () => void;
+  clearMessages?: () => void;
+  addMessage?: (msg: ChatMessage) => void;
 }

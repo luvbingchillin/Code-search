@@ -40,6 +40,7 @@ export const App: React.FC = () => {
       setHealthRefreshTrigger((prev) => prev + 1);
       try {
         const chunks = await apiClient.getRepoChunks(repo.id, 10);
+        let loadedChunks = chunks;
         if (chunks && chunks.length > 0) {
           if (agent.setActiveChunks) {
             agent.setActiveChunks(chunks);
@@ -48,13 +49,67 @@ export const App: React.FC = () => {
           const fallback = await nemoIR.searchAstChunks('def ', { filePath: repo.path });
           if (fallback && fallback.length > 0 && agent.setActiveChunks) {
             agent.setActiveChunks(fallback);
+            loadedChunks = fallback;
           }
+        }
+
+        if (agent.addMessage) {
+          const count = loadedChunks?.length ?? 0;
+          agent.addMessage({
+            id: `sys-${Date.now()}`,
+            role: 'assistant',
+            content: `### 🔄 Connected Repository: **${repo.name}**\n\nActive AST context updated (${count} initial nodes loaded in viewer). You can now ask questions about this codebase or browse functions and classes using the Explorer.`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          });
         }
       } catch (err) {
         console.error('Failed to load repo chunks:', err);
       }
     },
     [agent, nemoIR]
+  );
+
+  const handleSelectChunk = React.useCallback(
+    async (chunkId: string) => {
+      // 1. Direct match in activeChunks
+      const directMatch = agent.activeChunks.find((c) => c.id === chunkId);
+      if (directMatch) {
+        agent.setSelectedChunkId(chunkId);
+        return;
+      }
+
+      // 2. Hydrate from backend if it's a historical citation or external identifier
+      try {
+        const chunk = await apiClient.getChunkById(chunkId);
+        if (chunk) {
+          if (agent.setActiveChunks) {
+            agent.setActiveChunks([...agent.activeChunks, chunk]);
+          }
+          agent.setSelectedChunkId(chunk.id);
+          return;
+        }
+      } catch {
+        const parts = chunkId.split(':');
+        const ident = parts.length > 1 ? parts[1] : chunkId;
+        try {
+          const resp = await apiClient.lookupEntity(ident);
+          if (resp?.chunks && resp.chunks.length > 0) {
+            const newChunk = resp.chunks[0];
+            if (agent.setActiveChunks && !agent.activeChunks.some((c) => c.id === newChunk.id)) {
+              agent.setActiveChunks([...agent.activeChunks, newChunk]);
+            }
+            agent.setSelectedChunkId(newChunk.id);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // Fallback
+      agent.setSelectedChunkId(chunkId);
+    },
+    [agent]
   );
 
   const toggleChatMinimized = React.useCallback(() => {
@@ -197,7 +252,7 @@ export const App: React.FC = () => {
             status={agent.agentStatus}
             messages={agent.messages}
             chunks={agent.activeChunks}
-            onSelectChunk={agent.setSelectedChunkId}
+            onSelectChunk={handleSelectChunk}
             onSubmit={agent.submitQuery}
             onCancel={agent.cancelQuery}
             streamingTokens={agent.streamingTokens}
@@ -206,6 +261,7 @@ export const App: React.FC = () => {
             onMinimize={toggleChatMinimized}
             activeRepoId={activeRepo?.id}
             activeRepoName={activeRepo?.name}
+            onClearChat={agent.clearMessages}
           />
         }
         rightPane={
