@@ -429,4 +429,54 @@ test.describe('Sequential Improvements Automated Browser E2E Suite (Milestone 6)
     await chatInput.press('Enter');
     await expect(messageList).toContainText('psf/requests');
   });
+
+  // =========================================================================
+  // Feature 7: UX Edge Cases, New Chat Session & Zero-Result Guard
+  // =========================================================================
+  test('Feature 7: New Chat button resets chat history and zero-result search returns honest card', async ({ page }) => {
+    await page.route('**/api/v1/search', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          query: 'unknown_symbol_xyz',
+          total_results: 0,
+          chunks: [],
+          latency_ms: 10,
+        }),
+      });
+    });
+
+    await page.goto('/');
+
+    const messageList = page.getByTestId('message-list');
+    const chatInput = page.getByTestId('chat-input-textarea');
+
+    // 1. Initial empty state has "No repository connected"
+    const codeDisplay = page.getByTestId('code-display');
+    await expect(codeDisplay).toContainText('No repository connected');
+    await expect(page.getByTestId('empty-state-connect-repo-btn')).toBeVisible();
+
+    // 2. Connect repository psf/requests
+    await page.getByTestId('connect-repo-btn').click();
+    await page.getByTestId('open-repo-btn-requests').click();
+
+    // Repository connection message appears in chat
+    await expect(messageList).toContainText('Connected Repository: psf/requests');
+
+    // 3. Test New Chat button clears history
+    const clearChatBtn = page.getByTestId('clear-chat-btn');
+    await expect(clearChatBtn).toBeVisible();
+    await clearChatBtn.click();
+
+    // Messages should be cleared
+    await expect(messageList).not.toContainText('Connected Repository: psf/requests');
+
+    // 4. Query for non-existent symbol -> Zero-result card, no hallucinated CaseInsensitiveDict
+    await chatInput.fill('unknown_symbol_xyz');
+    await chatInput.press('Enter');
+
+    await expect(messageList).toContainText('No Matching AST Nodes Found');
+    await expect(messageList).not.toContainText('CaseInsensitiveDict');
+  });
 });
