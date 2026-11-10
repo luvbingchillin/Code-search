@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
-import { FolderCode, FolderPlus } from 'lucide-react';
+import { FolderCode, FolderPlus, FolderTree } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 interface CodeDisplayProps {
@@ -9,6 +9,8 @@ interface CodeDisplayProps {
   onOpenConnectRepo?: () => void;
   searchTerm?: string;
   onMatchCountChange?: (count: number) => void;
+  hasActiveRepo?: boolean;
+  onToggleExplorer?: () => void;
 }
 
 const escapeRegex = (s: string) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -18,6 +20,8 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
   onOpenConnectRepo,
   searchTerm = '',
   onMatchCountChange,
+  hasActiveRepo = false,
+  onToggleExplorer,
 }) => {
   const lines = useMemo(() => {
     return chunk ? chunk.code.split('\n') : [];
@@ -67,6 +71,36 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
   }, [matchCount, onMatchCountChange]);
 
   if (!chunk) {
+    if (hasActiveRepo) {
+      return (
+        <div
+          data-testid="code-display"
+          className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#070a12] select-none"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-3 shadow-inner text-emerald-400">
+            <FolderCode className="w-7 h-7 opacity-80" />
+          </div>
+          <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
+            No AST code tabs open
+          </h3>
+          <p className="text-xs text-slate-400 max-w-xs mb-5 leading-relaxed">
+            Select a Python file or symbol from the Explorer sidebar on the left, or ask a question in chat.
+          </p>
+          {onToggleExplorer && (
+            <button
+              type="button"
+              data-testid="empty-state-open-explorer-btn"
+              onClick={onToggleExplorer}
+              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors shadow-md shadow-emerald-950/40 flex items-center space-x-1.5 cursor-pointer"
+            >
+              <FolderTree className="w-3.5 h-3.5" />
+              <span>Open File Explorer</span>
+            </button>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         data-testid="code-display"
@@ -76,7 +110,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
           <FolderCode className="w-7 h-7 opacity-80" />
         </div>
         <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
-          No AST code chunk selected.
+          No repository connected
         </h3>
         <p className="text-xs text-slate-400 max-w-xs mb-5 leading-relaxed">
           Connect a local repository to extract and index its AST code chunks, or submit a search query in the chat.

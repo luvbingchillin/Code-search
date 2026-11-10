@@ -11,7 +11,7 @@ export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
   selectedChunkId: string | null;
   onSelectChunk: (chunkId: string) => void;
-  onSelectCall?: (callIdentifier: string) => void;
+  onSelectCall?: (callIdentifier: string) => Promise<boolean | void> | boolean | void;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
   isMinimized?: boolean;
@@ -143,6 +143,8 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
             onOpenConnectRepo={onOpenConnectRepo}
             searchTerm={searchTerm}
             onMatchCountChange={setMatchCount}
+            hasActiveRepo={Boolean(activeRepoId)}
+            onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
           />
 
           {/* Collapsible AST Metadata Drawer */}

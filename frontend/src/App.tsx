@@ -130,7 +130,7 @@ export const App: React.FC = () => {
   }, []);
 
   const handleSelectCall = React.useCallback(
-    async (callIdentifier: string) => {
+    async (callIdentifier: string): Promise<boolean> => {
       const cleanName = callIdentifier.replace(/^self\./, '');
 
       // Step 1: Check if callee is already present in agent.activeChunks
@@ -145,7 +145,7 @@ export const App: React.FC = () => {
 
       if (localMatch) {
         agent.setSelectedChunkId(localMatch.id);
-        return;
+        return true;
       }
 
       // Step 2: If not in active chunks, invoke apiClient.lookupEntity(cleanName)
@@ -159,10 +159,12 @@ export const App: React.FC = () => {
             agent.setActiveChunks([...agent.activeChunks, ...newChunks]);
           }
           agent.setSelectedChunkId(resp.chunks[0].id);
+          return true;
         }
       } catch (err) {
         console.warn(`Entity lookup failed for ${callIdentifier}:`, err);
       }
+      return false;
     },
     [agent]
   );

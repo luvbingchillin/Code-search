@@ -1,12 +1,54 @@
-import React from 'react';
-import { Layers, FileText, Code2, GitBranch, Terminal } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Layers, FileText, Code2, GitBranch, Terminal, Info } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
+
+export const PYTHON_BUILTINS = new Set([
+  'str',
+  'int',
+  'float',
+  'bool',
+  'list',
+  'dict',
+  'set',
+  'tuple',
+  'len',
+  'range',
+  'enumerate',
+  'zip',
+  'map',
+  'filter',
+  'sorted',
+  'isinstance',
+  'issubclass',
+  'hasattr',
+  'getattr',
+  'setattr',
+  'delattr',
+  'open',
+  'print',
+  'type',
+  'id',
+  'super',
+  'iter',
+  'next',
+  'min',
+  'max',
+  'sum',
+  'any',
+  'all',
+  'abs',
+  'repr',
+  'format',
+  'chr',
+  'ord',
+  'callable',
+]);
 
 interface ASTMetadataInspectorProps {
   chunk: AstCodeChunk | null;
   isOpen: boolean;
   onClose: () => void;
-  onSelectCall?: (callIdentifier: string) => void;
+  onSelectCall?: (callIdentifier: string) => Promise<boolean | void> | boolean | void;
 }
 
 export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
@@ -15,6 +57,21 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
   onClose,
   onSelectCall,
 }) => {
+  const [callNotice, setCallNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCallNotice(null);
+  }, [chunk?.id, isOpen]);
+
+  const handleCallClick = async (call: string) => {
+    setCallNotice(null);
+    if (!onSelectCall) return;
+    const res = await onSelectCall(call);
+    if (res === false) {
+      setCallNotice(`External entity: '${call}' is not defined locally in this repository.`);
+    }
+  };
+
   if (!isOpen || !chunk) return null;
 
   return (
@@ -34,6 +91,16 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
           Close
         </button>
       </div>
+
+      {callNotice && (
+        <div
+          data-testid="external-call-notice"
+          className="flex items-center space-x-2 px-2.5 py-1.5 rounded bg-amber-950/60 border border-amber-700/60 text-amber-200 text-xs"
+        >
+          <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>{callNotice}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-200">
         <div>
@@ -114,17 +181,36 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
             <span>Called Functions ({chunk.calls.length}):</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {chunk.calls.map((call, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onSelectCall?.(call)}
-                data-testid={`call-badge-${call}`}
-                className="px-2 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 border border-emerald-700/60 hover:border-emerald-500 text-[11px] font-mono cursor-pointer transition-colors inline-flex items-center"
-              >
-                {call} ↗
-              </button>
-            ))}
+            {chunk.calls.map((call, i) => {
+              const cleanCall = call.replace(/^self\./, '');
+              const isBuiltin = PYTHON_BUILTINS.has(cleanCall);
+
+              if (isBuiltin) {
+                return (
+                  <span
+                    key={i}
+                    data-testid={`call-builtin-${call}`}
+                    title="Python built-in standard library function"
+                    className="px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-700/60 text-[11px] font-mono inline-flex items-center space-x-1 cursor-default select-none"
+                  >
+                    <span>{call}</span>
+                    <span className="text-[9px] text-slate-500 font-sans tracking-wide">built-in</span>
+                  </span>
+                );
+              }
+
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleCallClick(call)}
+                  data-testid={`call-badge-${call}`}
+                  className="px-2 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 border border-emerald-700/60 hover:border-emerald-500 text-[11px] font-mono cursor-pointer transition-colors inline-flex items-center"
+                >
+                  {call} ↗
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
