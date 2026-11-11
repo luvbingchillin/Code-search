@@ -285,6 +285,17 @@ export function useReActAgent(
         /^(what\s+repo(\s+am\s+i\s+in)?|which\s+repo|current\s+repo|repo\s+info|info)$/i.test(lower);
       const isAsk = lower.startsWith('/ask ') || lower.startsWith('/ask');
 
+      const isAbout =
+        lower === 'what is codeseek ai?' ||
+        lower === 'what is codeseek ai' ||
+        lower === 'about' ||
+        /^(what\s+is\s+codeseek(\s+ai)?|about|who\s+are\s+you)$/i.test(lower);
+      const isConnectIntent =
+        lower.startsWith('connect psf/requests') ||
+        lower.startsWith('connect sample_codebase') ||
+        lower === 'connect repo' ||
+        /^(connect|open)\s+(psf\/requests|requests|sample_codebase|sample)$/i.test(lower);
+
       // Intent Handling 1: /help or help
       if (isHelp) {
         if (timerRef.current) {
@@ -312,6 +323,88 @@ export function useReActAgent(
           ...statusRef.current,
           state: 'Idle',
           currentStepMessage: 'Ready to query codebase via Edge AI',
+        };
+        statusRef.current = idleStatus;
+        setAgentStatus(idleStatus);
+        return;
+      }
+
+      // Intent Handling 2: About CodeSeek AI
+      if (isAbout) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const aboutContent = `### ⚡ About CodeSeek AI
+
+**CodeSeek AI** is a privacy-first, edge-computed Python code retrieval and architectural search engine.
+
+- **100% Edge Privacy**: Zero cloud telemetry or external LLM API calls.
+- **Structural AST Parsing**: Tree-sitter extracts granular Python functions and class nodes to prevent semantic fragmentation.
+- **Vector Search**: Embedded LanceDB database with 384-dimensional AST embeddings.
+- **Local Neural Inference**: Optional WebLLM running Qwen2.5-Coder directly in your browser on WebGPU.
+
+Connect a repository using the **Repositories** menu in the header to start searching code!`;
+
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: aboutContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Complete',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 10,
+            tokensGenerated: aboutContent.split(/\s+/).filter(Boolean).length,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const idleStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: 'Ready to query codebase via Edge AI',
+        };
+        statusRef.current = idleStatus;
+        setAgentStatus(idleStatus);
+        return;
+      }
+
+      // Intent Handling 3: Connect repository suggestion
+      if (isConnectIntent) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const targetRepo = lower.includes('sample') ? 'sample_codebase' : 'psf/requests';
+        const connectContent = `### 📦 Connect Repository: **${targetRepo}**
+
+Click **Repositories** in the top navigation header or open the repository modal to connect **${targetRepo}**.
+
+Once connected, its AST syntax tree will load into the code viewer and you can query symbols, classes, and call hierarchies!`;
+
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: connectContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Complete',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 10,
+            tokensGenerated: connectContent.split(/\s+/).filter(Boolean).length,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const idleStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: 'Connect a repository to index AST nodes and query via Edge AI',
         };
         statusRef.current = idleStatus;
         setAgentStatus(idleStatus);

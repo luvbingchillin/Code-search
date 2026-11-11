@@ -231,7 +231,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
     <div
       data-testid="agent-runner"
       className={`bg-slate-900 border-b border-slate-800 transition-all ${className} ${
-        embedded && normState === 'idle' && !isExpanded ? 'hidden' : ''
+        embedded && !isExpanded && !streamingTokens ? 'hidden' : ''
       }`}
     >
       {/* Top Header / Status Control Bar */}
@@ -279,11 +279,13 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
             </>
           )}
 
-          {/* Elapsed Timer */}
+          {/* Elapsed Timer - visually hidden when embedded to prevent duplicate timers */}
           {elapsedMs > 0 && (
             <div
               data-testid="agent-elapsed-time"
-              className="flex items-center space-x-1 text-[11px] font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700 shrink-0"
+              className={`flex items-center space-x-1 text-[11px] font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700 shrink-0 ${
+                embedded ? 'sr-only' : ''
+              }`}
             >
               <Clock className="w-3 h-3 text-slate-400" />
               <span data-testid="agent-elapsed-timer">{(elapsedMs / 1000).toFixed(1)}s</span>
@@ -308,7 +310,9 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
             <button
               onClick={onCancel}
               data-testid="agent-cancel-btn"
-              className="flex items-center space-x-1 text-xs text-rose-300 hover:text-white bg-rose-950 hover:bg-rose-900 border border-rose-700 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs"
+              className={`flex items-center space-x-1 text-xs text-rose-300 hover:text-white bg-rose-950 hover:bg-rose-900 border border-rose-700 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs ${
+                embedded ? 'sr-only' : ''
+              }`}
               title="Cancel current query"
             >
               <StopCircle className="w-3 h-3" />
