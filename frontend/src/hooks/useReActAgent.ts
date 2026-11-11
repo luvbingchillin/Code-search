@@ -157,6 +157,7 @@ export function useReActAgent(
   streamingTokensRef.current = streamingTokens;
 
   const simulatorRef = useRef<AgentSimulator>(new AgentSimulator());
+  const hasShownSimulatorNoticeRef = useRef<boolean>(false);
   const timerRef = useRef<number | null>(null);
   const isCancelledRef = useRef<boolean>(false);
 
@@ -243,6 +244,7 @@ export function useReActAgent(
 
   const clearMessages = useCallback(() => {
     messagesRef.current = [];
+    hasShownSimulatorNoticeRef.current = false;
     setMessages([]);
     reset();
   }, [reset]);
@@ -603,10 +605,15 @@ Please select or connect a Python repository before querying AST code chunks.
             liveChunks
           );
 
-          finalResponseText =
-            result.response +
-            '\n\n> 💡 *Note: Synthesized using deterministic AST Simulator. Click **WebLLM: Load** in the header to activate real-time local neural code synthesis (Qwen2.5-Coder on WebGPU).*';
-          citedChunksList = result.citedChunks;
+          const isFirstSimulatorResponse = !hasShownSimulatorNoticeRef.current;
+          if (isFirstSimulatorResponse) {
+            hasShownSimulatorNoticeRef.current = true;
+            finalResponseText =
+              result.response +
+              '\n\n> 💡 *Note: Synthesized using deterministic AST Simulator. Click **WebLLM: Load** in the header to activate real-time local neural code synthesis (Qwen2.5-Coder on WebGPU).*';
+          } else {
+            finalResponseText = result.response;
+          }
           citedChunksList = result.citedChunks;
         }
 

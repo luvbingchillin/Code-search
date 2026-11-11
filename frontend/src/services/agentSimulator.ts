@@ -100,9 +100,8 @@ export class AgentSimulator {
     const response = `Based on the codebase analysis, here is the implementation details for **"${query}"**:\n\n` +
       `### Key AST Definitions\n${citedSummary}\n\n` +
       `### Code Explanation\n` +
-      `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`. ` +
-      `It handles critical logic with a calculated semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.\n\n` +
-      `You can inspect the full AST definition, decorators, parameters, and line ranges in the code viewer pane on the right.`;
+      `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
+      `with a semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.`;
 
     // 3. Synthesizing
     onStateChange('Synthesizing', 'Synthesizing response with cited AST context via WebLLM...');

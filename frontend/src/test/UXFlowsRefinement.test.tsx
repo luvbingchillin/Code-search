@@ -18,6 +18,7 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
   const sampleChunk: AstCodeChunk = {
     id: 'chunk-1',
     filePath: 'core/models.py',
+    fileName: 'models.py',
     astNodeType: 'FunctionDef',
     identifier: 'send_request',
     startLine: 10,

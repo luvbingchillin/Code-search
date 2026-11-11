@@ -200,6 +200,34 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
       data-testid="message-list"
       className="flex-1 overflow-y-auto p-4 space-y-4 text-sm"
     >
+      {messages.length === 0 && (
+        <div data-testid="chat-empty-welcome" className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-3 text-sky-400 shadow-xs">
+            <Bot className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
+            CodeSeek AI Developer Assistant
+          </h3>
+          <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed font-sans">
+            Search Python AST structures, explore function hierarchies, and inspect call graphs across local repositories.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-md w-full text-left text-xs font-mono">
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
+              <span className="text-sky-400 font-semibold block mb-0.5">1. Connect</span>
+              <span className="text-[11px] text-slate-400 font-sans">Select psf/requests or index a local codebase</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
+              <span className="text-emerald-400 font-semibold block mb-0.5">2. Query</span>
+              <span className="text-[11px] text-slate-400 font-sans">Ask for functions, classes, or architecture</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
+              <span className="text-amber-400 font-semibold block mb-0.5">3. Inspect</span>
+              <span className="text-[11px] text-slate-400 font-sans">Traverse multi-hop AST calls in split viewer</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {messages.map((msg) => {
         const isUser = msg.role === 'user';
 
