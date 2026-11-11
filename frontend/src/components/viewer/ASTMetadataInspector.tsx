@@ -102,26 +102,25 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-200">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-300 pb-2 border-b border-slate-800/80">
         <div>
-          <span className="text-slate-400">AST Node:</span>{' '}
+          <span className="text-slate-400">Node:</span>{' '}
           <span className="text-cyan-300 font-semibold">{chunk.astNodeType}</span>
         </div>
-
         <div>
-          <span className="text-slate-400">Identifier:</span>{' '}
+          <span className="text-slate-400">Entity:</span>{' '}
           <span className="text-emerald-300 font-semibold">{chunk.identifier}</span>
         </div>
-
         <div>
           <span className="text-slate-400">Range:</span>{' '}
-          <span>Lines {chunk.startLine} - {chunk.endLine} ({chunk.endLine - chunk.startLine + 1} lines)</span>
+          <span>Lines {chunk.startLine}–{chunk.endLine} ({chunk.endLine - chunk.startLine + 1} lines)</span>
         </div>
-
-        <div>
-          <span className="text-slate-400">Repository:</span>{' '}
-          <span className="text-sky-300">{chunk.repoFullName ?? 'local'}</span>
-        </div>
+        {chunk.repoFullName && (
+          <div>
+            <span className="text-slate-400">Repo:</span>{' '}
+            <span className="text-sky-300">{chunk.repoFullName}</span>
+          </div>
+        )}
       </div>
 
       {chunk.docstring && (

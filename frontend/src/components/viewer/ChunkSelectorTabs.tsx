@@ -7,6 +7,7 @@ interface ChunkSelectorTabsProps {
   selectedChunkId: string | null;
   onSelectChunk: (chunkId: string) => void;
   onCloseChunk?: (chunkId: string) => void;
+  onCloseAllChunks?: () => void;
 }
 
 export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
@@ -14,6 +15,7 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
   selectedChunkId,
   onSelectChunk,
   onCloseChunk,
+  onCloseAllChunks,
 }) => {
   if (chunks.length === 0) {
     return (
@@ -86,6 +88,24 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
           </div>
         );
       })}
+
+      {onCloseChunk && chunks.length > 2 && (
+        <button
+          type="button"
+          data-testid="close-all-tabs-btn"
+          onClick={() => {
+            if (onCloseAllChunks) {
+              onCloseAllChunks();
+            } else {
+              chunks.forEach((c) => onCloseChunk(c.id));
+            }
+          }}
+          className="ml-auto text-[11px] font-sans text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded hover:bg-slate-800 border border-transparent hover:border-slate-700 transition-colors shrink-0 cursor-pointer"
+          title="Close all open tabs"
+        >
+          Close All
+        </button>
+      )}
     </div>
   );
 };

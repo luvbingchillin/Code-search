@@ -196,11 +196,22 @@ export const Header: React.FC<HeaderProps> = ({
         <div
           data-testid="model-indicator-badge"
           className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs"
-          title="Edge SLM: Qwen2.5-Coder-1.5B running locally on WebGPU"
+          title={
+            webLLM.status === 'ready'
+              ? 'Edge SLM: Qwen2.5-Coder-1.5B running locally on WebGPU'
+              : 'Target Edge SLM: Qwen2.5-Coder-1.5B on WebGPU (Standby - Click WebLLM to load)'
+          }
         >
-          <Cpu className="w-3.5 h-3.5 text-sky-400" />
+          <Cpu className={`w-3.5 h-3.5 ${webLLM.status === 'ready' ? 'text-emerald-400' : 'text-slate-400'}`} />
           <span className="font-mono font-medium truncate max-w-[150px]">
             {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
+          </span>
+          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+            webLLM.status === 'ready'
+              ? 'bg-emerald-950/70 text-emerald-400 border-emerald-700/50'
+              : 'bg-slate-900 text-slate-500 border-slate-700/40'
+          }`}>
+            {webLLM.status === 'ready' ? 'Active' : 'Standby'}
           </span>
         </div>
 

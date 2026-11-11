@@ -39,7 +39,7 @@ export const App: React.FC = () => {
       setActiveRepo(repo);
       setHealthRefreshTrigger((prev) => prev + 1);
       try {
-        const chunks = await apiClient.getRepoChunks(repo.id, 10);
+        const chunks = await apiClient.getRepoChunks(repo.id, 3);
         let loadedChunks = chunks;
         if (chunks && chunks.length > 0) {
           if (agent.setActiveChunks) {
@@ -184,6 +184,12 @@ export const App: React.FC = () => {
     [agent]
   );
 
+  const handleCloseAllChunks = React.useCallback(() => {
+    if (agent.setActiveChunks) {
+      agent.setActiveChunks([]);
+    }
+  }, [agent]);
+
   const handleAddChunk = React.useCallback(
     (newChunk: any) => {
       if (!agent.activeChunks.some((c) => c.id === newChunk.id)) {
@@ -278,6 +284,7 @@ export const App: React.FC = () => {
             onMinimize={toggleCodeMinimized}
             onOpenConnectRepo={handleOpenConnectRepo}
             onCloseChunk={handleCloseChunk}
+            onCloseAllChunks={handleCloseAllChunks}
             activeRepoId={activeRepo?.id}
             onAddChunk={handleAddChunk}
           />

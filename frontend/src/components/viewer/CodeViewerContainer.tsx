@@ -18,6 +18,7 @@ export interface CodeViewerContainerProps {
   onMinimize?: () => void;
   onOpenConnectRepo?: () => void;
   onCloseChunk?: (id: string) => void;
+  onCloseAllChunks?: () => void;
   activeRepoId?: string | null;
   onAddChunk?: (chunk: AstCodeChunk) => void;
 }
@@ -33,6 +34,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   onMinimize,
   onOpenConnectRepo,
   onCloseChunk,
+  onCloseAllChunks,
   activeRepoId,
   onAddChunk,
 }) => {
@@ -107,6 +109,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         selectedChunkId={selectedChunk?.id ?? null}
         onSelectChunk={onSelectChunk}
         onCloseChunk={onCloseChunk}
+        onCloseAllChunks={onCloseAllChunks}
       />
 
       {/* Code Header with Breadcrumbs, Search, Explorer Toggle and Actions */}
