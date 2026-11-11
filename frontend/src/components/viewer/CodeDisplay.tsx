@@ -110,10 +110,10 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
           <FolderCode className="w-7 h-7 opacity-80" />
         </div>
         <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
-          No repository connected
+          No AST code chunk selected.
         </h3>
         <p className="text-xs text-slate-400 max-w-xs mb-5 leading-relaxed">
-          Connect a local repository to extract and index its AST code chunks, or submit a search query in the chat.
+          No repository connected. Connect a local repository to extract and index its AST code chunks, or submit a search query in the chat.
         </p>
         {onOpenConnectRepo && (
           <button

@@ -5,6 +5,8 @@ import { useReActAgent } from '../hooks/useReActAgent';
 import { CodeDisplay } from '../components/viewer/CodeDisplay';
 import { ASTMetadataInspector, PYTHON_BUILTINS } from '../components/viewer/ASTMetadataInspector';
 import { MessageList } from '../components/chat/MessageList';
+import { ChunkSelectorTabs } from '../components/viewer/ChunkSelectorTabs';
+import { DEFAULT_SUGGESTIONS } from '../components/chat/QuerySuggestions';
 import { AstCodeChunk, RepositoryItem, ChatMessage } from '../types';
 
 describe('UX Flows & Edge Cases Refinement Suite', () => {
@@ -230,6 +232,104 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       expect(handleSelectChunk).toHaveBeenCalledWith(
         'historical_file.py:legacy_function:45'
       );
+    });
+  });
+
+  describe('6. MessageList Empty Chat Welcome Card', () => {
+    it('renders clean onboarding card when message list is empty', () => {
+      render(
+        <MessageList
+          messages={[]}
+          chunks={[]}
+          onSelectChunk={vi.fn()}
+        />
+      );
+
+      const welcomeCard = screen.getByTestId('chat-empty-welcome');
+      expect(welcomeCard).toBeInTheDocument();
+      expect(welcomeCard).toHaveTextContent('CodeSeek AI Developer Assistant');
+      expect(welcomeCard).toHaveTextContent('1. Connect');
+      expect(welcomeCard).toHaveTextContent('2. Query');
+      expect(welcomeCard).toHaveTextContent('3. Inspect');
+    });
+  });
+
+  describe('7. Simulator Notice Shown Only Once Per Session', () => {
+    it('appends simulator disclaimer on first turn but avoids repeating on second turn', async () => {
+      const mockSearch = vi.fn().mockResolvedValue([sampleChunk]);
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: sampleRepo,
+          nemoIR: { searchAstChunks: mockSearch } as any,
+        })
+      );
+
+      // Turn 1
+      await act(async () => {
+        await result.current.submitQuery('query one');
+      });
+
+      const firstMsg = result.current.messages[result.current.messages.length - 1];
+      expect(firstMsg.content).toContain('Note: Synthesized using deterministic AST Simulator');
+
+      // Turn 2
+      await act(async () => {
+        await result.current.submitQuery('query two');
+      });
+
+      const secondMsg = result.current.messages[result.current.messages.length - 1];
+      expect(secondMsg.content).not.toContain('Note: Synthesized using deterministic AST Simulator');
+    });
+  });
+
+  describe('8. Disconnected Onboarding Suggestions & About Intent', () => {
+    it('provides actionable suggestions when disconnected', () => {
+      expect(DEFAULT_SUGGESTIONS).toContain('Connect psf/requests (HTTP library)');
+      expect(DEFAULT_SUGGESTIONS).toContain('What is CodeSeek AI?');
+    });
+
+    it('answers "What is CodeSeek AI?" gracefully without throwing repository gating warning', async () => {
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: null,
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('What is CodeSeek AI?');
+      });
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toContain('About CodeSeek AI');
+      expect(lastMsg.content).not.toContain('No Active Repository Connected');
+      expect(result.current.agentStatus.state).toBe('Idle');
+    });
+  });
+
+  describe('9. ChunkSelectorTabs Close All Action', () => {
+    it('displays "Close All" button when there are more than 2 tabs and calls onCloseAllChunks', () => {
+      const handleCloseAll = vi.fn();
+      const chunks: AstCodeChunk[] = [
+        { ...sampleChunk, id: 'c1', identifier: 'func1' },
+        { ...sampleChunk, id: 'c2', identifier: 'func2' },
+        { ...sampleChunk, id: 'c3', identifier: 'func3' },
+      ];
+
+      render(
+        <ChunkSelectorTabs
+          chunks={chunks}
+          selectedChunkId="c1"
+          onSelectChunk={vi.fn()}
+          onCloseChunk={vi.fn()}
+          onCloseAllChunks={handleCloseAll}
+        />
+      );
+
+      const closeAllBtn = screen.getByTestId('close-all-tabs-btn');
+      expect(closeAllBtn).toBeInTheDocument();
+      fireEvent.click(closeAllBtn);
+      expect(handleCloseAll).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -464,15 +464,23 @@ test.describe('Sequential Improvements Automated Browser E2E Suite (Milestone 6)
     // Repository connection message appears in chat
     await expect(messageList).toContainText('Connected Repository: psf/requests');
 
-    // 3. Test New Chat button clears history
+    // 3. Test New Chat button clears history and reveals clean empty welcome state
     const clearChatBtn = page.getByTestId('clear-chat-btn');
     await expect(clearChatBtn).toBeVisible();
     await clearChatBtn.click();
 
-    // Messages should be cleared
+    // Messages should be cleared and welcome card shown
     await expect(messageList).not.toContainText('Connected Repository: psf/requests');
+    await expect(page.getByTestId('chat-empty-welcome')).toBeVisible();
 
-    // 4. Query for non-existent symbol -> Zero-result card, no hallucinated CaseInsensitiveDict
+    // 4. Test Close All tabs button
+    const closeAllTabsBtn = page.getByTestId('close-all-tabs-btn');
+    if (await closeAllTabsBtn.isVisible()) {
+      await closeAllTabsBtn.click();
+      await expect(codeDisplay).toContainText('No AST code tabs open');
+    }
+
+    // 5. Query for non-existent symbol -> Zero-result card, no hallucinated CaseInsensitiveDict
     await chatInput.fill('unknown_symbol_xyz');
     await chatInput.press('Enter');
 
