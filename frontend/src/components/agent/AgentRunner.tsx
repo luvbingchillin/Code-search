@@ -50,6 +50,7 @@ export interface AgentRunnerProps {
   onReset?: () => void;
   compact?: boolean;
   embedded?: boolean;
+  showTokenStream?: boolean;
   className?: string;
 }
 
@@ -97,6 +98,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   onReset,
   compact = false,
   embedded = false,
+  showTokenStream: propShowTokenStream,
   className = '',
 }) => {
   // Resolve active properties merging explicit props and status object
@@ -116,6 +118,11 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
       setIsExpanded(true);
     }
   }, [embedded, normState]);
+
+  // Raw token stream terminal is hidden by default when embedded to avoid duplicating the chat response
+  const [isTokenStreamExpanded, setIsTokenStreamExpanded] = useState<boolean>(
+    propShowTokenStream ?? !embedded
+  );
 
   const isBusy =
     normState === 'thinking' ||
@@ -403,16 +410,28 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                   <Terminal className="w-3.5 h-3.5" />
                   <span>WebLLM Token Stream</span>
                 </span>
-                {tokenCount > 0 && (
-                  <span data-testid="agent-token-count" className="text-slate-300 font-mono font-medium">
-                    {tokenCount} tokens
-                  </span>
-                )}
+                <div className="flex items-center space-x-2">
+                  {tokenCount > 0 && (
+                    <span data-testid="agent-token-count" className="text-slate-300 font-mono font-medium">
+                      {tokenCount} tokens
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setIsTokenStreamExpanded((prev) => !prev)}
+                    data-testid="agent-toggle-token-stream-btn"
+                    className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700"
+                    title={isTokenStreamExpanded ? 'Hide raw token stream' : 'Show raw token stream'}
+                  >
+                    {isTokenStreamExpanded ? 'Hide stream' : 'Show stream'}
+                  </button>
+                </div>
               </div>
 
               <div
                 data-testid="agent-streaming-tokens"
-                className="mt-2 text-slate-100 leading-relaxed whitespace-pre-wrap break-words max-h-36 overflow-y-auto"
+                className={`mt-2 text-slate-100 leading-relaxed whitespace-pre-wrap break-words max-h-36 overflow-y-auto ${
+                  isTokenStreamExpanded ? 'block' : 'hidden'
+                }`}
               >
                 {streamingTokens ? (
                   <>

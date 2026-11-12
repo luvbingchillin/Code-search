@@ -74,7 +74,7 @@ export class ApiClient {
     const timeoutId = setTimeout(() => {
       isTimedOut = true;
       try {
-        controller.abort(new DOMException(`Request to ${endpoint} timed out after ${timeoutMs}ms`, 'TimeoutError'));
+        controller.abort(new DOMException(`Request to ${endpoint} timed out (aborted after ${timeoutMs}ms)`, 'AbortError'));
       } catch {
         controller.abort();
       }
@@ -119,7 +119,7 @@ export class ApiClient {
     } catch (err: any) {
       if (err?.name === 'AbortError' || err?.name === 'TimeoutError' || isTimedOut) {
         const defaultMsg = isTimedOut
-          ? `Request to ${cleanEndpoint} timed out after ${timeoutMs}ms`
+          ? `Request to ${cleanEndpoint} timed out (aborted after ${timeoutMs}ms)`
           : 'The operation was aborted';
         const rawReason = controller.signal?.reason;
         const reasonMsg =
