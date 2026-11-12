@@ -6,6 +6,7 @@ import { CodeDisplay } from '../components/viewer/CodeDisplay';
 import { ASTMetadataInspector, PYTHON_BUILTINS } from '../components/viewer/ASTMetadataInspector';
 import { MessageList } from '../components/chat/MessageList';
 import { ChunkSelectorTabs } from '../components/viewer/ChunkSelectorTabs';
+import { AgentRunner } from '../components/agent/AgentRunner';
 import { DEFAULT_SUGGESTIONS } from '../components/chat/QuerySuggestions';
 import { AstCodeChunk, RepositoryItem, ChatMessage } from '../types';
 
@@ -330,6 +331,101 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       expect(closeAllBtn).toBeInTheDocument();
       fireEvent.click(closeAllBtn);
       expect(handleCloseAll).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('10. Codebase Architectural Overview Queries', () => {
+    it('gates "what does this code base do" when no repository is connected', async () => {
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: null,
+          initialChunks: [],
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('what does this code base do');
+      });
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toMatch(/No Active Repository Connected/i);
+    });
+
+    it('synthesizes architectural overview for psf/requests when connected', async () => {
+      const requestsChunks: AstCodeChunk[] = [
+        {
+          id: 'sessions.py:Session:356',
+          filePath: 'sessions.py',
+          fileName: 'sessions.py',
+          astNodeType: 'ClassDef',
+          identifier: 'Session',
+          startLine: 356,
+          endLine: 816,
+          code: 'class Session: pass',
+          relevanceScore: 0.95,
+          repoFullName: 'psf/requests',
+        },
+        {
+          id: 'adapters.py:HTTPAdapter:167',
+          filePath: 'adapters.py',
+          fileName: 'adapters.py',
+          astNodeType: 'ClassDef',
+          identifier: 'HTTPAdapter',
+          startLine: 167,
+          endLine: 610,
+          code: 'class HTTPAdapter: pass',
+          relevanceScore: 0.91,
+          repoFullName: 'psf/requests',
+        },
+      ];
+
+      const mockSearch = vi.fn().mockResolvedValue(requestsChunks);
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: sampleRepo,
+          nemoIR: { searchAstChunks: mockSearch } as any,
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('what does this code base do');
+      });
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toContain('Architectural Overview: **psf/requests**');
+      expect(lastMsg.content).toContain('Session');
+      expect(lastMsg.content).toContain('HTTPAdapter');
+      expect(result.current.agentStatus.state).toBe('Complete');
+      expect(lastMsg.citedChunks).toContain('sessions.py:Session:356');
+    });
+  });
+
+  describe('11. AgentRunner Raw Token Stream Collapsible By Default', () => {
+    it('hides token stream by default when embedded={true} and toggles visibility on click', () => {
+      render(
+        <AgentRunner
+          state="synthesizing"
+          streamingTokens="def solve(): pass"
+          embedded={true}
+        />
+      );
+
+      // In embedded mode, traces are expanded when busy so streaming output is mounted
+      expect(screen.getByTestId('agent-streaming-output')).toBeInTheDocument();
+      const tokensContainer = screen.getByTestId('agent-streaming-tokens');
+      // Hidden by default when embedded
+      expect(tokensContainer.className).toContain('hidden');
+
+      // Click toggle button
+      const toggleBtn = screen.getByTestId('agent-toggle-token-stream-btn');
+      expect(toggleBtn).toHaveTextContent('Show stream');
+      fireEvent.click(toggleBtn);
+
+      // Now stream is visible
+      expect(tokensContainer.className).toContain('block');
+      expect(toggleBtn).toHaveTextContent('Hide stream');
     });
   });
 });

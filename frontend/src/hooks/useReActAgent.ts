@@ -290,6 +290,12 @@ export function useReActAgent(
         lower === 'what is codeseek ai' ||
         lower === 'about' ||
         /^(what\s+is\s+codeseek(\s+ai)?|about|who\s+are\s+you)$/i.test(lower);
+      const isOverview =
+        lower === '/overview' ||
+        lower === 'overview' ||
+        /^(what\s+does\s+this\s+(code\s*base|repo|repository|project|software)\s+do|explain\s+this\s+(code\s*base|repo|repository|project)|(code\s*base|repo|repository)\s+overview|overview(\s+of\s+this\s+(code\s*base|repo|repository|project))?|what\s+is\s+this\s+(code\s*base|repo|repository|project)|architecture(\s+of\s+this\s+(code\s*base|repo|repository|project))?|how\s+does\s+this\s+(code\s*base|repo|repository|project)\s+work)\??$/i.test(
+          lower
+        );
       const isConnectIntent =
         lower.startsWith('connect psf/requests') ||
         lower.startsWith('connect sample_codebase') ||
@@ -508,12 +514,31 @@ Please select or connect a Python repository before querying AST code chunks.
       const startTime = Date.now();
       const thinkingStatus: AgentStatus = {
         state: 'Thinking',
-        currentStepMessage: 'Analyzing query intent and identifying AST target entities...',
+        currentStepMessage: isOverview
+          ? 'Analyzing repository architecture and identifying core entry points and models...'
+          : 'Analyzing query intent and identifying AST target entities...',
         elapsedMs: 0,
         activeChunkCount: activeChunksRef.current.length,
       };
       statusRef.current = thinkingStatus;
       setAgentStatus(thinkingStatus);
+
+      const isRequestsRepo = Boolean(
+        activeRepoRef.current?.name?.toLowerCase().includes('requests') ||
+        activeRepoPathRef.current?.toLowerCase().includes('requests')
+      );
+      const isSampleRepo = Boolean(
+        activeRepoRef.current?.name?.toLowerCase().includes('sample') ||
+        activeRepoPathRef.current?.toLowerCase().includes('sample')
+      );
+
+      const effectiveSearchTerm = isOverview
+        ? isRequestsRepo
+          ? 'Session Request Response HTTPAdapter'
+          : isSampleRepo
+          ? 'Calculator add subtract FastAPI'
+          : 'ClassDef class def main model'
+        : effectiveQuery;
 
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = window.setInterval(() => {
@@ -545,7 +570,9 @@ Please select or connect a Python repository before querying AST code chunks.
           const searchingStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Searching AST',
-            currentStepMessage: 'Querying NemoIR vector index for Python AST nodes...',
+            currentStepMessage: isOverview
+              ? 'Retrieving foundational architecture and model AST nodes from LanceDB...'
+              : 'Querying NemoIR vector index for Python AST nodes...',
           };
           statusRef.current = searchingStatus;
           setAgentStatus(searchingStatus);
@@ -553,17 +580,11 @@ Please select or connect a Python repository before querying AST code chunks.
           const searchOptions = activeRepoPathRef.current
             ? { filePath: activeRepoPathRef.current }
             : undefined;
-          let matchedChunks: AstCodeChunk[] = [];
-          try {
-            matchedChunks = nemoIRRef.current
-              ? await (searchOptions
-                  ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
-                  : nemoIRRef.current.searchAstChunks(effectiveQuery))
-              : simulatorRef.current.searchAstChunks(effectiveQuery);
-          } catch (searchErr) {
-            console.warn('Backend vector search timed out or failed; falling back to AST simulator chunks:', searchErr);
-            matchedChunks = simulatorRef.current.searchAstChunks(effectiveQuery);
-          }
+          const matchedChunks = nemoIRRef.current
+            ? await (searchOptions
+                ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
+                : nemoIRRef.current.searchAstChunks(effectiveSearchTerm))
+            : simulatorRef.current.searchAstChunks(effectiveSearchTerm);
           activeChunksRef.current = matchedChunks;
           setActiveChunksState(matchedChunks);
           citedChunksList = matchedChunks;
@@ -642,7 +663,9 @@ Please select or connect a Python repository before querying AST code chunks.
               )
               .join('\n\n');
 
-            const prompt = `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
+            const prompt = isOverview
+              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a comprehensive architectural overview of this repository, explaining its primary purpose, core components (such as Session, Request, Response, Adapters), and execution pipeline.`
+              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
 
             finalResponseText = await currentLLM.generate(prompt, (chunk, accumulated) => {
               if (isCancelledRef.current) return;
@@ -660,13 +683,16 @@ Please select or connect a Python repository before querying AST code chunks.
                 ? { filePath: activeRepoPathRef.current }
                 : undefined;
               const res = await (searchOptions
-                ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
-                : nemoIRRef.current.searchAstChunks(effectiveQuery));
+                ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
+                : nemoIRRef.current.searchAstChunks(effectiveSearchTerm));
               if (res) {
                 liveChunks = res;
               }
-            } catch {
-              // Graceful fallback to simulator search
+            } catch (nemoErr) {
+              if (webLLMRef.current !== undefined) {
+                throw nemoErr;
+              }
+              // Pure simulator fallback: gracefully continue with simulator chunks
             }
           }
 
@@ -764,15 +790,7 @@ Please select or connect a Python repository before querying AST code chunks.
           streamingTokensRef.current = '';
         }
 
-        const isTimeout =
-          err?.name === 'TimeoutError' ||
-          err?.name === 'AbortError' ||
-          err?.message?.includes('aborted') ||
-          err?.message?.includes('timed out');
-
-        const rawErrMsg = isTimeout
-          ? 'Backend vector search request timed out. Please check backend health or try again.'
-          : (err?.message || 'Error occurred during ReAct loop');
+        const rawErrMsg = err?.message || 'Error occurred during ReAct loop';
 
         const errStatus: AgentStatus = {
           ...statusRef.current,

@@ -97,11 +97,74 @@ export class AgentSimulator {
       )
       .join('\n');
 
-    const response = `Based on the codebase analysis, here is the implementation details for **"${query}"**:\n\n` +
-      `### Key AST Definitions\n${citedSummary}\n\n` +
-      `### Code Explanation\n` +
-      `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
-      `with a semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.`;
+    const isOverviewQuery =
+      /^(what\s+does\s+this\s+(code\s*base|repo|repository|project|software)\s+do|explain\s+this\s+(code\s*base|repo|repository|project)|(code\s*base|repo|repository)\s+overview|overview(\s+of\s+this\s+(code\s*base|repo|repository|project))?|what\s+is\s+this\s+(code\s*base|repo|repository|project)|architecture(\s+of\s+this\s+(code\s*base|repo|repository|project))?|how\s+does\s+this\s+(code\s*base|repo|repository|project)\s+work)\??$/i.test(
+        query.trim()
+      );
+
+    const hasRequestsChunks = matchedChunks.some(
+      (c) =>
+        c.filePath.includes('sessions.py') ||
+        c.filePath.includes('models.py') ||
+        c.filePath.includes('adapters.py') ||
+        c.repoFullName?.includes('requests')
+    );
+    const hasSampleChunks = matchedChunks.some(
+      (c) =>
+        c.filePath.includes('calculator.py') ||
+        c.filePath.includes('sample_codebase') ||
+        c.identifier === 'Calculator'
+    );
+
+    let response = '';
+    if (isOverviewQuery) {
+      if (hasRequestsChunks) {
+        response =
+          `### 🌐 Architectural Overview: **psf/requests**\n\n` +
+          `**\`psf/requests\`** is the premier Python HTTP client library (*"HTTP for Humans"*). It provides an elegant, synchronous interface for issuing HTTP requests, managing persistent sessions, handling authentication, and negotiating response payloads without low-level socket plumbing.\n\n` +
+          `---\n\n` +
+          `### 🏛️ Core Architecture & Pipeline\n` +
+          `1. **Session & Connection Lifecycle (\`sessions.py\`)\n` +
+          `   - **\`Session\`**: Central orchestrator providing cookie persistence across multiple requests, connection pooling (via urllib3), auth persistence, and transport adapter mounting.\n` +
+          `2. **Request Encapsulation (\`models.py\`)\n` +
+          `   - **\`Request\` & \`PreparedRequest\`**: Configures HTTP method, headers, parameters, and compiles wire-ready network payloads.\n` +
+          `3. **Response Handling (\`models.py\`)\n` +
+          `   - **\`Response\`**: Container for server responses, encapsulating HTTP status codes, headers, cookie jars, and lazy content decoders (\`.content\`, \`.text\`, \`.json()\`).\n` +
+          `4. **Transport Adapters (\`adapters.py\`)\n` +
+          `   - **\`HTTPAdapter\`**: Transport abstraction layer mounting urllib3 connection pool managers, socket retries, and TLS/SSL verification.\n\n` +
+          `---\n\n` +
+          `### 🔑 Key AST Definitions\n${citedSummary}`;
+      } else if (hasSampleChunks) {
+        response =
+          `### ⚡ Architectural Overview: **sample_codebase**\n\n` +
+          `**\`sample_codebase\`** is a lightweight Python FastAPI microservice demonstrating modular REST architecture, mathematical computation utilities, and decorator-based logging.\n\n` +
+          `---\n\n` +
+          `### 🏛️ Core Architecture & Modules\n` +
+          `1. **API Router & Application Service (\`main.py\`)\n` +
+          `   - Configures the FastAPI ASGI application, registers endpoint routes (\`/health\`, \`/calculate\`), and handles parameter validation.\n` +
+          `2. **Computational Engine (\`calculator.py\`)\n` +
+          `   - **\`Calculator\`**: Object-oriented math engine implementing fundamental arithmetic routines (\`add\`, \`subtract\`, \`multiply\`, \`divide\`) with zero-division error handling.\n` +
+          `3. **Cross-Cutting Utilities (\`utils.py\`)\n` +
+          `   - Execution timing decorators, structured logging, and input sanitation helpers.\n\n` +
+          `---\n\n` +
+          `### 🔑 Key AST Definitions\n${citedSummary}`;
+      } else {
+        response =
+          `### 📦 Architectural Overview\n\n` +
+          `This repository is a structured Python project with ${matchedChunks.length} foundational AST components indexed.\n\n` +
+          `---\n\n` +
+          `### 🏛️ Key AST Definitions\n${citedSummary}\n\n` +
+          `### Code Architecture\n` +
+          `The primary architectural anchor identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`.`;
+      }
+    } else {
+      response =
+        `Based on the codebase analysis, here is the implementation details for **"${query}"**:\n\n` +
+        `### Key AST Definitions\n${citedSummary}\n\n` +
+        `### Code Explanation\n` +
+        `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
+        `with a semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.`;
+    }
 
     // 3. Synthesizing
     onStateChange('Synthesizing', 'Synthesizing response with cited AST context via WebLLM...');
