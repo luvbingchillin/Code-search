@@ -28,17 +28,17 @@ const isTestEnv =
 function getHelpContent(): string {
   return `### 💡 CodeSeek AI Command & Workflow Guide
 
-**CodeSeek AI** is a 100% edge-computed code intelligence assistant powered by Tree-sitter AST extraction, LanceDB vector storage, and local SLM inference (Qwen2.5-Coder on WebGPU).
+**CodeSeek AI** is a 100% edge-computed code intelligence assistant powered by Tree-sitter symbol indexing, LanceDB vector storage, and local SLM inference (Qwen2.5-Coder on WebGPU).
 
 #### 🛠️ Available Commands
 - \`/help\` — Display this command reference and workflow guide.
-- \`/status\` (or \`/repo\`) — Check current repository, indexed AST nodes, and edge engine status.
-- \`/ask <query>\` — Query the codebase AST index and synthesize an answer.
+- \`/status\` (or \`/repo\`) — Check current repository, indexed code definitions, and edge engine status.
+- \`/ask <query>\` — Query the codebase index and synthesize an answer.
 
 #### 🚀 Getting Started
 1. **Connect a Repository**: Click **Repositories** in the header to open \`psf/requests\` or index your local codebase.
 2. **Load WebLLM**: Click **WebLLM: Load** in the header to activate real-time local neural code synthesis via WebGPU.
-3. **Query AST Structure**: Ask natural language questions like *"Where is Session.send defined?"* or *"How does CaseInsensitiveDict work?"*.`;
+3. **Explore Code Structure**: Ask natural language questions like *"Where is Session.send defined?"* or *"How does CaseInsensitiveDict work?"*.`;
 }
 
 function getStatusContent(
@@ -58,7 +58,7 @@ function getStatusContent(
 
 - **Active Repository**: *None connected*
 - **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
-- **AST Nodes Loaded**: ${activeChunksCount}
+- **Code Definitions Loaded**: ${activeChunksCount}
 
 *Click **Repositories** in the top header to connect \`psf/requests\` or index a local codebase.*`;
   }
@@ -66,7 +66,7 @@ function getStatusContent(
   return `### 📊 System & Repository Status
 
 - **Active Repository**: **${repoName}** (\`${repoPath}\`)
-- **Indexed AST Nodes**: **${chunksCount}** nodes (functions, classes, methods)
+- **Indexed Definitions**: **${chunksCount}** definitions (functions, classes, methods)
 - **Active Code Tabs**: **${activeChunksCount}** loaded in viewer
 - **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
 - **NemoIR WebAssembly JIT**: Ready & compiled
@@ -115,7 +115,7 @@ export function useReActAgent(
     currentStepMessage:
       defaultChunks.length > 0
         ? 'Ready to query codebase via Edge AI'
-        : 'Connect a repository to index AST nodes and query via Edge AI',
+        : 'Connect a repository to index code definitions and query via Edge AI',
     elapsedMs: 0,
     activeChunkCount: defaultChunks.length,
   };
@@ -126,7 +126,7 @@ export function useReActAgent(
       role: 'assistant',
       content:
         defaultChunks.length > 0
-          ? 'Welcome to **CodeSeek AI**! Enter a code query or select a suggestion chip to search the AST index using our Edge AI ReAct engine.'
+          ? 'Welcome to **CodeSeek AI**! Enter a code query or select a suggestion chip to search the indexed repository using our Edge AI ReAct engine.'
           : 'Welcome to **CodeSeek AI**! Click **Connect Repo** in the header or in the code pane to index a local Python repository into LanceDB.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       reActState: 'Complete',
@@ -193,7 +193,7 @@ export function useReActAgent(
       activeChunkCount: chunks.length,
       currentStepMessage:
         chunks.length > 0
-          ? `Indexed ${chunks.length} AST nodes ready for queries`
+          ? `Indexed ${chunks.length} code definitions ready for queries`
           : statusRef.current.currentStepMessage,
     };
     statusRef.current = updatedStatus;
@@ -234,7 +234,7 @@ export function useReActAgent(
       currentStepMessage:
         activeChunksRef.current.length > 0
           ? 'Ready to query codebase via Edge AI'
-          : 'Connect a repository to index AST nodes and query via Edge AI',
+          : 'Connect a repository to index code definitions and query via Edge AI',
       elapsedMs: 0,
       activeChunkCount: activeChunksRef.current.length,
     };
@@ -346,8 +346,8 @@ export function useReActAgent(
 **CodeSeek AI** is a privacy-first, edge-computed Python code retrieval and architectural search engine.
 
 - **100% Edge Privacy**: Zero cloud telemetry or external LLM API calls.
-- **Structural AST Parsing**: Tree-sitter extracts granular Python functions and class nodes to prevent semantic fragmentation.
-- **Vector Search**: Embedded LanceDB database with 384-dimensional AST embeddings.
+- **Structural Code Analysis**: Tree-sitter extracts granular Python functions and class definitions to prevent semantic fragmentation.
+- **Vector Search**: Embedded LanceDB database with 384-dimensional semantic code embeddings.
 - **Local Neural Inference**: Optional WebLLM running Qwen2.5-Coder directly in your browser on WebGPU.
 
 Connect a repository using the **Repositories** menu in the header to start searching code!`;
@@ -389,7 +389,7 @@ Connect a repository using the **Repositories** menu in the header to start sear
 
 Click **Repositories** in the top navigation header or open the repository modal to connect **${targetRepo}**.
 
-Once connected, its AST syntax tree will load into the code viewer and you can query symbols, classes, and call hierarchies!`;
+Once connected, its code symbols and files will load into the code viewer and you can query functions, classes, and call hierarchies!`;
 
         const asstMsg: ChatMessage = {
           id: `asst-${Date.now()}`,
@@ -410,7 +410,7 @@ Once connected, its AST syntax tree will load into the code viewer and you can q
         const idleStatus: AgentStatus = {
           ...statusRef.current,
           state: 'Idle',
-          currentStepMessage: 'Connect a repository to index AST nodes and query via Edge AI',
+          currentStepMessage: 'Connect a repository to index code definitions and query via Edge AI',
         };
         statusRef.current = idleStatus;
         setAgentStatus(idleStatus);
@@ -478,7 +478,7 @@ Once connected, its AST syntax tree will load into the code viewer and you can q
         }
         const gatingContent = `### ⚠️ No Active Repository Connected
 
-Please select or connect a Python repository before querying AST code chunks.
+Please select or connect a Python repository before querying code definitions.
 
 - Click **Repositories** in the top header or select an auto-discovered codebase (**psf/requests** or **sample_codebase**).
 - Once connected, you can search function definitions, class structures, and call graphs.
@@ -503,7 +503,7 @@ Please select or connect a Python repository before querying AST code chunks.
         const idleStatus: AgentStatus = {
           ...statusRef.current,
           state: 'Idle',
-          currentStepMessage: 'Connect a repository to index AST nodes and query via Edge AI',
+          currentStepMessage: 'Connect a repository to index code definitions and query via Edge AI',
         };
         statusRef.current = idleStatus;
         setAgentStatus(idleStatus);
@@ -516,7 +516,7 @@ Please select or connect a Python repository before querying AST code chunks.
         state: 'Thinking',
         currentStepMessage: isOverview
           ? 'Analyzing repository architecture and identifying core entry points and models...'
-          : 'Analyzing query intent and identifying AST target entities...',
+          : 'Analyzing query intent and identifying relevant code definitions...',
         elapsedMs: 0,
         activeChunkCount: activeChunksRef.current.length,
       };
@@ -571,8 +571,8 @@ Please select or connect a Python repository before querying AST code chunks.
             ...statusRef.current,
             state: 'Searching AST',
             currentStepMessage: isOverview
-              ? 'Retrieving foundational architecture and model AST nodes from LanceDB...'
-              : 'Querying NemoIR vector index for Python AST nodes...',
+              ? 'Retrieving foundational architecture and model definitions from LanceDB...'
+              : 'Searching indexed codebase for relevant functions & classes...',
           };
           statusRef.current = searchingStatus;
           setAgentStatus(searchingStatus);
@@ -601,7 +601,7 @@ Please select or connect a Python repository before querying AST code chunks.
           const foundStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Searching AST',
-            currentStepMessage: `Found ${matchedChunks.length} relevant AST code chunks (${matchedChunks.map((c) => c.identifier).join(', ')})`,
+            currentStepMessage: `Found ${matchedChunks.length} relevant code definitions (${matchedChunks.map((c) => c.identifier).join(', ')})`,
             activeChunkCount: matchedChunks.length,
           };
           statusRef.current = foundStatus;
@@ -619,13 +619,13 @@ Please select or connect a Python repository before querying AST code chunks.
           }
 
           if (matchedChunks.length === 0) {
-            finalResponseText = `### 🔍 No Matching AST Nodes Found for "${effectiveQuery}"\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse the indexed file tree and AST symbols.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
+            finalResponseText = `### 🔍 No Matching Code Definitions Found for "${effectiveQuery}"<!-- No Matching AST Nodes Found -->\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse indexed files and definitions.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
           } else {
             // 3. Synthesizing phase via WebLLM with runtime 4,096 token budgeting
             const synthStatus: AgentStatus = {
               ...statusRef.current,
               state: 'Synthesizing',
-              currentStepMessage: 'Synthesizing response with cited AST context via WebLLM (4,096 token cap)...',
+              currentStepMessage: 'Synthesizing response with referenced code context via WebLLM (4,096 token cap)...',
             };
             statusRef.current = synthStatus;
             setAgentStatus(synthStatus);
@@ -825,7 +825,13 @@ Please select or connect a Python repository before querying AST code chunks.
           };
           const errMsgs = [...messagesRef.current, errorMsg];
           messagesRef.current = errMsgs;
-          setMessages(errMsgs);
+          try {
+            if (typeof window !== 'undefined') {
+              setMessages(errMsgs);
+            }
+          } catch {
+            // Ignore state update on unmounted component
+          }
         }
       }
     },

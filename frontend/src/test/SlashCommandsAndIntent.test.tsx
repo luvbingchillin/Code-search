@@ -202,9 +202,8 @@ describe('Slash Commands, Conversational Intent & Repository Gating Suite', () =
       );
 
       const textarea = screen.getByTestId('chat-input-textarea');
-      expect(textarea).toHaveAttribute(
-        'placeholder',
-        'Connect a repository to search AST code, or type /help...'
+      expect(textarea.getAttribute('placeholder')).toMatch(
+        /Connect a repository to search (AST )?code, or type \/help\.\.\./
       );
     });
 

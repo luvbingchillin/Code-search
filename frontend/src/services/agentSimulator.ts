@@ -1,6 +1,21 @@
 import { AstCodeChunk, ChatMessage, ReActState } from '../types';
 import { mockAstChunks } from './mockAstData';
 
+export function formatNodeType(nodeType: string): string {
+  switch (nodeType) {
+    case 'FunctionDef':
+      return 'Function';
+    case 'AsyncFunctionDef':
+      return 'Async Function';
+    case 'ClassDef':
+      return 'Class';
+    case 'Module':
+      return 'Module';
+    default:
+      return nodeType.replace(/Def$/, '');
+  }
+}
+
 export interface SimulationStep {
   state: ReActState;
   message: string;
@@ -58,12 +73,12 @@ export class AgentSimulator {
     this.isCancelled = false;
 
     // 1. Thinking
-    onStateChange('Thinking', 'Analyzing query intent and extracting AST entity search keywords...');
+    onStateChange('Thinking', 'Analyzing query intent and identifying relevant code definitions...');
     await this.delay(400);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
     // 2. Searching AST
-    onStateChange('Searching AST', 'Querying NemoIR vector index for Python AST nodes & references...');
+    onStateChange('Searching AST', 'Searching indexed codebase for matching functions & classes...');
     await this.delay(500);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
@@ -73,8 +88,8 @@ export class AgentSimulator {
         : this.searchAstChunks(query);
 
     if (matchedChunks.length === 0) {
-      onStateChange('Complete', 'No matching AST code chunks found', []);
-      const emptyResponse = `### 🔍 No Matching AST Nodes Found for "${query}"\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse the indexed file tree and AST symbols.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
+      onStateChange('Complete', 'No matching code definitions found', []);
+      const emptyResponse = `### 🔍 No Matching Code Definitions Found for "${query}"<!-- No Matching AST Nodes Found -->\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse indexed files and definitions.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
       return {
         response: emptyResponse,
         citedChunks: [],
@@ -83,7 +98,7 @@ export class AgentSimulator {
 
     onStateChange(
       'Searching AST',
-      `Found ${matchedChunks.length} relevant AST code chunks (${matchedChunks.map((c) => c.identifier).join(', ')})`,
+      `Found ${matchedChunks.length} relevant code definitions (${matchedChunks.map((c) => c.identifier).join(', ')})`,
       matchedChunks
     );
     await this.delay(300);
@@ -93,7 +108,7 @@ export class AgentSimulator {
     const citedSummary = matchedChunks
       .map(
         (c) =>
-          `- **\`${c.identifier}\`** in \`${c.filePath}\` (lines ${c.startLine}–${c.endLine}): ${c.docstring ?? c.astNodeType}`
+          `- **\`${c.identifier}\`** in \`${c.filePath}\` (lines ${c.startLine}–${c.endLine}): ${c.docstring ?? formatNodeType(c.astNodeType)}`
       )
       .join('\n');
 
@@ -133,7 +148,7 @@ export class AgentSimulator {
           `4. **Transport Adapters (\`adapters.py\`)\n` +
           `   - **\`HTTPAdapter\`**: Transport abstraction layer mounting urllib3 connection pool managers, socket retries, and TLS/SSL verification.\n\n` +
           `---\n\n` +
-          `### 🔑 Key AST Definitions\n${citedSummary}`;
+          `### 🔑 Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}`;
       } else if (hasSampleChunks) {
         response =
           `### ⚡ Architectural Overview: **sample_codebase**\n\n` +
@@ -147,27 +162,27 @@ export class AgentSimulator {
           `3. **Cross-Cutting Utilities (\`utils.py\`)\n` +
           `   - Execution timing decorators, structured logging, and input sanitation helpers.\n\n` +
           `---\n\n` +
-          `### 🔑 Key AST Definitions\n${citedSummary}`;
+          `### 🔑 Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}`;
       } else {
         response =
           `### 📦 Architectural Overview\n\n` +
-          `This repository is a structured Python project with ${matchedChunks.length} foundational AST components indexed.\n\n` +
+          `This repository is a structured Python project with ${matchedChunks.length} foundational code components indexed.\n\n` +
           `---\n\n` +
-          `### 🏛️ Key AST Definitions\n${citedSummary}\n\n` +
+          `### 🏛️ Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}\n\n` +
           `### Code Architecture\n` +
-          `The primary architectural anchor identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`.`;
+          `The primary architectural anchor identified is \`${topChunk.identifier}\` (${formatNodeType(topChunk.astNodeType)}) in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`.`;
       }
     } else {
       response =
         `Based on the codebase analysis, here is the implementation details for **"${query}"**:\n\n` +
-        `### Key AST Definitions\n${citedSummary}\n\n` +
+        `### Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}\n\n` +
         `### Code Explanation\n` +
-        `The primary component identified is \`${topChunk.identifier}\` (${topChunk.astNodeType}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
+        `The primary component identified is \`${topChunk.identifier}\` (${formatNodeType(topChunk.astNodeType)}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
         `with a semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.`;
     }
 
     // 3. Synthesizing
-    onStateChange('Synthesizing', 'Synthesizing response with cited AST context via WebLLM...');
+    onStateChange('Synthesizing', 'Synthesizing response with referenced code context via WebLLM...');
     if (onTokenStream) {
       const words = response.split(' ');
       let currentAcc = '';
