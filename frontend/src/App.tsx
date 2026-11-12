@@ -46,10 +46,14 @@ export const App: React.FC = () => {
             agent.setActiveChunks(chunks);
           }
         } else {
-          const fallback = await nemoIR.searchAstChunks('def ', { filePath: repo.path });
-          if (fallback && fallback.length > 0 && agent.setActiveChunks) {
-            agent.setActiveChunks(fallback);
-            loadedChunks = fallback;
+          try {
+            const fallback = await nemoIR.searchAstChunks('def ', { filePath: repo.path });
+            if (fallback && fallback.length > 0 && agent.setActiveChunks) {
+              agent.setActiveChunks(fallback);
+              loadedChunks = fallback;
+            }
+          } catch (fallbackErr) {
+            console.warn('Initial AST chunk search fallback encountered error:', fallbackErr);
           }
         }
 

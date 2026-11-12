@@ -553,11 +553,17 @@ Please select or connect a Python repository before querying AST code chunks.
           const searchOptions = activeRepoPathRef.current
             ? { filePath: activeRepoPathRef.current }
             : undefined;
-          const matchedChunks = nemoIRRef.current
-            ? await (searchOptions
-                ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
-                : nemoIRRef.current.searchAstChunks(effectiveQuery))
-            : simulatorRef.current.searchAstChunks(effectiveQuery);
+          let matchedChunks: AstCodeChunk[] = [];
+          try {
+            matchedChunks = nemoIRRef.current
+              ? await (searchOptions
+                  ? nemoIRRef.current.searchAstChunks(effectiveQuery, searchOptions)
+                  : nemoIRRef.current.searchAstChunks(effectiveQuery))
+              : simulatorRef.current.searchAstChunks(effectiveQuery);
+          } catch (searchErr) {
+            console.warn('Backend vector search timed out or failed; falling back to AST simulator chunks:', searchErr);
+            matchedChunks = simulatorRef.current.searchAstChunks(effectiveQuery);
+          }
           activeChunksRef.current = matchedChunks;
           setActiveChunksState(matchedChunks);
           citedChunksList = matchedChunks;
@@ -758,13 +764,23 @@ Please select or connect a Python repository before querying AST code chunks.
           streamingTokensRef.current = '';
         }
 
+        const isTimeout =
+          err?.name === 'TimeoutError' ||
+          err?.name === 'AbortError' ||
+          err?.message?.includes('aborted') ||
+          err?.message?.includes('timed out');
+
+        const rawErrMsg = isTimeout
+          ? 'Backend vector search request timed out. Please check backend health or try again.'
+          : (err?.message || 'Error occurred during ReAct loop');
+
         const errStatus: AgentStatus = {
           ...statusRef.current,
           state: isCancelled ? 'Idle' : 'Error',
           currentStepMessage: isCancelled
             ? 'Query cancelled by user'
-            : (err?.message || 'Error occurred during ReAct loop'),
-          error: isCancelled ? undefined : (err?.message || 'Unknown error'),
+            : rawErrMsg,
+          error: isCancelled ? undefined : rawErrMsg,
         };
         statusRef.current = errStatus;
         try {
@@ -773,6 +789,25 @@ Please select or connect a Python repository before querying AST code chunks.
           }
         } catch {
           // Ignore state update on unmounted component
+        }
+
+        if (!isCancelled) {
+          const errorMsg: ChatMessage = {
+            id: `err-${Date.now()}`,
+            role: 'assistant',
+            content: `### ❌ ReAct Execution Failed\n\n**${rawErrMsg}**\n\n- The local vector backend service at \`http://localhost:8000\` may be warming up or busy.\n- Type \`/status\` to check environment details or try again.`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            reActState: 'Error',
+            citedChunks: [],
+            metrics: {
+              latencyMs: Date.now() - startTime,
+              tokensGenerated: 0,
+              astNodesSearched: 0,
+            },
+          };
+          const errMsgs = [...messagesRef.current, errorMsg];
+          messagesRef.current = errMsgs;
+          setMessages(errMsgs);
         }
       }
     },

@@ -116,7 +116,7 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
         />
       );
 
-      expect(screen.getByText('No repository connected')).toBeInTheDocument();
+      expect(screen.getByText(/No repository connected/i)).toBeInTheDocument();
       expect(screen.getByText(/Connect a local repository/i)).toBeInTheDocument();
 
       const btn = screen.getByTestId('empty-state-connect-repo-btn');

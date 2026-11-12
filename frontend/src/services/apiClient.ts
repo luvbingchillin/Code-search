@@ -53,7 +53,7 @@ export class ApiClient {
         ? ((import.meta as any).env.VITE_API_URL as string | undefined)
         : undefined;
     this.baseUrl = (config?.baseUrl || envUrl || 'http://localhost:8000').replace(/\/+$/, '');
-    this.timeoutMs = config?.timeoutMs ?? 10000;
+    this.timeoutMs = config?.timeoutMs ?? 30000;
   }
 
   public getBaseUrl(): string {
@@ -70,10 +70,24 @@ export class ApiClient {
   ): Promise<T> {
     const { timeoutMs = this.timeoutMs, ...fetchOptions } = options || {};
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    let isTimedOut = false;
+    const timeoutId = setTimeout(() => {
+      isTimedOut = true;
+      try {
+        controller.abort(new DOMException(`Request to ${endpoint} timed out after ${timeoutMs}ms`, 'TimeoutError'));
+      } catch {
+        controller.abort();
+      }
+    }, timeoutMs);
 
     if (fetchOptions.signal) {
-      fetchOptions.signal.addEventListener('abort', () => controller.abort());
+      fetchOptions.signal.addEventListener('abort', () => {
+        try {
+          controller.abort(fetchOptions.signal?.reason);
+        } catch {
+          controller.abort();
+        }
+      });
     }
 
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -102,6 +116,26 @@ export class ApiClient {
       }
 
       return (await response.json()) as T;
+    } catch (err: any) {
+      if (err?.name === 'AbortError' || err?.name === 'TimeoutError' || isTimedOut) {
+        const defaultMsg = isTimedOut
+          ? `Request to ${cleanEndpoint} timed out after ${timeoutMs}ms`
+          : 'The operation was aborted';
+        const rawReason = controller.signal?.reason;
+        const reasonMsg =
+          typeof rawReason === 'string'
+            ? rawReason
+            : rawReason?.message || err?.message;
+
+        const finalMsg =
+          reasonMsg && !reasonMsg.includes('without reason')
+            ? reasonMsg
+            : defaultMsg;
+
+        const normalizedError = new DOMException(finalMsg, isTimedOut ? 'TimeoutError' : 'AbortError');
+        throw normalizedError;
+      }
+      throw err;
     } finally {
       clearTimeout(timeoutId);
     }
