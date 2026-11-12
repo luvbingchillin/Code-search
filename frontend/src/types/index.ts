@@ -72,6 +72,12 @@ export interface ChatMessage {
 
 export type WebLLMLoadingStatus = 'unloaded' | 'loading' | 'ready' | 'generating' | 'error';
 
+export interface WebLLMGenerateOptions {
+  maxTokens?: number;
+  temperature?: number;
+  presencePenalty?: number;
+}
+
 export interface UseWebLLMReturn {
   status: WebLLMLoadingStatus;
   progress: number;
@@ -83,11 +89,13 @@ export interface UseWebLLMReturn {
   loadModel: (modelId?: string) => Promise<void>;
   generate: (
     prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
-    onToken?: (chunk: string, accumulated: string) => void
+    onToken?: (chunk: string, accumulated: string) => void,
+    options?: WebLLMGenerateOptions
   ) => Promise<string>;
   generateStream: (
     prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
-    onToken?: (chunk: string, accumulated: string) => void
+    onToken?: (chunk: string, accumulated: string) => void,
+    options?: WebLLMGenerateOptions
   ) => Promise<string>;
   initEngine: (modelId?: string) => Promise<void>;
   interrupt: () => void | Promise<void>;

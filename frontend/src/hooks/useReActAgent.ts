@@ -25,6 +25,11 @@ const isTestEnv =
     (process.env?.NODE_ENV === 'test' || Boolean(process.env?.VITEST))) ||
   (typeof window !== 'undefined' && Boolean((window as any).__VITEST_ENVIRONMENT__));
 
+export function condenseCodeSnippet(code: string, maxChars = 650): string {
+  if (!code || code.length <= maxChars) return code;
+  return code.slice(0, maxChars) + '\n# ... [Truncated for fast local inference]';
+}
+
 function getHelpContent(): string {
   return `### 💡 CodeSeek AI Command & Workflow Guide
 
@@ -630,26 +635,27 @@ Please select or connect a Python repository before querying code definitions.
             statusRef.current = synthStatus;
             setAgentStatus(synthStatus);
 
-            // Enforce strict 4,096 token ceiling at runtime
-            const MAX_PROMPT_TOKENS = 3500; // Leave safety headroom for model completion
+            // Enforce lean prompt budget to ensure fast local WebGPU prefill (<2s)
+            const MAX_PROMPT_TOKENS = 1200;
             const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
             let currentTokens = estimateTokens(effectiveQuery) + 120;
             const budgetedChunks: AstCodeChunk[] = [];
 
             for (const chunk of matchedChunks.slice(0, 5)) {
-              const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${chunk.code}`;
+              const condensedCode = condenseCodeSnippet(chunk.code, 650);
+              const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${condensedCode}`;
               const chunkTokens = estimateTokens(chunkRepresentation);
 
               if (currentTokens + chunkTokens <= MAX_PROMPT_TOKENS) {
-                budgetedChunks.push(chunk);
+                budgetedChunks.push({ ...chunk, code: condensedCode });
                 currentTokens += chunkTokens;
               } else {
                 const remainingChars = Math.max(0, (MAX_PROMPT_TOKENS - currentTokens) * 4);
                 if (remainingChars > 120) {
                   const truncatedCode =
-                    chunk.code.slice(0, remainingChars) +
-                    '\n# ... [Truncated to fit 4,096 token safety budget]';
+                    condensedCode.slice(0, remainingChars) +
+                    '\n# ... [Truncated to fit local token safety budget]';
                   budgetedChunks.push({ ...chunk, code: truncatedCode });
                 }
                 break;
@@ -664,14 +670,18 @@ Please select or connect a Python repository before querying code definitions.
               .join('\n\n');
 
             const prompt = isOverview
-              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a comprehensive architectural overview of this repository, explaining its primary purpose, core components (such as Session, Request, Response, Adapters), and execution pipeline.`
-              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize an architectural explanation highlighting key AST entities and line numbers.`;
+              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (around 150-180 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: How do key components (such as Session, Request, Response, Adapters) collaborate?\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
+              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 150 words) highlighting key definitions, line numbers, and implementation roles.`;
 
-            finalResponseText = await currentLLM.generate(prompt, (chunk, accumulated) => {
-              if (isCancelledRef.current) return;
-              streamingTokensRef.current = accumulated;
-              setStreamingTokens(accumulated);
-            });
+            finalResponseText = await currentLLM.generate(
+              prompt,
+              (chunk, accumulated) => {
+                if (isCancelledRef.current) return;
+                streamingTokensRef.current = accumulated;
+                setStreamingTokens(accumulated);
+              },
+              { maxTokens: isOverview ? 300 : 250, temperature: 0.2 }
+            );
             if (isCancelledRef.current) throw new Error('Query cancelled by user');
           }
         } else {

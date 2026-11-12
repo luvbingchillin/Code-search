@@ -5,7 +5,7 @@ import {
   type InitProgressReport,
   type InitProgressCallback,
 } from '@mlc-ai/web-llm';
-import { UseWebLLMReturn, WebLLMLoadingStatus } from '../types';
+import { UseWebLLMReturn, WebLLMLoadingStatus, WebLLMGenerateOptions } from '../types';
 
 export const DEFAULT_MODEL = 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC';
 
@@ -139,7 +139,8 @@ export function useWebLLM(
   const generate = useCallback(
     async (
       prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
-      onToken?: (tokenChunk: string, accumulated: string) => void
+      onToken?: (tokenChunk: string, accumulated: string) => void,
+      options?: WebLLMGenerateOptions
     ): Promise<string> => {
       if (isInterruptedRef.current) {
         isInterruptedRef.current = false;
@@ -154,14 +155,28 @@ export function useWebLLM(
 
       const messages =
         typeof prompt === 'string'
-          ? [{ role: 'user' as const, content: prompt }]
+          ? [
+              {
+                role: 'system' as const,
+                content:
+                  'You are CodeSeek AI, an ultra-fast, local code intelligence engine. Synthesize clear, direct, and structured technical explanations without conversational filler, disclaimers, or speculation.',
+              },
+              { role: 'user' as const, content: prompt },
+            ]
           : prompt;
+
+      const maxTokens = options?.maxTokens ?? 280;
+      const temperature = options?.temperature ?? 0.2;
+      const presencePenalty = options?.presencePenalty ?? 0.1;
 
       try {
         if (engineRef.current && engineRef.current.chat?.completions?.create) {
           const response = await engineRef.current.chat.completions.create({
             messages,
             stream: true,
+            max_tokens: maxTokens,
+            temperature,
+            presence_penalty: presencePenalty,
           });
 
           for await (const chunk of response as AsyncIterable<any>) {
@@ -210,9 +225,10 @@ export function useWebLLM(
   const generateStream = useCallback(
     async (
       prompt: string | Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
-      onToken?: (tokenChunk: string, accumulated: string) => void
+      onToken?: (tokenChunk: string, accumulated: string) => void,
+      options?: WebLLMGenerateOptions
     ): Promise<string> => {
-      return generate(prompt, onToken);
+      return generate(prompt, onToken, options);
     },
     [generate]
   );
