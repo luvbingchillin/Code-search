@@ -33,6 +33,10 @@ class BaseEmbeddingModel(ABC):
         """
         pass
 
+    def warmup(self) -> None:
+        """Pre-warm model weights and execution caches if applicable."""
+        pass
+
 
 class MockEmbeddingModel(BaseEmbeddingModel):
     """Deterministic, offline embedding model generating unit-normalized vectors.
@@ -99,7 +103,14 @@ class SentenceTransformerEmbedder(BaseEmbeddingModel):
                     "Install it via `pip install sentence-transformers` or "
                     "use MockEmbeddingModel for offline testing."
                 ) from exc
-            self._model = SentenceTransformer(self.model_name, device=self.device)
+            try:
+                self._model = SentenceTransformer(
+                    self.model_name,
+                    device=self.device,
+                    local_files_only=True,
+                )
+            except Exception:
+                self._model = SentenceTransformer(self.model_name, device=self.device)
         return self._model
 
     @property
@@ -129,3 +140,8 @@ class SentenceTransformerEmbedder(BaseEmbeddingModel):
             show_progress_bar=False,
         )
         return np.asarray(embs, dtype=np.float32)
+
+    def warmup(self) -> None:
+        """Pre-loads the underlying neural network weights and executes a warmup inference."""
+        self._get_model()
+        self.embed_query("warmup")

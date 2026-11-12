@@ -47,6 +47,14 @@ def create_app(
             else:
                 app.state.embedder = SentenceTransformerEmbedder(model_name=app_settings.model_name)
 
+        # Pre-warm embedder in worker thread so cold start latency doesn't impact user queries
+        try:
+            import asyncio
+            await asyncio.to_thread(app.state.embedder.warmup)
+            logger.info("Embedder model weights pre-warmed successfully.")
+        except Exception as exc:
+            logger.warning(f"Embedder warmup skipped: {exc}")
+
         logger.info(
             f"Initialized {app_settings.project_name} "
             f"[VectorDB: {app.state.vector_store.__class__.__name__}, "

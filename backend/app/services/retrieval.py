@@ -1,6 +1,7 @@
 """Retrieval orchestration service coordinating vector search and entity lookup."""
 
 import time
+from pathlib import Path
 from typing import Optional
 
 from app.core.embedding import BaseEmbeddingModel
@@ -39,13 +40,26 @@ class RetrievalService:
             ast_node_type=ast_node_type,
         )
 
-        # Optional file_path filter if requested
+        # Optional file_path or repository filter if requested
         if file_path:
-            norm_target = file_path.replace("\\", "/").strip().lower()
-            chunks = [
-                c for c in chunks
-                if norm_target in c.filePath.lower() or c.filePath.lower() == norm_target
-            ]
+            norm_target = file_path.replace("\\", "/").strip().lower().rstrip("/")
+            target_path = Path(file_path)
+            target_basename = norm_target.split("/")[-1]
+
+            filtered = []
+            for c in chunks:
+                c_norm = c.filePath.replace("\\", "/").lower()
+                # 1. Exact or substring match in c.filePath
+                if norm_target == c_norm or norm_target in c_norm or c_norm.endswith(norm_target):
+                    filtered.append(c)
+                # 2. If target is a directory, check if c.filePath resides within that directory
+                elif target_path.exists() and target_path.is_dir() and (target_path / c.filePath).exists():
+                    filtered.append(c)
+                # 3. Match if c_norm ends with target or matches target basename
+                elif c_norm == target_basename or c_norm.endswith(f"/{target_basename}"):
+                    filtered.append(c)
+
+            chunks = filtered
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
