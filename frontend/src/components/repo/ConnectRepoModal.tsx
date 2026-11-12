@@ -181,7 +181,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               <h3 className="text-base font-semibold text-slate-100 font-sans flex items-center space-x-2">
                 <span>Codebase Repository Hub</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                  AST + LanceDB
+                  Code Index + LanceDB
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
@@ -327,7 +327,10 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                           <div className="flex items-center space-x-3 mt-1.5 text-[10px] text-slate-400 font-mono">
                             <span className="flex items-center space-x-1">
                               <FileCode className="w-3 h-3 text-slate-400" />
-                              <span>{repo.chunksCount ?? repo.chunks_count ?? 0} AST chunks</span>
+                              <span>
+                                {repo.chunksCount ?? repo.chunks_count ?? 0} definitions
+                                <span className="sr-only"> ({repo.chunksCount ?? repo.chunks_count ?? 0} AST chunks)</span>
+                              </span>
                             </span>
                             {(repo.filesCount ?? repo.files_count) !== undefined && (
                               <span>• {repo.filesCount ?? repo.files_count} files</span>
@@ -343,7 +346,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                           onClick={() => handleIndex(repo.path)}
                           disabled={isIndexing}
                           className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors border border-slate-700 flex items-center space-x-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                          title="Re-scan and update AST index"
+                          title="Re-scan and update code index"
                         >
                           {isThisIndexing ? (
                             <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
@@ -478,7 +481,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                     <span className="font-semibold text-xs text-sky-300">psf/requests</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">fixtures/requests</span>
                   </div>
-                  <p className="text-[11px] text-slate-400">Production HTTP client repository with 17 Python modules and 284 AST nodes.</p>
+                  <p className="text-[11px] text-slate-400">Production HTTP client repository with 17 Python modules and 284 code definitions.</p>
                 </div>
 
                 <div
@@ -533,7 +536,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                 <div className="text-[11px] text-emerald-300/90 pl-5.5 space-y-0.5 font-mono">
                   <p>• Repository: {successStats.repoName}</p>
                   <p>• Scanned Files: {successStats.files}</p>
-                  <p>• AST Chunks Extracted: {successStats.chunks}</p>
+                  <p>• Code Definitions Indexed: {successStats.chunks}</p>
                   <p>• Ingestion Latency: {successStats.time.toFixed(2)}s</p>
                 </div>
               </div>

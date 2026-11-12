@@ -168,12 +168,12 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
         {isLoading ? (
           <div className="flex items-center justify-center py-10 text-slate-400 space-x-2">
             <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
-            <span>Scanning AST symbols...</span>
+            <span>Scanning repository symbols...</span>
           </div>
         ) : !repoId ? (
           <div className="p-4 text-center text-slate-500 font-sans">
             <FolderOpen className="w-6 h-6 mx-auto mb-2 opacity-50 text-sky-400" />
-            <p className="text-[11px]">Connect a repository to browse source files & AST symbols.</p>
+            <p className="text-[11px]">Connect a repository to browse source files & code symbols.</p>
           </div>
         ) : filteredTree.length === 0 ? (
           <div className="p-4 text-center text-slate-500 font-sans">

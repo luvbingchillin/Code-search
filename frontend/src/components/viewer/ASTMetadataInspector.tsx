@@ -82,7 +82,7 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
       <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
         <div className="flex items-center space-x-1.5 text-slate-100 font-semibold">
           <Layers className="w-3.5 h-3.5 text-sky-400" />
-          <span>AST Metadata Inspector</span>
+          <span>Code & Symbol Details</span>
         </div>
         <button
           onClick={onClose}

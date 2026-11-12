@@ -209,7 +209,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
             CodeSeek AI Developer Assistant
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed font-sans">
-            Search Python AST structures, explore function hierarchies, and inspect call graphs across local repositories.
+            Search Python codebases, explore function hierarchies, and inspect call graphs across local repositories.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-md w-full text-left text-xs font-mono">
             <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
@@ -222,7 +222,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
             </div>
             <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
               <span className="text-amber-400 font-semibold block mb-0.5">3. Inspect</span>
-              <span className="text-[11px] text-slate-400 font-sans">Traverse multi-hop AST calls in split viewer</span>
+              <span className="text-[11px] text-slate-400 font-sans">Traverse multi-hop calls in split viewer</span>
             </div>
           </div>
         </div>
@@ -294,7 +294,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                 <div className="mt-3 pt-2 border-t border-slate-800">
                   <div className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
                     <Code2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Cited AST Chunks:</span>
+                    <span>Referenced Code:</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {msg.citedChunks.map((chunkId) => {
@@ -312,7 +312,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                           data-testid={`chunk-citation-${chunkId}`}
                           onClick={() => onSelectChunk(chunkId)}
                           className="flex items-center space-x-1 text-xs px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-500/60 text-emerald-400 font-mono transition-colors shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                          title="Click to view Python AST definition in viewer"
+                          title="Click to view definition in code viewer"
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                           <span>{label}</span>

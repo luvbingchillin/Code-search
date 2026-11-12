@@ -62,7 +62,7 @@ export const App: React.FC = () => {
           agent.addMessage({
             id: `sys-${Date.now()}`,
             role: 'assistant',
-            content: `### 🔄 Connected Repository: **${repo.name}**\n\nActive AST context updated (${count} initial nodes loaded in viewer). You can now ask questions about this codebase or browse functions and classes using the Explorer.`,
+            content: `### 🔄 Connected Repository: **${repo.name}**\n\nActive codebase connected (${count} initial definitions loaded in viewer). You can now ask questions about this codebase or browse functions and classes using the Explorer.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           });
         }

@@ -117,7 +117,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
           }`}
         >
           <Code2 className="w-3.5 h-3.5" />
-          <span>AST Code Viewer</span>
+          <span>Code Viewer</span>
         </button>
       </div>
 
@@ -197,7 +197,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               Focus Mode: All Panes Minimized
             </h3>
             <p className="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
-              Both the chat conversation and AST code viewer are minimized. Restore either pane to continue exploring your Python codebase.
+              Both the chat conversation and code viewer are minimized. Restore either pane to continue exploring your Python codebase.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <button
@@ -216,7 +216,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
                 className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-medium text-xs shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
               >
                 <Code2 className="w-3.5 h-3.5" />
-                <span>Open AST Code Viewer</span>
+                <span>Open Code Viewer</span>
               </button>
             </div>
           </div>
@@ -252,14 +252,14 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               data-testid="restore-code-btn"
               onClick={handleToggleCodeMinimized}
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-300 transition-colors cursor-pointer shadow-xs group"
-              title="Restore AST Code Viewer"
-              aria-label="Restore AST Code Viewer"
+              title="Restore Code Viewer"
+              aria-label="Restore Code Viewer"
             >
               <Code2 className="w-4 h-4" />
             </button>
             <div className="mt-8 flex-1 flex items-center justify-center">
               <span className="text-[11px] font-mono tracking-wider text-slate-400 uppercase rotate-90 whitespace-nowrap select-none pointer-events-none">
-                AST Viewer
+                Code Viewer
               </span>
             </div>
           </aside>

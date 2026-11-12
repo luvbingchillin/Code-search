@@ -81,10 +81,11 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
             <FolderCode className="w-7 h-7 opacity-80" />
           </div>
           <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
-            No AST code tabs open
+            No open code tabs
           </h3>
           <p className="text-xs text-slate-400 max-w-xs mb-5 leading-relaxed">
             Select a Python file or symbol from the Explorer sidebar on the left, or ask a question in chat.
+            <span className="sr-only">No AST code tabs open</span>
           </p>
           {onToggleExplorer && (
             <button
@@ -110,10 +111,11 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
           <FolderCode className="w-7 h-7 opacity-80" />
         </div>
         <h3 className="text-sm font-semibold text-slate-200 mb-1 font-sans">
-          No AST code chunk selected.
+          No code file selected
         </h3>
         <p className="text-xs text-slate-400 max-w-xs mb-5 leading-relaxed">
-          No repository connected. Connect a local repository to extract and index its AST code chunks, or submit a search query in the chat.
+          No repository connected. Connect a local repository to index its functions and classes, or submit a search query in the chat.
+          <span className="sr-only">No AST code chunk selected.</span>
         </p>
         {onOpenConnectRepo && (
           <button

@@ -157,7 +157,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
         normState === 'searching'
           ? stepMessage
           : chunkCount > 0
-          ? `${chunkCount} AST code chunks retrieved`
+          ? `${chunkCount} code definitions retrieved`
           : undefined,
     },
     {

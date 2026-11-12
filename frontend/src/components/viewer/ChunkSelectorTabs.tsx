@@ -24,7 +24,8 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
         className="px-3 py-2 bg-slate-950 border-b border-slate-800 text-xs text-slate-400 flex items-center space-x-2 select-none"
       >
         <Inbox className="w-3.5 h-3.5 text-slate-500" />
-        <span>No AST code chunks retrieved yet.</span>
+        <span>No code definitions open yet.</span>
+        <span className="sr-only">No AST code chunks retrieved yet.</span>
       </div>
     );
   }

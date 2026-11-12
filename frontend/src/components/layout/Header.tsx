@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
               Edge AI v1.0
             </span>
           </div>
-          <p className="text-xs text-slate-400">Generative Code Retrieval & Python AST Search Engine</p>
+          <p className="text-xs text-slate-400">Generative Code Retrieval & Semantic Search Engine</p>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer active:scale-95"
             title={
               activeRepo
-                ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} AST chunks). Click to switch or add.`
+                ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} code definitions). Click to switch or add.`
                 : 'Open pre-indexed repository or index new Python codebase'
             }
           >
@@ -245,8 +245,8 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
                 }`}
-                title={isCodeMinimized ? 'Restore AST Code Viewer' : 'Minimize AST Code Viewer'}
-                aria-label={isCodeMinimized ? 'Restore AST Code Viewer' : 'Minimize AST Code Viewer'}
+                title={isCodeMinimized ? 'Restore Code Viewer' : 'Minimize Code Viewer'}
+                aria-label={isCodeMinimized ? 'Restore Code Viewer' : 'Minimize Code Viewer'}
               >
                 <PanelRightClose className={`w-4 h-4 ${isCodeMinimized ? 'rotate-180 text-slate-400' : ''}`} />
               </button>

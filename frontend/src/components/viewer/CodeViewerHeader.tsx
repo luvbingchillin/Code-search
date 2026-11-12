@@ -95,7 +95,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium ${getNodeTypeBadgeColor(
                 chunk.astNodeType
               )}`}
-              title={`AST Node: ${chunk.astNodeType}`}
+              title={`Definition: ${chunk.astNodeType}`}
             >
               {chunk.astNodeType}
             </span>
@@ -193,10 +193,10 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                 ? 'bg-slate-800 text-sky-300 border-sky-500/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
-            title="Toggle AST Metadata Inspector"
+            title="Inspect symbol details, parameters & call graph"
           >
             <Info className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">AST Info</span>
+            <span className="hidden sm:inline">Symbol Info</span>
           </button>
         )}
 
@@ -205,7 +205,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           onClick={handleCopy}
           disabled={!chunk}
           className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
-          title="Copy Python AST code to clipboard"
+          title="Copy code to clipboard"
         >
           {copied ? (
             <>

@@ -18,7 +18,7 @@ interface StepItem {
 const STEPS: StepItem[] = [
   { id: 'step-1', name: 'Input', label: 'Query' },
   { id: 'step-2', name: 'Thinking', label: 'Thinking' },
-  { id: 'step-3', name: 'Searching AST', label: 'AST Search' },
+  { id: 'step-3', name: 'Searching AST', label: 'Code Search' },
   { id: 'step-4', name: 'Synthesizing', label: 'Synthesizing' },
 ];
 

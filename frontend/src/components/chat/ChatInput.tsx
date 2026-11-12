@@ -29,7 +29,7 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
   {
     cmd: '/status',
     label: '/status',
-    desc: 'Inspect active repository, indexed AST nodes, and SLM engine status',
+    desc: 'Inspect active repository, indexed functions & classes, and edge engine status',
     icon: <Activity className="w-3.5 h-3.5 text-emerald-400" />,
     directSubmit: true,
   },
@@ -43,7 +43,7 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
   {
     cmd: '/ask ',
     label: '/ask <query>',
-    desc: 'Query codebase AST index and synthesize an answer',
+    desc: 'Query codebase and synthesize an answer',
     icon: <Search className="w-3.5 h-3.5 text-amber-400" />,
     directSubmit: false,
   },
@@ -150,7 +150,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const placeholderText =
     hasActiveRepo || activeRepoName
       ? `Ask a question about ${activeRepoName || 'active repository'} (or type /help, /status)...`
-      : 'Connect a repository to search AST code, or type /help...';
+      : 'Connect a repository to search code, or type /help...';
 
   return (
     <form
