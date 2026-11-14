@@ -31,6 +31,74 @@ export function condenseCodeSnippet(code: string, maxChars = 650): string {
   return code.slice(0, maxChars) + '\n# ... [Truncated for fast local inference]';
 }
 
+/**
+ * Intent-Aware Focal AST Slicing for fast local WebGPU inference.
+ * - Focal node (isFocal = true): Retains complete implementation code up to 1,800 chars
+ *   so the model has exact line-level visibility into conditionals, branches, loops, and return values.
+ * - Supporting nodes (isFocal = false): Extracts class/function signatures, docstrings, and line references,
+ *   condensing auxiliary context to keep prompt prefill latency under 1.5s on WebGPU.
+ */
+export function smartDistillAstChunk(
+  chunk: AstCodeChunk,
+  isFocal: boolean,
+  maxChars = isFocal ? 1800 : 450
+): string {
+  const code = chunk.code?.trim() || '';
+  if (!code) return '';
+
+  if (isFocal) {
+    if (code.length <= maxChars) return code;
+    return (
+      code.slice(0, maxChars) +
+      `\n# ... [Implementation continues through line ${chunk.endLine}; truncated for token budget]`
+    );
+  }
+
+  // Supporting chunk: extract definition signature + docstring
+  const lines = code.split('\n');
+  const signatureLines: string[] = [];
+  let inDocstring = false;
+  let docstringDelimiter = '';
+
+  for (let i = 0; i < lines.length && i < 20; i++) {
+    const line = lines[i];
+    signatureLines.push(line);
+
+    if (!inDocstring) {
+      if (line.includes('"""')) {
+        inDocstring = true;
+        docstringDelimiter = '"""';
+        if (line.indexOf('"""') !== line.lastIndexOf('"""')) {
+          break; // Single-line docstring
+        }
+      } else if (line.includes("'''")) {
+        inDocstring = true;
+        docstringDelimiter = "'''";
+        if (line.indexOf("'''") !== line.lastIndexOf("'''")) {
+          break; // Single-line docstring
+        }
+      } else if (i > 3 && !line.trim().startsWith('#') && !line.includes(':')) {
+        break; // Passed function signature without docstring
+      }
+    } else {
+      if (line.includes(docstringDelimiter)) {
+        break;
+      }
+    }
+  }
+
+  const extracted = signatureLines.join('\n');
+  if (extracted.length < code.length * 0.85) {
+    return (
+      extracted +
+      `\n    # ... [Implementation: lines ${chunk.startLine}-${chunk.endLine} condensed for fast inference]`
+    );
+  }
+
+  if (code.length <= maxChars) return code;
+  return code.slice(0, maxChars) + `\n# ... [lines ${chunk.startLine}-${chunk.endLine} condensed]`;
+}
+
 function getHelpContent(): string {
   return `### 💡 CodeSeek AI Command & Workflow Guide
 
@@ -631,15 +699,19 @@ Please select or connect a Python repository before querying code definitions.
             statusRef.current = synthStatus;
             setAgentStatus(synthStatus);
 
-            // Enforce lean prompt budget to ensure fast local WebGPU prefill (<2s)
-            const MAX_PROMPT_TOKENS = 1200;
+            // Enforce intent-aware focal prompt budget to ensure fast local WebGPU prefill (<2s)
+            // Overview queries use tight architectural context; targeted queries preserve full implementation for Rank #1
+            const MAX_PROMPT_TOKENS = isOverview ? 500 : 850;
             const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
-            let currentTokens = estimateTokens(effectiveQuery) + 120;
+            let currentTokens = estimateTokens(effectiveQuery) + 100;
             const budgetedChunks: AstCodeChunk[] = [];
+            const candidateChunks = matchedChunks.slice(0, isOverview ? 4 : 5);
 
-            for (const chunk of matchedChunks.slice(0, 5)) {
-              const condensedCode = condenseCodeSnippet(chunk.code, 650);
+            for (let idx = 0; idx < candidateChunks.length; idx++) {
+              const chunk = candidateChunks[idx];
+              const isFocal = idx === 0 && !isOverview;
+              const condensedCode = smartDistillAstChunk(chunk, isFocal);
               const chunkRepresentation = `[Identifier: ${chunk.identifier}, File: ${chunk.filePath}:${chunk.startLine}-${chunk.endLine}, Type: ${chunk.astNodeType}]:\n${condensedCode}`;
               const chunkTokens = estimateTokens(chunkRepresentation);
 
@@ -666,8 +738,8 @@ Please select or connect a Python repository before querying code definitions.
               .join('\n\n');
 
             const prompt = isOverview
-              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (around 150-180 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: How do key components (such as Session, Request, Response, Adapters) collaborate?\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
-              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 150 words) highlighting key definitions, line numbers, and implementation roles.`;
+              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (under 150 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: Key classes/modules and their roles.\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
+              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 140 words) highlighting key definitions, line numbers, and implementation roles.`;
 
             finalResponseText = await currentLLM.generate(
               prompt,
@@ -676,7 +748,11 @@ Please select or connect a Python repository before querying code definitions.
                 streamingTokensRef.current = accumulated;
                 setStreamingTokens(accumulated);
               },
-              { maxTokens: isOverview ? 300 : 250, temperature: 0.2 }
+              {
+                maxTokens: isOverview ? 220 : 200,
+                temperature: 0.15,
+                stop: ['\n\n### User Question', '\n\n### Context AST', '<|im_end|>', '<|endoftext|>'],
+              }
             );
             if (isCancelledRef.current) throw new Error('Query cancelled by user');
           }
