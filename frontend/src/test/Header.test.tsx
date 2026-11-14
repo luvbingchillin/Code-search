@@ -326,4 +326,48 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
 
     expect(getHealthSpy).toHaveBeenCalled();
   });
+
+  it('toggles between Turbo 0.5B and Precision 1.5B via model-tier-toggle-btn', async () => {
+    const user = userEvent.setup();
+    const loadModelSpy = vi.fn();
+    const customWebLLM = {
+      ...mockWebLLM,
+      currentModel: 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC',
+      loadModel: loadModelSpy,
+    };
+
+    const { rerender } = render(
+      <Header
+        webLLM={customWebLLM}
+        nemoIR={mockNemoIR}
+        agentStatus={mockAgentStatus}
+      />
+    );
+
+    const toggleBtn = screen.getByTestId('model-tier-toggle-btn');
+    expect(toggleBtn).toBeInTheDocument();
+    expect(toggleBtn).toHaveTextContent('Precision 1.5B');
+
+    // Click to switch to Turbo 0.5B
+    await user.click(toggleBtn);
+    expect(loadModelSpy).toHaveBeenCalledWith('Qwen2.5-Coder-0.5B-Instruct-q4f16_1-MLC');
+
+    // Re-render as Turbo 0.5B
+    rerender(
+      <Header
+        webLLM={{
+          ...customWebLLM,
+          currentModel: 'Qwen2.5-Coder-0.5B-Instruct-q4f16_1-MLC',
+        }}
+        nemoIR={mockNemoIR}
+        agentStatus={mockAgentStatus}
+      />
+    );
+
+    expect(toggleBtn).toHaveTextContent('Turbo 0.5B');
+
+    // Click to switch back to Precision 1.5B
+    await user.click(toggleBtn);
+    expect(loadModelSpy).toHaveBeenCalledWith('Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC');
+  });
 });

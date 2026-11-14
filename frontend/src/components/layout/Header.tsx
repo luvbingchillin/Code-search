@@ -1,7 +1,8 @@
 import React from 'react';
-import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode } from 'lucide-react';
+import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode, Zap } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn, RepositoryItem } from '../../types';
 import { apiClient as defaultApiClient, HealthResponse } from '../../services/apiClient';
+import { TURBO_MODEL, PRECISION_MODEL } from '../../hooks/useWebLLM';
 
 interface HeaderProps {
   webLLM: UseWebLLMReturn;
@@ -192,27 +193,58 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Model Indicator with Informative Tooltip */}
-        <div
-          data-testid="model-indicator-badge"
-          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs"
-          title={
-            webLLM.status === 'ready'
-              ? 'Edge SLM: Qwen2.5-Coder-1.5B running locally on WebGPU'
-              : 'Target Edge SLM: Qwen2.5-Coder-1.5B on WebGPU (Standby - Click WebLLM to load)'
-          }
-        >
-          <Cpu className={`w-3.5 h-3.5 ${webLLM.status === 'ready' ? 'text-emerald-400' : 'text-slate-400'}`} />
-          <span className="font-mono font-medium truncate max-w-[150px]">
-            {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
-          </span>
-          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded border ${
-            webLLM.status === 'ready'
-              ? 'bg-emerald-950/70 text-emerald-400 border-emerald-700/50'
-              : 'bg-slate-900 text-slate-300 border-slate-700/60'
-          }`}>
-            {webLLM.status === 'ready' ? 'Active' : 'Standby'}
-          </span>
+        {/* Model Indicator with Informative Tooltip & Tier Toggle */}
+        <div className="hidden sm:flex items-center space-x-1.5">
+          <div
+            data-testid="model-indicator-badge"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-950 border border-slate-700/80 text-xs text-slate-300 shadow-xs"
+            title={
+              webLLM.status === 'ready'
+                ? `Edge SLM: ${webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'} running locally on WebGPU`
+                : 'Target Edge SLM on WebGPU (Standby - Click WebLLM to load)'
+            }
+          >
+            <Cpu className={`w-3.5 h-3.5 ${webLLM.status === 'ready' ? 'text-emerald-400' : 'text-slate-400'}`} />
+            <span className="font-mono font-medium truncate max-w-[150px]">
+              {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
+            </span>
+            <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded border ${
+              webLLM.status === 'ready'
+                ? 'bg-emerald-950/70 text-emerald-400 border-emerald-700/50'
+                : 'bg-slate-900 text-slate-300 border-slate-700/60'
+            }`}>
+              {webLLM.status === 'ready' ? 'Active' : 'Standby'}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            data-testid="model-tier-toggle-btn"
+            disabled={webLLM.status === 'loading'}
+            onClick={() => {
+              const isCurrentTurbo = Boolean(webLLM.currentModel && webLLM.currentModel.includes('0.5B'));
+              const targetModel = isCurrentTurbo ? PRECISION_MODEL : TURBO_MODEL;
+              webLLM.loadModel(targetModel);
+            }}
+            className="flex items-center space-x-1 px-2 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer disabled:cursor-wait active:scale-95 emil-press"
+            title={
+              webLLM.currentModel?.includes('0.5B')
+                ? 'Active: Turbo 0.5B (Fastest inference ~3s). Click to switch to Precision 1.5B.'
+                : 'Active: Precision 1.5B (Deep technical reasoning). Click to switch to Turbo 0.5B.'
+            }
+          >
+            {webLLM.currentModel?.includes('0.5B') ? (
+              <>
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-mono font-semibold text-amber-300">Turbo 0.5B</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                <span className="font-mono font-semibold text-sky-300">Precision 1.5B</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Layout Pane Visibility Controls (Toggle Chat / Toggle Code Viewer) */}
