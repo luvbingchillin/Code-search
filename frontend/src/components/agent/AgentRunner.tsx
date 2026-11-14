@@ -52,6 +52,8 @@ export interface AgentRunnerProps {
   embedded?: boolean;
   showTokenStream?: boolean;
   className?: string;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 export function normalizeAgentState(state?: string): NormalizedAgentState {
@@ -100,6 +102,8 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   embedded = false,
   showTokenStream: propShowTokenStream,
   className = '',
+  isExpanded: propIsExpanded,
+  onToggleExpanded,
 }) => {
   // Resolve active properties merging explicit props and status object
   const rawState = propState ?? status?.state ?? 'Idle';
@@ -114,23 +118,33 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
 
   // In embedded mode, expand during active work (thinking, searching, synthesizing)
   // and automatically collapse on complete/idle so the answer takes center stage!
-  const [isExpanded, setIsExpanded] = useState<boolean>(
+  const isControlled = propIsExpanded !== undefined;
+  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(
     !compact && (!embedded ? true : (normState !== 'idle' && normState !== 'complete'))
   );
+  const isExpanded = isControlled ? propIsExpanded : internalIsExpanded;
+
+  const toggleExpanded = () => {
+    if (isControlled && onToggleExpanded) {
+      onToggleExpanded();
+    } else {
+      setInternalIsExpanded((prev) => !prev);
+    }
+  };
 
   React.useEffect(() => {
-    if (embedded) {
+    if (embedded && !isControlled) {
       const prev = prevNormStateRef.current;
       if (prev !== normState) {
         if (normState === 'thinking' || normState === 'searching' || normState === 'synthesizing') {
-          setIsExpanded(true);
+          setInternalIsExpanded(true);
         } else if (normState === 'complete' || normState === 'idle') {
-          setIsExpanded(false);
+          setInternalIsExpanded(false);
         }
         prevNormStateRef.current = normState;
       }
     }
-  }, [embedded, normState]);
+  }, [embedded, isControlled, normState]);
 
   // Raw token stream terminal is hidden by default when embedded to avoid duplicating the chat response
   const [isTokenStreamExpanded, setIsTokenStreamExpanded] = useState<boolean>(
@@ -250,12 +264,16 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   return (
     <div
       data-testid="agent-runner"
-      className={`bg-slate-900 border-b border-slate-800 transition-all ${className} ${
+      className={`bg-slate-900 ${embedded && !showBody ? '' : 'border-b border-slate-800'} transition-all ${className} ${
         embedded && normState === 'idle' ? 'hidden' : ''
       }`}
     >
       {/* Top Header / Status Control Bar */}
-      <div className="px-3 py-1 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70 min-h-[30px]">
+      <div
+        className={`px-3 py-1 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70 min-h-[30px] ${
+          embedded ? 'sr-only' : ''
+        }`}
+      >
         <div className="flex items-center space-x-2 min-w-0">
           {embedded ? (
             <>
@@ -357,7 +375,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           )}
 
           <button
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={toggleExpanded}
             data-testid="agent-toggle-traces-btn"
             className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
             title={isExpanded ? 'Collapse agent traces' : 'Expand agent traces'}

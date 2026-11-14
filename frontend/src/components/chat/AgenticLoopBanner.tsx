@@ -1,12 +1,29 @@
 import React from 'react';
-import { Brain, Search, Cpu, CheckCircle, AlertTriangle, Clock, XSquare, PanelLeftClose, RotateCcw } from 'lucide-react';
+import {
+  Brain,
+  Search,
+  Cpu,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  XSquare,
+  PanelLeftClose,
+  RotateCcw,
+  Layers,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { AgentStatus, ReActState } from '../../types';
 
-interface AgenticLoopBannerProps {
+export interface AgenticLoopBannerProps {
   status: AgentStatus;
   onCancel?: () => void;
   onMinimize?: () => void;
   onClearChat?: () => void;
+  chunkCount?: number;
+  isTracesExpanded?: boolean;
+  onToggleTraces?: () => void;
 }
 
 interface StepItem {
@@ -27,6 +44,9 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
   onCancel,
   onMinimize,
   onClearChat,
+  chunkCount,
+  isTracesExpanded = false,
+  onToggleTraces,
 }) => {
   const getStepStatus = (stepName: StepItem['name']): 'upcoming' | 'current' | 'completed' => {
     if (status.state === 'Error') {
@@ -167,6 +187,38 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
           </div>
         )}
 
+        {/* Active Chunks Badge */}
+        {chunkCount !== undefined && chunkCount > 0 && (
+          <div
+            data-testid="banner-chunk-count"
+            className="flex items-center space-x-1 text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-700/60 shrink-0"
+            title={`${chunkCount} active AST code chunks retrieved`}
+          >
+            <Layers className="w-3 h-3 text-sky-400" />
+            <span>{chunkCount} chunks</span>
+          </div>
+        )}
+
+        {/* Traces Expand/Collapse Toggle */}
+        {onToggleTraces && (
+          <button
+            type="button"
+            data-testid="banner-toggle-traces-btn"
+            onClick={onToggleTraces}
+            className="flex items-center space-x-1 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-0.5 rounded transition-colors cursor-pointer emil-press"
+            title={isTracesExpanded ? 'Hide execution traces' : 'Show execution traces'}
+            aria-label="Toggle execution traces"
+          >
+            <Terminal className="w-3 h-3 text-sky-400" />
+            <span>Traces</span>
+            {isTracesExpanded ? (
+              <ChevronUp className="w-3 h-3 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            )}
+          </button>
+        )}
+
         {/* Cancel Action */}
         {isBusy && onCancel && (
           <button
@@ -185,7 +237,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="clear-chat-btn"
             onClick={onClearChat}
-            className="p-1 rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
+            className="p-1.5 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
             title="New chat session (Clear conversation)"
             aria-label="New chat session"
           >
@@ -199,7 +251,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="minimize-chat-btn"
             onClick={onMinimize}
-            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
+            className="p-1.5 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
             title="Minimize chat pane (Ctrl+B)"
             aria-label="Minimize chat pane"
           >

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AgentStatus, AstCodeChunk, ChatMessage } from '../../types';
 import { AgenticLoopBanner } from './AgenticLoopBanner';
-import { AgentRunner, AgentExecutionStep } from '../agent/AgentRunner';
+import { AgentRunner, AgentExecutionStep, normalizeAgentState, NormalizedAgentState } from '../agent/AgentRunner';
 import { MessageList } from './MessageList';
 import { QuerySuggestions } from './QuerySuggestions';
 import { ChatInput } from './ChatInput';
@@ -43,6 +43,24 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
     status.state === 'Searching AST' ||
     status.state === 'Synthesizing';
 
+  const [isTracesExpanded, setIsTracesExpanded] = useState<boolean>(false);
+  const prevNormStateRef = useRef<NormalizedAgentState>('idle');
+
+  useEffect(() => {
+    const norm = normalizeAgentState(status.state);
+    const prev = prevNormStateRef.current;
+    if (prev !== norm) {
+      if (norm === 'thinking' || norm === 'searching' || norm === 'synthesizing') {
+        setIsTracesExpanded(true);
+      } else if (norm === 'complete' || norm === 'idle') {
+        setIsTracesExpanded(false);
+      }
+      prevNormStateRef.current = norm;
+    }
+  }, [status.state]);
+
+  const activeChunkCount = status.activeChunkCount ?? chunks.length;
+
   return (
     <div className="h-full flex flex-col justify-between overflow-hidden">
       {/* Top ReAct Agentic Loop Stepper & Status Banner */}
@@ -51,6 +69,9 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
         onCancel={onCancel}
         onMinimize={onMinimize}
         onClearChat={onClearChat}
+        chunkCount={activeChunkCount}
+        isTracesExpanded={isTracesExpanded}
+        onToggleTraces={() => setIsTracesExpanded((prev) => !prev)}
       />
 
       {/* NemoIR ReAct AgentRunner Orchestrator */}
@@ -61,6 +82,8 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
         onCancel={onCancel}
         onReset={onReset}
         embedded={true}
+        isExpanded={isTracesExpanded}
+        onToggleExpanded={() => setIsTracesExpanded((prev) => !prev)}
       />
 
       {/* Scrollable Conversation Stream */}
