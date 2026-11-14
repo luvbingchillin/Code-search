@@ -110,12 +110,25 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
   const chunkCount = propChunks ?? status?.activeChunkCount ?? 0;
   const errorMsg = propError ?? status?.error;
 
-  const [isExpanded, setIsExpanded] = useState<boolean>(!compact && (!embedded || normState !== 'idle'));
+  const prevNormStateRef = React.useRef<NormalizedAgentState>(normState);
 
-  // When embedded in ChatPane, automatically expand execution traces when active work begins
+  // In embedded mode, expand during active work (thinking, searching, synthesizing)
+  // and automatically collapse on complete/idle so the answer takes center stage!
+  const [isExpanded, setIsExpanded] = useState<boolean>(
+    !compact && (!embedded ? true : (normState !== 'idle' && normState !== 'complete'))
+  );
+
   React.useEffect(() => {
-    if (embedded && (normState === 'thinking' || normState === 'searching' || normState === 'synthesizing')) {
-      setIsExpanded(true);
+    if (embedded) {
+      const prev = prevNormStateRef.current;
+      if (prev !== normState) {
+        if (normState === 'thinking' || normState === 'searching' || normState === 'synthesizing') {
+          setIsExpanded(true);
+        } else if (normState === 'complete' || normState === 'idle') {
+          setIsExpanded(false);
+        }
+        prevNormStateRef.current = normState;
+      }
     }
   }, [embedded, normState]);
 
@@ -238,11 +251,11 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
     <div
       data-testid="agent-runner"
       className={`bg-slate-900 border-b border-slate-800 transition-all ${className} ${
-        embedded && !isExpanded && !streamingTokens ? 'hidden' : ''
+        embedded && normState === 'idle' ? 'hidden' : ''
       }`}
     >
       {/* Top Header / Status Control Bar */}
-      <div className="px-3 py-1.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70">
+      <div className="px-3 py-1 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/70 min-h-[30px]">
         <div className="flex items-center space-x-2 min-w-0">
           {embedded ? (
             <>
@@ -256,9 +269,13 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
                 </span>
               )}
               <div className="flex items-center space-x-1.5 text-xs">
-                <Terminal className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <Terminal className="w-3 h-3 text-sky-400 shrink-0" />
                 <span className="font-mono text-[11px] text-slate-300 font-medium">
-                  {normState === 'idle' ? 'Execution Traces & Engine Metrics' : `${displayLabel} Pipeline`}
+                  {normState === 'idle'
+                    ? 'Execution Traces & Engine Metrics'
+                    : normState === 'complete'
+                    ? 'ReAct Execution Traces'
+                    : `${displayLabel} Pipeline`}
                 </span>
               </div>
             </>
@@ -331,7 +348,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
             <button
               onClick={onReset}
               data-testid="agent-reset-btn"
-              className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs"
+              className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
               title="Reset agent state"
             >
               <RotateCcw className="w-3 h-3" />
@@ -342,7 +359,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           <button
             onClick={() => setIsExpanded((prev) => !prev)}
             data-testid="agent-toggle-traces-btn"
-            className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs"
+            className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
             title={isExpanded ? 'Collapse agent traces' : 'Expand agent traces'}
           >
             <span className="text-[11px] font-sans">Traces</span>
