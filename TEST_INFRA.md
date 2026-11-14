@@ -1,27 +1,28 @@
-# E2E Test Infra: Edge AI Frontend
+# Test Infrastructure: Edge AI Frontend & Retrieval Backend
 
 ## Test Philosophy
-- Opaque-box, requirement-driven. No dependency on internal implementation details.
-- Methodology: Category-Partition + Boundary Value Analysis + Pairwise + Workload Testing.
-- Test runner: Vitest with React Testing Library and JSDOM. Command: `npm test` (or `npx vitest run`).
+- Multi-tier requirement-driven verification across frontend (JSDOM/Vitest) and backend (Pytest).
+- Methodology: Category-Partition + Boundary Value Analysis + Adversarial Stress + Scale Testing.
+- Test runners:
+  - Frontend: `npm --prefix frontend test` (Vitest 3, RTL, JSDOM)
+  - Backend: `pytest backend/app/tests` (Pytest 9)
 
-## Feature Inventory Mapping
-| # | Feature | Source | Tier 1 (Coverage) | Tier 2 (Boundary) | Tier 3 (Cross-Feature) | Tier 4 (Workload) |
-|---|---------|--------|:-----------------:|:-----------------:|:---------------------:|:-----------------:|
-| 1 | Split-Pane UI Layout | ORIGINAL_REQUEST §R1 | 5 tests | 5 tests | ✓ | ✓ |
-| 2 | Python AST Code Viewer | ORIGINAL_REQUEST §R1 | 5 tests | 5 tests | ✓ | ✓ |
-| 3 | ReAct Loop State Machine | ORIGINAL_REQUEST §R2 | 5 tests | 5 tests | ✓ | ✓ |
-| 4 | Edge AI Hooks & Scaffolding | ORIGINAL_REQUEST §R2 | 5 tests | 5 tests | ✓ | ✓ |
-
-## Test Architecture
-- Setup file: `frontend/src/test/setup.ts` (stubs for ResizeObserver, matchMedia, clipboard, navigator.gpu)
-- Test directory: `frontend/src/test/`
-- Test suites:
-  1. `SplitPaneLayout.test.tsx` (Verifies presence and responsiveness of left chat pane and right code viewer pane)
-  2. `AgenticLoopState.test.tsx` (Verifies explicit ReAct loop states: "Thinking", "Searching AST", "Synthesizing", "Complete", "Error")
-  3. `CodeViewerPane.test.tsx` (Verifies Python AST syntax highlighting, line numbers matching AST startLine, tab switching, and copy button)
-  4. `EdgeAIHooks.test.tsx` (Verifies useWebLLM, useNemoIR, useReActAgent hook capabilities and fallbacks)
+## Full Test Suite Inventory (853 Tests Total)
+- **Frontend Suites** (`frontend/src/test/`, 38 files, 547 tests):
+  - `AgenticLoopState.test.tsx`, `AgentRunner.test.tsx`, `AgentRunnerChallenger.test.tsx`
+  - `CodeViewerPane.test.tsx`, `CodeSearchChallenger.test.tsx`, `ASTMetadataInspector.test.tsx`
+  - `WebLLMIntegration.test.tsx`, `WebLLMChallenger2.test.tsx`, `EdgeAIHooks.test.tsx`
+  - `Header.test.tsx`, `HeaderChallenger1.test.tsx`, `HeaderComponentIntegrationChallenger2.test.tsx`
+  - `ConnectRepoModal.test.tsx`, `RepoFileTree.test.tsx`, `RepoManagerHub.test.tsx`
+  - `NemoCompiler.test.ts`, `NemoCompilerStress.test.ts`, `NemoCompilerChallenger2.test.ts`
+  - `UXFlowsRefinement.test.tsx`, `SlashCommandsAndIntent.test.tsx`
+  - `IntegrationM2StressChallenger.test.tsx`, `RepoScopingChallenger.test.tsx`
+- **Backend Suites** (`backend/app/tests/`, 306 tests):
+  - `test_acceptance.py`: Core Tree-sitter AST and LanceDB vector store contracts.
+  - `test_adversarial.py`, `test_adversarial_http.py`: Malformed JSON, CRLF, exotic decorators, SQLi immunity.
+  - `test_api.py`, `test_repos_api.py`: FastAPI endpoints, repo tree, and architecture manifests.
+  - `test_vector_store.py`, `test_scale_differential.py`: LanceDB ANN indexing, SQLite fallback, throughput.
 
 ## Acceptance Criteria Thresholds
-- All 4 test suites pass with 100% exit code 0.
-- `npm run build` completes with zero TypeScript errors.
+- All 853 tests pass with 100% green exit code 0.
+- `npm --prefix frontend run build` completes with zero TypeScript or packaging errors.

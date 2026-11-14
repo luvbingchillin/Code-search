@@ -592,22 +592,34 @@ Please select or connect a Python repository before querying code definitions.
       statusRef.current = thinkingStatus;
       setAgentStatus(thinkingStatus);
 
-      const isRequestsRepo = Boolean(
-        activeRepoRef.current?.name?.toLowerCase().includes('requests') ||
-        activeRepoPathRef.current?.toLowerCase().includes('requests')
-      );
-      const isSampleRepo = Boolean(
-        activeRepoRef.current?.name?.toLowerCase().includes('sample') ||
-        activeRepoPathRef.current?.toLowerCase().includes('sample')
-      );
+      let effectiveSearchTerm = effectiveQuery;
+      if (isOverview) {
+        // Dynamically extract core architectural components from the repository manifest
+        const manifestText = activeRepoRef.current?.manifest || '';
+        const manifestComponents = manifestText
+          ? manifestText
+              .split('\n')
+              .filter((line) => line.trim().startsWith('- '))
+              .map((line) => line.replace(/^-\s*([A-Za-z0-9_]+).*/, '$1').trim())
+              .filter((comp) => comp.length > 1 && !comp.includes(' '))
+          : [];
 
-      const effectiveSearchTerm = isOverview
-        ? isRequestsRepo
-          ? 'Session Request Response HTTPAdapter client'
-          : isSampleRepo
-          ? 'Calculator add subtract FastAPI route'
-          : 'ClassDef class client service app main core controller manager model'
-        : effectiveQuery;
+        if (manifestComponents.length > 0) {
+          effectiveSearchTerm = manifestComponents.join(' ') + ' client service app main core';
+        } else if (
+          activeRepoRef.current?.name?.toLowerCase().includes('requests') ||
+          activeRepoPathRef.current?.toLowerCase().includes('requests')
+        ) {
+          effectiveSearchTerm = 'Session Request Response HTTPAdapter client';
+        } else if (
+          activeRepoRef.current?.name?.toLowerCase().includes('sample') ||
+          activeRepoPathRef.current?.toLowerCase().includes('sample')
+        ) {
+          effectiveSearchTerm = 'Calculator add subtract FastAPI route';
+        } else {
+          effectiveSearchTerm = 'ClassDef class client service app main core controller manager model';
+        }
+      }
 
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = window.setInterval(() => {

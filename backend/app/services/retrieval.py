@@ -29,6 +29,8 @@ class RetrievalService:
 
         # Defensive bounds check on top_k
         safe_top_k = max(1, min(top_k, 100))
+        # Expand candidate pool if file_path post-filtering is requested to avoid candidate starvation
+        fetch_k = max(safe_top_k * 5, 50) if file_path else safe_top_k
 
         # Generate query embedding vector
         query_vector = self.embedder.embed_query(query)
@@ -36,7 +38,7 @@ class RetrievalService:
         # Retrieve candidates from vector store
         chunks = self.vector_store.search_semantic(
             query_vector=query_vector,
-            top_k=safe_top_k,
+            top_k=fetch_k,
             ast_node_type=ast_node_type,
         )
 
@@ -59,7 +61,7 @@ class RetrievalService:
                 elif c_norm == target_basename or c_norm.endswith(f"/{target_basename}"):
                     filtered.append(c)
 
-            chunks = filtered
+            chunks = filtered[:safe_top_k]
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
