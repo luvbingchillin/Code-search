@@ -169,7 +169,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
                   {step.label}
                 </span>
                 {idx < STEPS.length - 1 && (
-                  <span className="text-slate-600 select-none">→</span>
+                  <span className="text-slate-400 select-none">→</span>
                 )}
               </div>
             );

@@ -218,13 +218,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholderText}
           rows={1}
+          aria-label="Ask a question about the codebase"
           className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 resize-none leading-relaxed transition-colors"
           disabled={isBusy}
         />
         {!input && !isBusy && (
           <kbd
             data-testid="chat-focus-shortcut"
-            className="hidden sm:inline-flex items-center absolute right-3 top-2.5 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700 rounded shadow-xs pointer-events-none select-none"
+            className="hidden sm:inline-flex items-center absolute right-3 top-2.5 px-1.5 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-300 border border-slate-700 rounded shadow-xs pointer-events-none select-none"
             title="Focus chat input"
           >
             {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘K' : 'Ctrl+K'}
@@ -247,7 +248,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           data-testid="chat-send-btn"
           onClick={() => handleSubmit()}
-          className="h-9 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
+          className="h-9 px-3.5 rounded-lg bg-sky-700 hover:bg-sky-600 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
         >
           <Send className="w-3.5 h-3.5" />
           <span>Search</span>

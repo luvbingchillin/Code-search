@@ -66,7 +66,7 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
 
             {/* Parent File Badge */}
             {fileName && (
-              <span className="text-[10px] text-slate-500 font-sans group-hover:text-slate-400 transition-colors">
+              <span className="text-[11px] text-slate-400 font-sans group-hover:text-slate-300 transition-colors">
                 {fileName}
               </span>
             )}
@@ -80,10 +80,11 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
                   e.stopPropagation();
                   onCloseChunk(chunk.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:bg-slate-700 text-slate-400 hover:text-slate-100 rounded p-0.5 transition-all ml-1 cursor-pointer"
+                className="opacity-0 group-hover:opacity-100 hover:bg-slate-700 text-slate-400 hover:text-slate-100 rounded min-w-[24px] min-h-[24px] flex items-center justify-center transition-all ml-1 cursor-pointer"
                 title="Close tab"
+                aria-label={`Close tab: ${chunk.identifier}`}
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>

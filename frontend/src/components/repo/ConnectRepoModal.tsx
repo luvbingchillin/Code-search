@@ -193,7 +193,8 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             type="button"
             data-testid="close-connect-repo-modal-btn"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
+            aria-label="Close repository modal"
+            className="text-slate-400 hover:text-slate-200 transition-colors p-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -435,7 +436,11 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   data-testid="trigger-index-btn"
                   onClick={() => handleIndex()}
                   disabled={isIndexing || !repoPath.trim()}
-                  className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed shrink-0"
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 shrink-0 ${
+                    isIndexing || !repoPath.trim()
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-sky-600 hover:bg-sky-500 text-white cursor-pointer'
+                  }`}
                 >
                   {isIndexing ? (
                     <>

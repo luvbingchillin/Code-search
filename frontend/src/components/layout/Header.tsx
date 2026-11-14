@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
               {activeRepo ? activeRepo.name : 'Repositories'}
             </span>
             {activeRepo && (
-              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-slate-900 text-[10px] font-mono text-slate-300 border border-slate-700/60">
+              <span className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-slate-900 text-[11px] font-mono text-slate-300 border border-slate-700/60">
                 {activeRepo.chunksCount ?? 0}
               </span>
             )}
@@ -186,7 +186,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-slate-300 font-medium">WebLLM:</span>
           <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
           {webLLM.status === 'unloaded' && (
-            <span className="ml-1 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[10px] font-mono border border-sky-700/50">
+            <span className="ml-1 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[11px] font-mono border border-sky-700/50">
               Click to Load
             </span>
           )}
@@ -206,10 +206,10 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="font-mono font-medium truncate max-w-[150px]">
             {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
           </span>
-          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded border ${
             webLLM.status === 'ready'
               ? 'bg-emerald-950/70 text-emerald-400 border-emerald-700/50'
-              : 'bg-slate-900 text-slate-500 border-slate-700/40'
+              : 'bg-slate-900 text-slate-300 border-slate-700/60'
           }`}>
             {webLLM.status === 'ready' ? 'Active' : 'Standby'}
           </span>
@@ -223,7 +223,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 data-testid="toggle-chat-pane-btn"
                 onClick={onToggleChatMinimized}
-                className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
                   !isChatMinimized
                     ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
@@ -240,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 data-testid="toggle-code-pane-btn"
                 onClick={onToggleCodeMinimized}
-                className={`p-1.5 rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
                   !isCodeMinimized
                     ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'

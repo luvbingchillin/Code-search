@@ -158,8 +158,9 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               <button
                 data-testid="open-code-search-btn"
                 onClick={() => setIsSearchActive(true)}
-                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                 title="Search in code"
+                aria-label="Search in code"
               >
                 <Search className="w-3.5 h-3.5" />
               </button>
