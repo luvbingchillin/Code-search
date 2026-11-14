@@ -208,7 +208,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               setActiveTab('existing');
               setError(null);
             }}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer emil-press ${
               activeTab === 'existing'
                 ? 'bg-sky-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -234,7 +234,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               setActiveTab('add');
               setError(null);
             }}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer emil-press ${
               activeTab === 'add'
                 ? 'bg-sky-600 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -289,7 +289,12 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                     <div
                       key={repo.id}
                       data-testid={`repo-card-${repo.id}`}
-                      className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      onMouseMove={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                      }}
+                      className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 emil-spotlight ${
                         isActive
                           ? 'bg-sky-950/20 border-sky-500/60 shadow-sm shadow-sky-950/30'
                           : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
@@ -345,7 +350,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                           data-testid={`reindex-repo-btn-${repo.id}`}
                           onClick={() => handleIndex(repo.path)}
                           disabled={isIndexing}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors border border-slate-700 flex items-center space-x-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors border border-slate-700 flex items-center space-x-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 emil-press"
                           title="Re-scan and update code index"
                         >
                           {isThisIndexing ? (
@@ -360,7 +365,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                           type="button"
                           data-testid={`open-repo-btn-${repo.id}`}
                           onClick={() => handleOpenRepo(repo)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1.5 cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1.5 cursor-pointer emil-press ${
                             isActive
                               ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                               : 'bg-sky-600 hover:bg-sky-500 text-white shadow-xs'

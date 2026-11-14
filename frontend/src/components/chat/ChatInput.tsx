@@ -237,7 +237,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           data-testid="chat-stop-btn"
           onClick={onCancel}
-          className="h-9 px-3.5 rounded-lg bg-rose-600 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer"
+          className="h-9 px-3.5 rounded-lg bg-rose-600 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
         >
           <Square className="w-3.5 h-3.5 fill-current" />
           <span>Stop</span>
@@ -247,7 +247,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           data-testid="chat-send-btn"
           onClick={() => handleSubmit()}
-          className="h-9 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer"
+          className="h-9 px-3.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
         >
           <Send className="w-3.5 h-3.5" />
           <span>Search</span>

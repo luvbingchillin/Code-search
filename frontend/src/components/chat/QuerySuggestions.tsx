@@ -54,7 +54,12 @@ export const QuerySuggestions: React.FC<QuerySuggestionsProps> = ({
             data-testid="query-suggestion-chip"
             disabled={disabled}
             onClick={() => onSelectSuggestion(text)}
-            className="text-xs px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/60 text-slate-200 hover:text-white transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none active:scale-95 cursor-pointer shadow-xs shrink-0"
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            }}
+            className="text-xs px-2.5 py-1 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/60 text-slate-200 hover:text-white transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none cursor-pointer shadow-xs shrink-0 emil-press emil-spotlight hover:-translate-y-0.5 hover:shadow-sky-500/10 active:scale-95"
           >
             {text}
           </button>

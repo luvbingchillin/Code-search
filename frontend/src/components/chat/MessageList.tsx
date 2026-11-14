@@ -53,13 +53,17 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center space-x-1 text-slate-300 hover:text-white transition-colors px-2 py-0.5 rounded hover:bg-slate-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 cursor-pointer"
+          className={`flex items-center space-x-1 transition-all px-2 py-0.5 rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 cursor-pointer emil-press ${
+            copied
+              ? 'text-emerald-300 bg-emerald-950/80 border border-emerald-500/70 emil-spring-pop'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          }`}
           title={copied ? 'Copied to clipboard' : 'Copy code snippet'}
         >
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 text-[11px]">Copied</span>
+              <span className="text-emerald-400 text-[11px] font-medium">Copied</span>
             </>
           ) : (
             <>
@@ -311,10 +315,10 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                           type="button"
                           data-testid={`chunk-citation-${chunkId}`}
                           onClick={() => onSelectChunk(chunkId)}
-                          className="flex items-center space-x-1 text-xs px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-500/60 text-emerald-400 font-mono transition-colors shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                          className="group flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-500/60 text-emerald-400 font-mono transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press hover:-translate-y-0.5 hover:shadow-emerald-500/10 active:scale-95"
                           title="Click to view definition in code viewer"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 transition-transform duration-150 group-hover:scale-125" />
                           <span>{label}</span>
                         </button>
                       );

@@ -95,3 +95,80 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* Emil Kowalski-inspired tactile micro-interactions & physics */
+.emil-press {
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1), border-color 140ms ease;
+  will-change: transform;
+}
+.emil-press:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.emil-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.emil-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: radial-gradient(
+    240px circle at var(--mouse-x, -200px) var(--mouse-y, -200px),
+    rgba(56, 189, 248, 0.12),
+    transparent 70%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+.emil-spotlight:hover::before {
+  opacity: 1;
+}
+
+@keyframes emil-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.emil-spring-pop {
+  animation: emil-pop 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes emil-beacon-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+.emil-beacon {
+  animation: emil-beacon-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emil-press,
+  .emil-spring-pop,
+  .emil-beacon {
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .emil-spotlight::before {
+    display: none !important;
+  }
+}

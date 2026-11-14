@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             data-testid="connect-repo-btn"
             onClick={onOpenConnectRepo}
-            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer active:scale-95"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer active:scale-95 emil-press"
             title={
               activeRepo
                 ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} code definitions). Click to switch or add.`
@@ -173,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
             }
           }}
           disabled={webLLM.status === 'loading'}
-          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors shadow-xs cursor-pointer disabled:cursor-wait hover:brightness-110 active:scale-95 ${getWebLLMStatusColor()}`}
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors shadow-xs cursor-pointer disabled:cursor-wait hover:brightness-110 active:scale-95 emil-press ${getWebLLMStatusColor()}`}
           title={
             webLLM.status === 'unloaded'
               ? 'WebLLM is currently offline (using template simulator). Click to load Qwen2.5-Coder for real-time edge AI inference on WebGPU.'

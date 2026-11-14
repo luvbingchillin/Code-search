@@ -172,7 +172,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             type="button"
             data-testid="toggle-explorer-btn"
             onClick={onToggleExplorer}
-            className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
+            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
               isExplorerOpen
                 ? 'bg-sky-950 text-sky-300 border-sky-600/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
@@ -188,7 +188,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           <button
             data-testid="toggle-ast-inspector-btn"
             onClick={onToggleInspector}
-            className={`px-2 py-1 rounded transition-colors flex items-center space-x-1 text-xs border cursor-pointer shadow-xs ${
+            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
               isInspectorOpen
                 ? 'bg-slate-800 text-sky-300 border-sky-500/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
@@ -204,19 +204,23 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           data-testid="copy-code-btn"
           onClick={handleCopy}
           disabled={!chunk}
-          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+          className={`flex items-center space-x-1 px-2.5 py-1 rounded text-slate-200 hover:text-white border transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer emil-press ${
+            copied
+              ? 'bg-emerald-950/80 border-emerald-500/80 text-emerald-300 emil-spring-pop ring-1 ring-emerald-500/50'
+              : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+          }`}
           title="Copy code to clipboard"
         >
           {copied ? (
-            <>
+            <span className="flex items-center space-x-1">
               <Check className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-emerald-400 font-medium text-xs">Copied!</span>
-            </>
+            </span>
           ) : (
-            <>
+            <span className="flex items-center space-x-1">
               <Copy className="w-3.5 h-3.5" />
               <span className="text-xs">Copy</span>
-            </>
+            </span>
           )}
         </button>
 
@@ -225,7 +229,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             type="button"
             data-testid="minimize-code-btn"
             onClick={onMinimize}
-            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer emil-press"
             title="Minimize code viewer pane"
             aria-label="Minimize code viewer pane"
           >
@@ -238,7 +242,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             type="button"
             data-testid="toggle-maximize-code-btn"
             onClick={onToggleMaximize}
-            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer"
+            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer emil-press"
             title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
             aria-label={isMaximized ? "Restore split layout" : "Maximize code viewer"}
           >

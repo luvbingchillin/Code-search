@@ -131,7 +131,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
                     stepStatus === 'completed'
                       ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/70'
                       : stepStatus === 'current'
-                      ? 'bg-sky-600 text-white shadow-xs shadow-sky-500/50'
+                      ? 'bg-sky-600 text-white shadow-xs shadow-sky-500/50 emil-beacon ring-2 ring-sky-400/60'
                       : 'bg-slate-800 text-slate-400 border border-slate-700'
                   }`}
                 >
@@ -171,7 +171,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         {isBusy && onCancel && (
           <button
             onClick={onCancel}
-            className="flex items-center space-x-1 text-[11px] font-semibold text-rose-300 hover:text-white transition-colors px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 cursor-pointer shadow-xs"
+            className="flex items-center space-x-1 text-[11px] font-semibold text-rose-300 hover:text-white transition-colors px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 cursor-pointer shadow-xs emil-press"
             title="Cancel current query"
           >
             <XSquare className="w-3.5 h-3.5 text-rose-400" />
@@ -185,7 +185,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="clear-chat-btn"
             onClick={onClearChat}
-            className="p-1 rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700"
+            className="p-1 rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
             title="New chat session (Clear conversation)"
             aria-label="New chat session"
           >
@@ -199,7 +199,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="minimize-chat-btn"
             onClick={onMinimize}
-            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700"
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
             title="Minimize chat pane (Ctrl+B)"
             aria-label="Minimize chat pane"
           >

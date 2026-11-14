@@ -122,7 +122,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
             type="button"
             data-testid="empty-state-connect-repo-btn"
             onClick={onOpenConnectRepo}
-            className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium transition-colors shadow-md shadow-sky-950/40 flex items-center space-x-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium transition-colors shadow-md shadow-sky-950/40 flex items-center space-x-1.5 cursor-pointer emil-press active:scale-95"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             <span>Connect Local Repository</span>
