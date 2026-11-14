@@ -76,6 +76,7 @@ export interface WebLLMGenerateOptions {
   maxTokens?: number;
   temperature?: number;
   presencePenalty?: number;
+  stop?: string | string[];
 }
 
 export interface UseWebLLMReturn {
