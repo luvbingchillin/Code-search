@@ -8,6 +8,7 @@ export interface RepositoryItem {
   files_count?: number;
   status?: 'indexed' | 'indexing' | 'not_indexed';
   description?: string;
+  manifest?: string;
   lastIndexed?: string;
   last_indexed?: string;
 }
@@ -134,6 +135,13 @@ export interface RepositoryTreeResponse {
   total_files: number;
   total_symbols: number;
   tree: FileTreeNode[];
+}
+
+export interface RepositoryManifestResponse {
+  repo_id: string;
+  repo_name: string;
+  manifest: string;
+  core_components?: string[];
 }
 
 export interface FileTreeNode {

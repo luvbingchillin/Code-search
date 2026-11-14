@@ -2,7 +2,14 @@
  * FastAPI Retrieval Backend Client
  * Connects the frontend Edge AI ReAct loop with the Python FastAPI backend.
  */
-import { AstCodeChunk, AstNodeType, NemoSearchOptions, RepositoryItem, RepositoryTreeResponse } from '../types';
+import {
+  AstCodeChunk,
+  AstNodeType,
+  NemoSearchOptions,
+  RepositoryItem,
+  RepositoryTreeResponse,
+  RepositoryManifestResponse,
+} from '../types';
 
 export interface SearchRequest {
   query: string;
@@ -284,6 +291,49 @@ export class ApiClient {
         `/api/v1/repos/${encodeURIComponent(repoId)}/tree`
       );
     } catch {
+      return null;
+    }
+  }
+
+  public async getRepoManifest(
+    repoId: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<RepositoryManifestResponse | null> {
+    try {
+      return await this.request<RepositoryManifestResponse>(
+        `/api/v1/repos/${encodeURIComponent(repoId)}/manifest`,
+        { method: 'GET', signal: options?.signal }
+      );
+    } catch {
+      // Fallback if backend offline or endpoint unavailable
+      if (repoId.toLowerCase().includes('requests')) {
+        return {
+          repo_id: 'requests',
+          repo_name: 'psf/requests',
+          manifest:
+            'psf/requests is a human-friendly HTTP client library for Python.\n' +
+            'Core Components:\n' +
+            '- Session: Maintains cookies, connection pooling, and configuration across requests.\n' +
+            '- Request & PreparedRequest: Represents outgoing HTTP requests before and after URL/header preparation.\n' +
+            '- Response: Encapsulates server response data, status codes, encoding detection, and JSON parsing.\n' +
+            '- HTTPAdapter: Transport adapter connecting Sessions to urllib3 socket pools.\n' +
+            'Pipeline: Session.request() builds Request -> prepares PreparedRequest -> dispatches via HTTPAdapter.send() -> returns Response.',
+          core_components: ['Session', 'Request', 'PreparedRequest', 'Response', 'HTTPAdapter'],
+        };
+      } else if (repoId.toLowerCase().includes('sample')) {
+        return {
+          repo_id: 'sample_codebase',
+          repo_name: 'sample_codebase',
+          manifest:
+            'sample_codebase is a demonstration service showcasing FastAPI routes, mathematical operations, and utility classes.\n' +
+            'Core Components:\n' +
+            '- Calculator: Core calculation class supporting arithmetic operations, memory storage, and error handling.\n' +
+            '- FastAPI Routes: API endpoints exposing calculation services and health checks.\n' +
+            '- Utility Functions: Helper validation and formatting routines.\n' +
+            'Pipeline: Client request -> FastAPI route validation -> Calculator business logic execution -> JSON response.',
+          core_components: ['Calculator', 'FastAPI Routes', 'Utility Functions'],
+        };
+      }
       return null;
     }
   }

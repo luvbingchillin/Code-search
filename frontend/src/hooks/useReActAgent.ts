@@ -737,8 +737,24 @@ Please select or connect a Python repository before querying code definitions.
               )
               .join('\n\n');
 
+            let repoManifest: string | null = activeRepoRef.current?.manifest || null;
+            if (isOverview && !repoManifest && activeRepoRef.current?.id) {
+              try {
+                const resp = await apiClient.getRepoManifest(activeRepoRef.current.id);
+                if (resp?.manifest) {
+                  repoManifest = resp.manifest;
+                }
+              } catch {
+                // Graceful fallback
+              }
+            }
+
+            const manifestContext = isOverview && repoManifest
+              ? `Architectural Manifest:\n${repoManifest}\n\n`
+              : '';
+
             const prompt = isOverview
-              ? `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (under 150 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: Key classes/modules and their roles.\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
+              ? `${manifestContext}Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (under 150 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: Key classes/modules and their roles.\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
               : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 140 words) highlighting key definitions, line numbers, and implementation roles.`;
 
             finalResponseText = await currentLLM.generate(

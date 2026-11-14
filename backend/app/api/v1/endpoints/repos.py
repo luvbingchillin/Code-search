@@ -11,6 +11,7 @@ from app.schemas.ast_chunk import (
     FileSymbolNode,
     FileTreeNode,
     RepositoryTreeResponse,
+    RepositoryManifestResponse,
 )
 from app.services.repo_registry import repo_registry
 from app.services.retrieval import RetrievalService
@@ -38,6 +39,18 @@ def get_repository(repo_id: str) -> RepositoryItem:
             detail=f"Repository '{repo_id}' not found in registry",
         )
     return repo
+
+
+@router.get("/repos/{repo_id}/manifest", response_model=RepositoryManifestResponse, summary="Get Repository Architectural Manifest")
+def get_repository_manifest(repo_id: str) -> RepositoryManifestResponse:
+    """Retrieve pre-computed architectural manifest and core symbols for instant overview synthesis."""
+    manifest = repo_registry.get_repository_manifest(repo_id)
+    if not manifest:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repository '{repo_id}' not found in registry",
+        )
+    return manifest
 
 
 @router.get("/repos/{repo_id}/chunks", response_model=List[AstCodeChunk], summary="Get Sample AST Chunks for Repository")

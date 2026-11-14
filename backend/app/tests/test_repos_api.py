@@ -66,3 +66,18 @@ def test_get_repository_tree(repo_test_client: TestClient):
 
     not_found = repo_test_client.get("/api/v1/repos/nonexistent_repo/tree")
     assert not_found.status_code == 404
+
+
+def test_get_repository_manifest(repo_test_client: TestClient):
+    """Verify GET /api/v1/repos/{repo_id}/manifest returns architectural manifest."""
+    resp = repo_test_client.get("/api/v1/repos/requests/manifest")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["repo_id"] == "requests"
+    assert "manifest" in data
+    assert "Session" in data["manifest"]
+    assert "core_components" in data
+    assert "Session" in data["core_components"]
+
+    not_found = repo_test_client.get("/api/v1/repos/nonexistent_repo/manifest")
+    assert not_found.status_code == 404

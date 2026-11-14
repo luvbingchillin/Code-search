@@ -7,11 +7,35 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-from app.schemas.ast_chunk import RepositoryItem
+from app.schemas.ast_chunk import RepositoryItem, RepositoryManifestResponse
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_REGISTRY_PATH = Path("data/repos_registry.json")
+
+REQUESTS_MANIFEST = (
+    "psf/requests is a human-friendly HTTP client library for Python.\n"
+    "Core Components:\n"
+    "- Session: Maintains cookies, connection pooling, and configuration across requests.\n"
+    "- Request & PreparedRequest: Represents outgoing HTTP requests before and after URL/header preparation.\n"
+    "- Response: Encapsulates server response data, status codes, encoding detection, and JSON parsing.\n"
+    "- HTTPAdapter: Transport adapter connecting Sessions to urllib3 socket pools.\n"
+    "Pipeline: Session.request() builds Request -> prepares PreparedRequest -> dispatches via HTTPAdapter.send() -> returns Response."
+)
+
+SAMPLE_CODEBASE_MANIFEST = (
+    "sample_codebase is a demonstration service showcasing FastAPI routes, mathematical operations, and utility classes.\n"
+    "Core Components:\n"
+    "- Calculator: Core calculation class supporting arithmetic operations, memory storage, and error handling.\n"
+    "- FastAPI Routes: API endpoints exposing calculation services and health checks.\n"
+    "- Utility Functions: Helper validation and formatting routines.\n"
+    "Pipeline: Client request -> FastAPI route validation -> Calculator business logic execution -> JSON response."
+)
+
+SEED_MANIFESTS = {
+    "requests": REQUESTS_MANIFEST,
+    "sample_codebase": SAMPLE_CODEBASE_MANIFEST,
+}
 
 SEED_REPOSITORIES = [
     {
@@ -22,6 +46,7 @@ SEED_REPOSITORIES = [
         "files_count": 17,
         "status": "indexed",
         "description": "Python HTTP for Humans (284 AST nodes, Session, models, adapters)",
+        "manifest": REQUESTS_MANIFEST,
     },
     {
         "id": "sample_codebase",
@@ -31,6 +56,7 @@ SEED_REPOSITORIES = [
         "files_count": 3,
         "status": "indexed",
         "description": "FastAPI service sample with math functions, classes, and decorators",
+        "manifest": SAMPLE_CODEBASE_MANIFEST,
     },
 ]
 
@@ -62,7 +88,12 @@ class RepoRegistry:
         try:
             with open(self.registry_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            return [RepositoryItem(**item) for item in data]
+            results = []
+            for item in data:
+                if not item.get("manifest") and item.get("id") in SEED_MANIFESTS:
+                    item["manifest"] = SEED_MANIFESTS[item["id"]]
+                results.append(RepositoryItem(**item))
+            return results
         except Exception as e:
             logger.error(f"Error reading repository registry: {e}")
             return [RepositoryItem(**item) for item in SEED_REPOSITORIES]
@@ -101,6 +132,7 @@ class RepoRegistry:
         for r in repos:
             if r.path.replace("\\", "/").rstrip("/").lower() == norm_path.lower() or r.id == repo_id:
                 found = True
+                manifest_val = r.manifest or SEED_MANIFESTS.get(r.id) or description
                 target_item = RepositoryItem(
                     id=r.id,
                     name=r.name,
@@ -109,6 +141,7 @@ class RepoRegistry:
                     files_count=files_count,
                     status="indexed",
                     description=description or r.description or f"Indexed codebase ({chunks_count} AST chunks)",
+                    manifest=manifest_val,
                     last_indexed=now,
                 )
                 updated_repos.append(target_item)
@@ -116,6 +149,7 @@ class RepoRegistry:
                 updated_repos.append(r)
 
         if not found:
+            manifest_val = SEED_MANIFESTS.get(repo_id) or description or f"{repo_name} codebase with {files_count} Python files and {chunks_count} indexed AST symbols."
             target_item = RepositoryItem(
                 id=repo_id,
                 name=repo_name,
@@ -124,6 +158,7 @@ class RepoRegistry:
                 files_count=files_count,
                 status="indexed",
                 description=description or f"Indexed codebase ({chunks_count} AST chunks)",
+                manifest=manifest_val,
                 last_indexed=now,
             )
             updated_repos.append(target_item)
@@ -142,6 +177,39 @@ class RepoRegistry:
             files_count=files_count,
             status="indexed",
             last_indexed=now,
+        )
+
+    def get_repository_manifest(self, repo_id: str) -> Optional[RepositoryManifestResponse]:
+        """Retrieve architectural manifest and core symbols for instant overview synthesis."""
+        repo = self.get_repository(repo_id)
+        if not repo:
+            return None
+
+        manifest_text = (
+            repo.manifest
+            or SEED_MANIFESTS.get(repo.id)
+            or repo.description
+            or f"{repo.name} codebase with {repo.chunks_count} AST symbols."
+        )
+
+        components = []
+        if repo.id == "requests":
+            components = ["Session", "Request", "PreparedRequest", "Response", "HTTPAdapter"]
+        elif repo.id == "sample_codebase":
+            components = ["Calculator", "FastAPI Routes", "Utility Functions"]
+        else:
+            for line in manifest_text.splitlines():
+                line_str = line.strip()
+                if line_str.startswith("- "):
+                    comp = line_str[2:].split(":")[0].strip()
+                    if comp:
+                        components.append(comp)
+
+        return RepositoryManifestResponse(
+            repo_id=repo.id,
+            repo_name=repo.name,
+            manifest=manifest_text,
+            core_components=components,
         )
 
 

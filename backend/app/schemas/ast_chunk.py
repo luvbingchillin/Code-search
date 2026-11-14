@@ -74,6 +74,7 @@ class RepositoryItem(BaseModel):
     files_count: int = Field(default=0, description="Total Python source files scanned")
     status: str = Field(default="indexed", description="Indexing status: indexed, indexing, or not_indexed")
     description: Optional[str] = Field(default=None, description="Short summary description")
+    manifest: Optional[str] = Field(default=None, description="Architectural summary manifest of the repository")
     last_indexed: Optional[str] = Field(default=None, description="ISO timestamp of last successful index")
 
 
@@ -118,6 +119,16 @@ class RepositoryTreeResponse(BaseModel):
     tree: List[FileTreeNode] = Field(default_factory=list, description="List of file nodes with nested symbols")
 
 
+class RepositoryManifestResponse(BaseModel):
+    """Architectural manifest schema for instant overview synthesis."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    repo_id: str = Field(..., description="Unique repository identifier")
+    repo_name: str = Field(..., description="Repository display name")
+    manifest: str = Field(..., description="Architectural summary manifest")
+    core_components: List[str] = Field(default_factory=list, description="List of primary classes and components")
+
+
 __all__ = [
     "AstNodeType",
     "AstCodeChunk",
@@ -132,4 +143,5 @@ __all__ = [
     "FileSymbolNode",
     "FileTreeNode",
     "RepositoryTreeResponse",
+    "RepositoryManifestResponse",
 ]
