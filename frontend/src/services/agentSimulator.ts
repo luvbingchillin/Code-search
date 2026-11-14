@@ -1,5 +1,6 @@
 import { AstCodeChunk, ChatMessage, ReActState } from '../types';
 import { mockAstChunks } from './mockAstData';
+import { detectOverviewIntent } from '../utils/intentDetection';
 
 export function formatNodeType(nodeType: string): string {
   switch (nodeType) {
@@ -30,6 +31,15 @@ export class AgentSimulator {
   }
 
   public searchAstChunks(query: string): AstCodeChunk[] {
+    const isOverview = detectOverviewIntent(query);
+    if (isOverview) {
+      const classChunks = mockAstChunks.filter((c) => c.astNodeType === 'ClassDef');
+      if (classChunks.length > 0) {
+        return classChunks;
+      }
+      return mockAstChunks.slice(0, 3);
+    }
+
     const lower = query.toLowerCase();
     const tokens = lower.split(/\W+/).filter((t) => t.length > 2);
 
@@ -112,22 +122,24 @@ export class AgentSimulator {
       )
       .join('\n');
 
-    const isOverviewQuery =
-      /^(what\s+does\s+this\s+(code\s*base|repo|repository|project|software)\s+do|explain\s+this\s+(code\s*base|repo|repository|project)|(code\s*base|repo|repository)\s+overview|overview(\s+of\s+this\s+(code\s*base|repo|repository|project))?|what\s+is\s+this\s+(code\s*base|repo|repository|project)|architecture(\s+of\s+this\s+(code\s*base|repo|repository|project))?|how\s+does\s+this\s+(code\s*base|repo|repository|project)\s+work)\??$/i.test(
-        query.trim()
-      );
+    const isOverviewQuery = detectOverviewIntent(query);
 
     const hasRequestsChunks = matchedChunks.some(
       (c) =>
         c.filePath.includes('sessions.py') ||
         c.filePath.includes('models.py') ||
         c.filePath.includes('adapters.py') ||
+        c.filePath.includes('auth.py') ||
+        c.filePath.includes('exceptions.py') ||
+        c.filePath.includes('status_codes.py') ||
+        c.filePath.includes('api.py') ||
         c.repoFullName?.includes('requests')
     );
     const hasSampleChunks = matchedChunks.some(
       (c) =>
         c.filePath.includes('calculator.py') ||
         c.filePath.includes('sample_codebase') ||
+        c.filePath.includes('main.py') ||
         c.identifier === 'Calculator'
     );
 

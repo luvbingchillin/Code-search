@@ -11,6 +11,7 @@ import {
 } from '../types';
 import { AgentSimulator } from '../services/agentSimulator';
 import { mockAstChunks } from '../services/mockAstData';
+import { detectOverviewIntent } from '../utils/intentDetection';
 
 export interface UseReActAgentOptions {
   webLLM?: UseWebLLMReturn;
@@ -295,12 +296,7 @@ export function useReActAgent(
         lower === 'what is codeseek ai' ||
         lower === 'about' ||
         /^(what\s+is\s+codeseek(\s+ai)?|about|who\s+are\s+you)$/i.test(lower);
-      const isOverview =
-        lower === '/overview' ||
-        lower === 'overview' ||
-        /^(what\s+does\s+this\s+(code\s*base|repo|repository|project|software)\s+do|explain\s+this\s+(code\s*base|repo|repository|project)|(code\s*base|repo|repository)\s+overview|overview(\s+of\s+this\s+(code\s*base|repo|repository|project))?|what\s+is\s+this\s+(code\s*base|repo|repository|project)|architecture(\s+of\s+this\s+(code\s*base|repo|repository|project))?|how\s+does\s+this\s+(code\s*base|repo|repository|project)\s+work)\??$/i.test(
-          lower
-        );
+      const isOverview = detectOverviewIntent(lower);
       const isConnectIntent =
         lower.startsWith('connect psf/requests') ||
         lower.startsWith('connect sample_codebase') ||
@@ -539,10 +535,10 @@ Please select or connect a Python repository before querying code definitions.
 
       const effectiveSearchTerm = isOverview
         ? isRequestsRepo
-          ? 'Session Request Response HTTPAdapter'
+          ? 'Session Request Response HTTPAdapter client'
           : isSampleRepo
-          ? 'Calculator add subtract FastAPI'
-          : 'ClassDef class def main model'
+          ? 'Calculator add subtract FastAPI route'
+          : 'ClassDef class client service app main core controller manager model'
         : effectiveQuery;
 
       if (timerRef.current) clearInterval(timerRef.current);

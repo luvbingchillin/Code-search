@@ -400,6 +400,74 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       expect(result.current.agentStatus.state).toBe('Complete');
       expect(lastMsg.citedChunks).toContain('sessions.py:Session:356');
     });
+
+    it('synthesizes architectural overview for "what is this codebase about"', async () => {
+      const requestsChunks: AstCodeChunk[] = [
+        {
+          id: 'sessions.py:Session:356',
+          filePath: 'sessions.py',
+          fileName: 'sessions.py',
+          astNodeType: 'ClassDef',
+          identifier: 'Session',
+          startLine: 356,
+          endLine: 816,
+          code: 'class Session: pass',
+          relevanceScore: 0.95,
+          repoFullName: 'psf/requests',
+        },
+      ];
+
+      const mockSearch = vi.fn().mockResolvedValue(requestsChunks);
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: sampleRepo,
+          nemoIR: { searchAstChunks: mockSearch } as any,
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('what is this codebase about');
+      });
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toContain('Architectural Overview: **psf/requests**');
+      expect(lastMsg.content).toContain('Session');
+      expect(result.current.agentStatus.state).toBe('Complete');
+    });
+
+    it('synthesizes architectural overview for "/overview"', async () => {
+      const requestsChunks: AstCodeChunk[] = [
+        {
+          id: 'sessions.py:Session:356',
+          filePath: 'sessions.py',
+          fileName: 'sessions.py',
+          astNodeType: 'ClassDef',
+          identifier: 'Session',
+          startLine: 356,
+          endLine: 816,
+          code: 'class Session: pass',
+          relevanceScore: 0.95,
+          repoFullName: 'psf/requests',
+        },
+      ];
+
+      const mockSearch = vi.fn().mockResolvedValue(requestsChunks);
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: sampleRepo,
+          nemoIR: { searchAstChunks: mockSearch } as any,
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('/overview');
+      });
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toContain('Architectural Overview: **psf/requests**');
+    });
   });
 
   describe('11. AgentRunner Raw Token Stream Collapsible By Default', () => {
