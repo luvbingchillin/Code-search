@@ -6,59 +6,105 @@ This project evolved from the CodeOrient baseline to solve its three critical fl
 
 ## Features
 
-- **100% Edge-Computed Privacy**: No code is ever sent to cloud APIs (OpenAI/Anthropic). All inference and retrieval happen locally on your hardware.
-- **AST-Driven Ingestion**: Utilizes Tree-sitter instead of naive text splitters to extract structurally complete functions and classes, completely eliminating semantic fragmentation.
-- **Autonomous Multi-Hop Retrieval**: The agent intelligently traverses the structural codebase graph to resolve internal dependencies before synthesizing an answer.
-- **Deterministic Agentic Loop**: Compiled WebAssembly workflows (NemoIR) strictly manage the ReAct loop and enforce a hard 4,096 token limit to prevent browser VRAM crashes.
-- **Split-Pane UI Workspace**: A seamless React interface allowing developers to chat with the agent while simultaneously inspecting the exact syntax-highlighted AST chunks being referenced.
+- **100% Edge-Computed Privacy**: Zero cloud API dependencies. All inference, AST embedding, and vector retrieval execute locally on user hardware.
+- **Dual-Tier WebGPU SLM Architecture**:
+  - `⚡ Turbo 0.5B` (`Qwen2.5-Coder-0.5B`): Ultra-fast ~3–5s inference for rapid exploration.
+  - `🎯 Precision 1.5B` (`Qwen2.5-Coder-1.5B`): Deep multi-hop technical reasoning.
+  - One-click tier switching directly from the header with background WGSL compute shader warmup (Time to First Token < 1.5s).
+- **Structural AST-Driven Ingestion**: Tree-sitter Python parser extracting complete function/class nodes with decorators, docstrings, and call-graph metadata to eliminate semantic fragmentation.
+- **Index-Time Architecture Manifests**: Pre-computed architectural summaries delivering instant (< 5ms) codebase overview retrieval for `/overview` queries.
+- **Autonomous Multi-Hop Retrieval**: The agent traverses internal dependency call graphs, enabling users to click AST badge references and navigate deep call stacks.
+- **Deterministic Agentic Loop**: WebAssembly workflows (`@nemoir/compiler-wasm`) coordinate the ReAct loop (`Thinking` $\to$ `Searching AST` $\to$ `Synthesizing` $\to$ `Complete`) with bounded token budgeting.
+- **Split-Pane Developer Workspace**: Neo-tactile brutalist interface featuring an interactive chat pane, dynamic query suggestions, a hierarchical file & symbol explorer, and a PrismJS AST code viewer with aligned file line numbers.
 
 ## Tech Stack
 
 **Frontend (Edge Inference & UI)**
 - **Core Framework**: React 19, TypeScript, Vite 6
-- **Styling**: TailwindCSS
-- **Edge Inference Engine**: WebLLM (executing quantized SLMs like Qwen2.5-Coder via WebGPU)
-- **Agent Orchestration**: NemoIR (WebAssembly ReAct loops)
-- **Code Visualization**: PrismJS (Python syntax highlighting)
-- **Automated Testing**: Vitest, React Testing Library
+- **Styling**: TailwindCSS v4 with Neo-Tactile Brutalist Design Tokens (Phudu / Inter / JetBrains Mono)
+- **Edge Inference Engine**: `@mlc-ai/web-llm` (WebGPU quantized SLM execution)
+- **Agent Orchestration**: `@nemoir/compiler-wasm`, `@nemoir/web-runtime`, `@nemoir/web-ui`
+- **Code Visualization**: PrismJS (Python syntax highlighting with token-preserving keyword search)
+- **Automated Testing**: Vitest 3, React Testing Library (547 automated tests)
 
-**Backend (Offline Ingestion Pipeline)**
-- **Language**: Python
+**Backend (Retrieval & Ingestion Engine)**
+- **Language & Framework**: Python 3.12, FastAPI, Uvicorn
 - **AST Parser**: Tree-sitter (`tree-sitter-python`)
-- **Embeddings**: SentenceTransformers (e.g., `all-MiniLM-L6-v2`)
-- **Vector Storage**: Local Vector DB (LanceDB / ChromaDB)
+- **Embeddings**: SentenceTransformers (`all-MiniLM-L6-v2`, 384 dimensions)
+- **Vector Storage**: LanceDB (primary columnar vector storage) & SQLite Vector Store (testing fallback)
+- **Automated Testing**: Pytest 9 (306 automated tests)
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- A WebGPU-compatible browser (e.g., Chrome, Edge) for local SLM execution
+- Node.js (v18 or higher) & npm
+- Python 3.10+ (Python 3.12 recommended) with pip
+- A WebGPU-compatible browser (Google Chrome 113+, Microsoft Edge 113+)
 
-### Showcase Website
-A dedicated showcase and explanation website featuring the **Casino Roulette Table** theme, interactive AST vs. naive chunking comparison, and empirical benchmark scorecards is located in `showcase/`:
+---
+
+### Running the Backend Server
+1. Navigate to the backend directory and install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Start the FastAPI retrieval server on port 8000:
+   ```bash
+   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+   ```
+   *(On startup, the server automatically initializes LanceDB at `data/lancedb` and pre-warms embedding weights.)*
+
+---
+
+### Running the Frontend Application
+1. Navigate into the `frontend/` directory and install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+2. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+3. Open your browser and navigate to `http://localhost:5173`.
+
+---
+
+### Showcase & Interactive Demo Website
+A dedicated showcase website featuring the **Casino Roulette Table** theme, interactive AST vs. naive chunking comparisons, and benchmark scorecards is located in `showcase/`:
 ```bash
 cd showcase
 npm install
 npm run dev
 ```
 
-### Installation
-1. Clone the repository to your local machine.
-2. Navigate into the frontend directory and install the dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-3. Start the local development server:
-   ```bash
-   npm run dev
-   ```
+---
 
-## Usage
+## Testing & Quality Assurance
 
-1. Open your browser and navigate to `http://localhost:5173`.
-2. **Initialize Local Ingestion (Future Feature)**: Use the Python backend CLI to parse and ingest a local Python repository (e.g., FastAPI) using Tree-sitter.
-3. **Query the Codebase**: In the left-hand Chat Pane, ask an architectural question (e.g., *"How is the authentication middleware structured?"*).
-4. **Monitor the Agent**: Watch the Agentic Loop Banner track the local agent's state as it transitions between *Thinking*, *Searching AST*, and *Synthesizing*.
-5. **Inspect the Code**: View the exact Python AST chunks the agent retrieved in the right-hand Code Viewer Pane, complete with accurate source line numbers and multi-hop tabs.
+CodeSeek AI features a comprehensive regression and adversarial test suite with **853 passed tests** across frontend and backend:
+
+- **Frontend Vitest Suite** (547 tests):
+  ```bash
+  cd frontend
+  npm test
+  ```
+- **Backend Pytest Suite** (306 tests):
+  ```bash
+  pytest backend/app/tests
+  ```
+
+---
+
+## Usage Workflow
+
+1. **Connect & Index Codebases**:
+   - Click the **Repositories** button in the header.
+   - Choose a pre-indexed codebase (`psf/requests`, `sample_codebase`) or enter a local filesystem directory to scan and ingest new Python source files.
+2. **Select Inference Model Tier**:
+   - In the header, toggle between `⚡ Turbo 0.5B` (recommended for ultra-fast exploration) and `🎯 Precision 1.5B` (for deep logic analysis).
+   - Click **WebLLM: Click to Load** to initialize the WebGPU engine.
+3. **Query Code Architecture**:
+   - Ask overview questions (e.g. *"what does this codebase do"*, `"/overview"`) or specific logic questions (e.g. *"How does Session.send handle retries?"*).
+4. **Inspect Structural AST**:
+   - The right-hand pane renders exact syntax-highlighted AST functions and classes, with docstrings, decorators, parameters, and interactive callee navigation badges.
