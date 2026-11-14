@@ -297,7 +297,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
               {msg.citedChunks && msg.citedChunks.length > 0 && (
                 <div className="mt-3 pt-2 border-t border-slate-800">
                   <div className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-                    <Code2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <Code2 className="w-3.5 h-3.5 text-[#68f12b]" />
                     <span>Referenced Code:</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -315,10 +315,10 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                           type="button"
                           data-testid={`chunk-citation-${chunkId}`}
                           onClick={() => onSelectChunk(chunkId)}
-                          className="group flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-500/60 text-emerald-400 font-mono transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press hover:-translate-y-0.5 hover:shadow-emerald-500/10 active:scale-95"
+                          className="group flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded bg-[#0a1f10] hover:bg-[#0f2e18] border border-[#68f12b]/30 hover:border-[#68f12b]/70 text-[#68f12b] font-mono transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#68f12b] emil-press hover:-translate-y-0.5 hover:shadow-[#68f12b]/10 active:scale-95"
                           title="Click to view definition in code viewer"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 transition-transform duration-150 group-hover:scale-125" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#68f12b] transition-transform duration-150 group-hover:scale-125" />
                           <span>{label}</span>
                         </button>
                       );
