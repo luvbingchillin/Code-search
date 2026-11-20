@@ -44,6 +44,23 @@ export const PYTHON_BUILTINS = new Set([
   'callable',
 ]);
 
+const formatKind = (type: string) => {
+  switch (type) {
+    case 'FunctionDef':
+      return 'Function';
+    case 'AsyncFunctionDef':
+      return 'Async Function';
+    case 'ClassDef':
+      return 'Class';
+    case 'Module':
+      return 'Module';
+    case 'Assign':
+      return 'Variable';
+    default:
+      return type.replace(/Def$/, '');
+  }
+};
+
 interface ASTMetadataInspectorProps {
   chunk: AstCodeChunk | null;
   isOpen: boolean;
@@ -82,7 +99,7 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
       <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
         <div className="flex items-center space-x-1.5 text-slate-100 font-semibold">
           <Layers className="w-3.5 h-3.5 text-sky-400" />
-          <span>Code & Symbol Details</span>
+          <span>Symbol Navigation & Contract</span>
         </div>
         <button
           onClick={onClose}
@@ -104,16 +121,19 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-300 pb-2 border-b border-slate-800/80">
         <div>
-          <span className="text-slate-400">Node:</span>{' '}
-          <span className="text-cyan-300 font-semibold">{chunk.astNodeType}</span>
+          <span className="text-slate-400">Kind:</span>{' '}
+          <span className="text-cyan-300 font-semibold">{formatKind(chunk.astNodeType)}</span>
+          <span className="text-[10px] text-slate-500 font-mono ml-1">({chunk.astNodeType})</span>
         </div>
         <div>
           <span className="text-slate-400">Entity:</span>{' '}
           <span className="text-emerald-300 font-semibold">{chunk.identifier}</span>
         </div>
         <div>
-          <span className="text-slate-400">Range:</span>{' '}
-          <span>Lines {chunk.startLine}–{chunk.endLine} ({chunk.endLine - chunk.startLine + 1} lines)</span>
+          <span className="text-slate-400">Scope:</span>{' '}
+          <span>
+            Lines {chunk.startLine}–{chunk.endLine} ({chunk.endLine - chunk.startLine + 1} lines · ~{Math.max(1, Math.round((chunk.endLine - chunk.startLine + 1) / 35))} min read)
+          </span>
         </div>
         {chunk.repoFullName && (
           <div>

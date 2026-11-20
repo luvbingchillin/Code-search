@@ -155,8 +155,8 @@ export const Hero: React.FC = () => {
                   <span className="text-[#dad0a7]">
                     fastapi/routing.py &gt; Class: <strong className="text-[#68f12b]">APIRoute</strong> &gt; Function: <strong className="text-[#68f12b]">__init__</strong>
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-[#143520] text-[#68f12b] border border-[#68f12b]/40 font-bold">
-                    AST: FunctionDef (Intact)
+                  <span className="px-2 py-0.5 rounded bg-[#143520] text-[#68f12b] border border-[#68f12b]/40 font-medium text-[11px] font-mono">
+                    Function (Complete Definition)
                   </span>
                 </div>
 
@@ -179,7 +179,11 @@ export const Hero: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-[#dad0a7]/20 flex items-center justify-between text-[11px] text-[#dad0a7]">
-                <span>Node Tokens: <strong className="text-[#68f12b] font-mono">412 tokens</strong></span>
+                <div className="flex items-center space-x-2">
+                  <span>Scope: <strong className="text-[#68f12b] font-mono">47 lines</strong></span>
+                  <span className="text-[#dad0a7]/40">·</span>
+                  <span className="text-[#dad0a7]/80">~1 min read</span>
+                </div>
                 <span className="text-[#68f12b] font-mono font-bold">Privacy: 0 bytes sent to cloud</span>
               </div>
             </div>
