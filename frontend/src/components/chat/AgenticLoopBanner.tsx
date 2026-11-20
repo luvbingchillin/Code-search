@@ -187,15 +187,15 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
           </div>
         )}
 
-        {/* Active Chunks Badge */}
+        {/* Active Definitions Badge */}
         {chunkCount !== undefined && chunkCount > 0 && (
           <div
             data-testid="banner-chunk-count"
             className="flex items-center space-x-1 text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-700/60 shrink-0"
-            title={`${chunkCount} active AST code chunks retrieved`}
+            title={`${chunkCount} code definitions retrieved`}
           >
             <Layers className="w-3 h-3 text-sky-400" />
-            <span>{chunkCount} chunks</span>
+            <span>{chunkCount} definitions</span>
           </div>
         )}
 

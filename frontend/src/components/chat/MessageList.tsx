@@ -278,7 +278,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
                   <summary className="cursor-pointer text-slate-300 hover:text-white font-mono text-[11px] flex items-center justify-between select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 rounded">
                     <span className="flex items-center space-x-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>ReAct Reasoning Chain ({msg.thoughts.length} steps)</span>
+                      <span>Reasoning Process ({msg.thoughts.length} steps)</span>
                     </span>
                     <ChevronDown className="w-3 h-3 text-slate-400 transition-transform duration-200" />
                   </summary>

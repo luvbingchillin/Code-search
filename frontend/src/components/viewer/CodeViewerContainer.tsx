@@ -350,27 +350,34 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[#f4f3eb]/50">AST Type:</span>
-                      <span className="text-teal-300 font-semibold">{inspectedNode.astNodeType}</span>
+                      <span className="text-[#f4f3eb]/50">Kind:</span>
+                      <span className="text-teal-300 font-semibold font-mono">
+                        {inspectedNode.astNodeType === 'FunctionDef'
+                          ? 'Function'
+                          : inspectedNode.astNodeType === 'ClassDef'
+                          ? 'Class'
+                          : inspectedNode.astNodeType}
+                        <span className="text-[10px] text-[#f4f3eb]/40 font-mono ml-1">({inspectedNode.astNodeType})</span>
+                      </span>
                     </div>
                     {inspectedNode.startLine !== undefined && inspectedNode.endLine !== undefined && (
                       <div className="flex justify-between items-center">
-                        <span className="text-[#f4f3eb]/50">Lines:</span>
+                        <span className="text-[#f4f3eb]/50">Scope:</span>
                         <span>
-                          {inspectedNode.startLine}–{inspectedNode.endLine}
+                          Lines {inspectedNode.startLine}–{inspectedNode.endLine}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Outgoing Lexical Call References */}
+                  {/* Outgoing Call References */}
                   <div className="mb-3 pt-2 border-t border-[#1b3d22]">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] uppercase tracking-wider text-[#68f12b] font-semibold">
                         Call References
                       </span>
                       <span className="text-[10px] text-[#f4f3eb]/50">
-                        {inspectedNodeCallees.length} {inspectedNodeCallees.length === 1 ? 'callee' : 'callees'}
+                        {inspectedNodeCallees.length} {inspectedNodeCallees.length === 1 ? 'called function' : 'called functions'}
                       </span>
                     </div>
                     {inspectedNodeCallees.length > 0 ? (
@@ -391,7 +398,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       </div>
                     ) : (
                       <div className="text-[10px] text-[#f4f3eb]/40 italic">
-                        No outgoing lexical call references in AST
+                        No outgoing function calls detected
                       </div>
                     )}
                   </div>

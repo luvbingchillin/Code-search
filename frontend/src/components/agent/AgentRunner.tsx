@@ -173,7 +173,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
     },
     {
       id: 'step-searching',
-      name: 'AST Vector Search',
+      name: 'Code Search',
       status:
         normState === 'searching'
           ? 'running'
@@ -189,7 +189,7 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
     },
     {
       id: 'step-synthesizing',
-      name: 'WebLLM Synthesis',
+      name: 'Synthesizing Answer',
       status:
         normState === 'synthesizing'
           ? 'running'

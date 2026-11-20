@@ -266,8 +266,8 @@ describe('NemoIR AgentRunner Acceptance Suite (AC2)', () => {
 
       // Default step titles
       expect(screen.getByText('Intent & Planning')).toBeInTheDocument();
-      expect(screen.getByText('AST Vector Search')).toBeInTheDocument();
-      expect(screen.getByText('WebLLM Synthesis')).toBeInTheDocument();
+      expect(screen.getByText('Code Search')).toBeInTheDocument();
+      expect(screen.getByText('Synthesizing Answer')).toBeInTheDocument();
       expect(screen.getByText('Response Verified')).toBeInTheDocument();
     });
 

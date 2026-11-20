@@ -137,9 +137,9 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                 <span
                   data-testid="chunk-relevance-score"
                   className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
-                  title="Vector semantic similarity score calculated by LanceDB"
+                  title="Semantic match score: how closely this code relates to your query"
                 >
-                  Relevance {(chunk.relevanceScore * 100).toFixed(0)}%
+                  Match {(chunk.relevanceScore * 100).toFixed(0)}%
                 </span>
               </>
             )}

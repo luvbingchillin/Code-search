@@ -67,7 +67,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           'Spills into "def post(" without body'
         ],
         aiExplanation: 'The AI misses the route decorator, guesses parameter types, and invents what this endpoint returns because the function signature was cut off.',
-        sbirScore: 'SBIR: 0.67%'
+        sbirScore: 'SBIR: 0.67% · Broken Syntax'
       },
       astChunk: {
         nodeType: 'FunctionDef',
@@ -98,7 +98,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           '100% syntactically valid code block'
         ],
         aiExplanation: 'The AI explains the route path, dependency injection chain, and return types with 100% precision and zero hallucinations.',
-        sbirScore: 'SBIR: 100.0%'
+        sbirScore: 'SBIR: 100.0% · Complete Syntax'
       }
     },
     {
@@ -128,7 +128,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           'AI has to hallucinate return and error types'
         ],
         aiExplanation: 'The AI cannot identify the method or arguments, and hallucinates how retry exceptions are handled because the block was severed.',
-        sbirScore: 'SBIR: 0.67%'
+        sbirScore: 'SBIR: 0.67% · Broken Syntax'
       },
       astChunk: {
         nodeType: 'FunctionDef',
@@ -168,7 +168,7 @@ export const ChunkComparisonVisualizer: React.FC = () => {
           'Zero guesswork for the AI'
         ],
         aiExplanation: 'The AI accurately explains connection pooling, request verification, and retry handling from method signature to return value.',
-        sbirScore: 'SBIR: 100.0%'
+        sbirScore: 'SBIR: 100.0% · Complete Syntax'
       }
     }
   ];
