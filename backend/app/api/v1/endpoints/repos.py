@@ -1,10 +1,12 @@
 """Repository registry and metadata endpoints."""
 
+from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import get_retrieval_service
 from app.models.chunk import AstCodeChunk
+from app.parser.scanner import CodebaseScanner
 from app.schemas.ast_chunk import (
     RepositoriesResponse,
     RepositoryItem,
@@ -12,9 +14,11 @@ from app.schemas.ast_chunk import (
     FileTreeNode,
     RepositoryTreeResponse,
     RepositoryManifestResponse,
+    StrataGraphResponse,
 )
 from app.services.repo_registry import repo_registry
 from app.services.retrieval import RetrievalService
+from app.services.strata import build_strata_graph
 
 router = APIRouter()
 
@@ -189,3 +193,94 @@ def get_repository_tree(
         total_symbols=total_symbols,
         tree=tree_nodes,
     )
+
+
+@router.get(
+    "/repos/{repo_id}/strata-graph",
+    response_model=StrataGraphResponse,
+    summary="Get 3D Layered Strata Code Dependency Graph",
+)
+def get_repository_strata_graph(
+    repo_id: str,
+    retrieval_service: RetrievalService = Depends(get_retrieval_service),
+) -> StrataGraphResponse:
+    """Retrieve 3D layered strata nodes, call dependency edges, and tier metadata for a repository."""
+    repo = repo_registry.get_repository(repo_id)
+    if not repo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repository '{repo_id}' not found in registry",
+        )
+
+    vs = retrieval_service.vector_store
+    all_chunks: List[AstCodeChunk] = []
+
+    # 1. Attempt retrieval from vector store (LanceDB or SQLite)
+    if vs is not None:
+        if hasattr(vs, "_table") and vs._table is not None:
+            try:
+                records = vs._table.search().limit(5000).to_list()
+                for r in records:
+                    f_path = str(r.get("filePath") or r.get("file_path") or "")
+                    if repo.id == "sample_codebase" and "sample_codebase" not in f_path.lower():
+                        continue
+                    elif repo.id == "requests" and "sample_codebase" in f_path.lower():
+                        continue
+                    elif repo.id not in ("sample_codebase", "requests") and repo.path.lower() not in f_path.lower():
+                        continue
+
+                    data = dict(r)
+                    data.pop("vector", None)
+                    data.pop("_distance", None)
+                    for k in ("parameters", "decorators", "imports", "calls"):
+                        if data.get(k) is not None:
+                            data[k] = list(data[k])
+                        else:
+                            data[k] = []
+                    all_chunks.append(AstCodeChunk(**data))
+            except Exception:
+                pass
+        elif hasattr(vs, "conn") and vs.conn is not None:
+            try:
+                cursor = vs.conn.cursor()
+                cursor.execute(f"SELECT * FROM {getattr(vs, 'table_name', 'ast_chunks')}")
+                for row in cursor.fetchall():
+                    f_path = str(row["filePath"])
+                    if repo.id == "sample_codebase" and "sample_codebase" not in f_path.lower():
+                        continue
+                    elif repo.id == "requests" and "sample_codebase" in f_path.lower():
+                        continue
+                    elif repo.id not in ("sample_codebase", "requests") and repo.path.lower() not in f_path.lower():
+                        continue
+
+                    all_chunks.append(vs._row_to_chunk(row))
+            except Exception:
+                pass
+
+    # 2. Fallback to scanning repository files directly from disk if vector store has no chunks
+    if not all_chunks:
+        candidates = [
+            Path(repo.path),
+            Path("backend") / repo.path,
+            Path("..") / repo.path,
+        ]
+        repo_dir = None
+        for cand in candidates:
+            if cand.exists():
+                repo_dir = cand
+                break
+
+        if repo_dir is not None:
+            scanner = CodebaseScanner()
+            scanned = scanner.scan_directory(str(repo_dir), repo_root=str(repo_dir))
+            all_chunks.extend(scanned)
+
+    # Deduplicate chunks by ID
+    seen_ids = set()
+    unique_chunks = []
+    for c in all_chunks:
+        if c.id not in seen_ids:
+            seen_ids.add(c.id)
+            unique_chunks.append(c)
+
+    return build_strata_graph(unique_chunks, repo_id=repo.id)

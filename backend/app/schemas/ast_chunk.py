@@ -4,6 +4,12 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 from app.models.chunk import AstCodeChunk, AstNodeType
+from app.schemas.strata import (
+    StrataNode,
+    StrataEdge,
+    StrataTierInfo,
+    StrataGraphResponse,
+)
 
 
 class SearchRequest(BaseModel):
@@ -144,4 +150,8 @@ __all__ = [
     "FileTreeNode",
     "RepositoryTreeResponse",
     "RepositoryManifestResponse",
+    "StrataNode",
+    "StrataEdge",
+    "StrataTierInfo",
+    "StrataGraphResponse",
 ]

@@ -9,6 +9,10 @@ from app.schemas.ast_chunk import (
     IndexResponse,
     SearchRequest,
     SearchResponse,
+    StrataNode,
+    StrataEdge,
+    StrataTierInfo,
+    StrataGraphResponse,
 )
 
 __all__ = [
@@ -20,4 +24,8 @@ __all__ = [
     "HealthResponse",
     "IndexRequest",
     "IndexResponse",
+    "StrataNode",
+    "StrataEdge",
+    "StrataTierInfo",
+    "StrataGraphResponse",
 ]
