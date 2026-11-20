@@ -12,6 +12,7 @@ import {
 import { AgentSimulator } from '../services/agentSimulator';
 import { mockAstChunks } from '../services/mockAstData';
 import { detectOverviewIntent } from '../utils/intentDetection';
+import { apiClient } from '../services/apiClient';
 
 export interface UseReActAgentOptions {
   webLLM?: UseWebLLMReturn;
