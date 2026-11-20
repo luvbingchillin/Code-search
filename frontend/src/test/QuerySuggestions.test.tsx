@@ -1,10 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import {
   QuerySuggestions,
   REPO_SUGGESTIONS,
   DEFAULT_SUGGESTIONS,
 } from '../components/chat/QuerySuggestions';
+import { ChatPane } from '../components/chat/ChatPane';
+import { AgentStatus } from '../types';
 
 describe('QuerySuggestions Acceptance Suite', () => {
   it('renders default suggestions when activeRepoId is undefined', () => {
@@ -85,6 +88,57 @@ describe('QuerySuggestions Acceptance Suite', () => {
     const chips = screen.getAllByTestId('query-suggestion-chip');
     chips.forEach((chip) => {
       expect(chip).toBeDisabled();
+    });
+  });
+
+  describe('ChatPane Prop Forwarding & Submission', () => {
+    const baseStatus: AgentStatus = {
+      state: 'Idle',
+      currentStepMessage: 'Ready',
+      elapsedMs: 0,
+      activeChunkCount: 0,
+    };
+
+    it('ChatPane threads activeRepoId to QuerySuggestions to render repo-specific chips', () => {
+      render(
+        <ChatPane
+          status={baseStatus}
+          messages={[]}
+          chunks={[]}
+          onSelectChunk={vi.fn()}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+          activeRepoId="requests"
+        />
+      );
+
+      const chips = screen.getAllByTestId('query-suggestion-chip');
+      expect(chips).toHaveLength(REPO_SUGGESTIONS.requests.length);
+      expect(screen.getByText('Where is Session.send defined?')).toBeInTheDocument();
+      expect(screen.getByText('Where is CaseInsensitiveDict defined?')).toBeInTheDocument();
+    });
+
+    it('clicking a suggestion chip in ChatPane triggers onSubmit callback with exact query text', () => {
+      const handleSubmit = vi.fn();
+      render(
+        <ChatPane
+          status={baseStatus}
+          messages={[]}
+          chunks={[]}
+          onSelectChunk={vi.fn()}
+          onSubmit={handleSubmit}
+          onCancel={vi.fn()}
+          activeRepoId="requests"
+        />
+      );
+
+      const chip = screen.getByText('How does SessionRedirectMixin handle 3xx redirects?');
+      fireEvent.click(chip);
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit).toHaveBeenCalledWith(
+        'How does SessionRedirectMixin handle 3xx redirects?'
+      );
     });
   });
 });

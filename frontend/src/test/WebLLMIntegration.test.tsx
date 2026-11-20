@@ -605,4 +605,62 @@ describe('WebLLM Edge Inference & Stream Wiring Acceptance Suite (Milestone 3 â€
       expect(agentResult.current.streamingTokens).toBe('');
     });
   });
+
+  // =========================================================================
+  // 7. Concurrency Guards & Device Loss Resilience
+  // =========================================================================
+  describe('7. Concurrency Guards & Device Loss Resilience', () => {
+    it('rejects generate() when called concurrently while initEngine() is in-flight', async () => {
+      const { result } = renderHook(() => useWebLLM());
+
+      let caughtGenerateError: any;
+      await act(async () => {
+        const initP = result.current.initEngine();
+        const genP = result.current.generate('Prompt while loading').catch((e) => {
+          caughtGenerateError = e;
+        });
+        await Promise.all([initP, genP]);
+      });
+
+      expect(caughtGenerateError).toBeDefined();
+      expect(caughtGenerateError.message).toMatch(/WebLLM engine is not loaded/);
+      expect(result.current.status).toBe('ready');
+    });
+
+    it('survives rapid bursts of interrupt() while generate() is actively in progress', async () => {
+      const { result } = renderHook(() => useWebLLM());
+      await act(async () => {
+        await result.current.initEngine();
+      });
+
+      await act(async () => {
+        const genP = result.current.generate('Prompt under interrupt');
+        for (let i = 0; i < 5; i++) {
+          result.current.interrupt();
+        }
+        await genP;
+      });
+
+      expect(result.current.status).toBe('ready');
+      expect(result.current.error).toBeNull();
+    });
+
+    it('records error state and error message when generation throws during inference', async () => {
+      mockEngineInstance = createMockEngine({ shouldFailGenerate: true });
+      const { result } = renderHook(() => useWebLLM());
+
+      await act(async () => {
+        await result.current.initEngine();
+      });
+
+      await act(async () => {
+        await expect(result.current.generate('Failing prompt')).rejects.toThrow(
+          'WebGPU pipeline execution error during inference'
+        );
+      });
+
+      expect(result.current.status).toBe('error');
+      expect(result.current.error).toContain('WebGPU pipeline execution error');
+    });
+  });
 });

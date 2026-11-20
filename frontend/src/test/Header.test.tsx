@@ -370,4 +370,145 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
     await user.click(toggleBtn);
     expect(loadModelSpy).toHaveBeenCalledWith('Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC');
   });
+
+  describe('Adversarial Payloads & Concurrency Guards', () => {
+    it('gracefully handles empty object and null total_chunks without crashing', async () => {
+      const malformed = {
+        status: 'healthy',
+        total_chunks: null as unknown as number,
+      } as unknown as HealthResponse;
+      vi.spyOn(apiClient, 'getHealth').mockResolvedValue(malformed);
+
+      render(
+        <Header
+          webLLM={mockWebLLM}
+          nemoIR={mockNemoIR}
+          agentStatus={mockAgentStatus}
+        />
+      );
+
+      const healthLabel = await screen.findByTestId('backend-health-label');
+      expect(healthLabel).toHaveTextContent('API:8000 (LanceDB: 0)');
+      const healthDot = screen.getByTestId('backend-health-dot');
+      expect(healthDot.className).toContain('bg-emerald-400');
+    });
+
+    it('rejects non-standard status values like "ONLINE" or "HEALTHY" gracefully', async () => {
+      const upperCaseStatus = {
+        status: 'HEALTHY',
+        total_chunks: 500,
+      } as unknown as HealthResponse;
+      vi.spyOn(apiClient, 'getHealth').mockResolvedValue(upperCaseStatus);
+
+      render(
+        <Header
+          webLLM={mockWebLLM}
+          nemoIR={mockNemoIR}
+          agentStatus={mockAgentStatus}
+        />
+      );
+
+      const healthLabel = await screen.findByTestId('backend-health-label');
+      expect(healthLabel).toHaveTextContent('API: Offline (Simulator)');
+      const healthPill = screen.getByTestId('backend-health-pill');
+      expect(healthPill.className).toContain('bg-amber-950/50');
+    });
+
+    it('handles out-of-order asynchronous responses (latency inversion) without state clobbering', async () => {
+      let callCount = 0;
+      vi.spyOn(apiClient, 'getHealth').mockImplementation(() => {
+        callCount++;
+        const currentCall = callCount;
+        if (currentCall === 1) {
+          return new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  status: 'healthy',
+                  vector_db: 'lancedb',
+                  total_chunks: 100,
+                  embedding_dimension: 384,
+                  embedding_model: 'all-MiniLM-L6-v2',
+                }),
+              150
+            )
+          );
+        }
+        return new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                status: 'healthy',
+                vector_db: 'lancedb',
+                total_chunks: 999,
+                embedding_dimension: 384,
+                embedding_model: 'all-MiniLM-L6-v2',
+              }),
+            20
+          )
+        );
+      });
+
+      const { rerender } = render(
+        <Header
+          webLLM={mockWebLLM}
+          nemoIR={mockNemoIR}
+          agentStatus={mockAgentStatus}
+          healthRefreshTrigger={0}
+        />
+      );
+
+      act(() => {
+        rerender(
+          <Header
+            webLLM={mockWebLLM}
+            nemoIR={mockNemoIR}
+            agentStatus={mockAgentStatus}
+            healthRefreshTrigger={1}
+          />
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('backend-health-label')).toHaveTextContent('API:8000 (LanceDB: 999)');
+      });
+    });
+
+    it('preserves backend health pill across layout pane minimize/restore toggles', async () => {
+      vi.spyOn(apiClient, 'getHealth').mockResolvedValue({
+        status: 'healthy',
+        vector_db: 'lancedb',
+        total_chunks: 284,
+        embedding_dimension: 384,
+        embedding_model: 'all-MiniLM-L6-v2',
+      });
+
+      const { rerender } = render(
+        <Header
+          webLLM={mockWebLLM}
+          nemoIR={mockNemoIR}
+          agentStatus={mockAgentStatus}
+          isChatMinimized={false}
+          isCodeMinimized={false}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('backend-health-pill')).toBeInTheDocument();
+      });
+
+      rerender(
+        <Header
+          webLLM={mockWebLLM}
+          nemoIR={mockNemoIR}
+          agentStatus={mockAgentStatus}
+          isChatMinimized={true}
+          isCodeMinimized={false}
+        />
+      );
+
+      expect(screen.getByTestId('backend-health-pill')).toBeInTheDocument();
+      expect(screen.getByTestId('backend-health-label')).toHaveTextContent('API:8000 (LanceDB: 284)');
+    });
+  });
 });
