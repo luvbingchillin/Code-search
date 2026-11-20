@@ -160,6 +160,47 @@ export interface FileSymbolNode {
   parameters?: string[];
 }
 
+export interface StrataNodeDTO {
+  id: string;
+  identifier: string;
+  filePath: string;
+  astNodeType: string;
+  tier: number;
+  startLine?: number;
+  endLine?: number;
+  calls?: string[];
+  [key: string]: unknown;
+}
+
+export interface StrataEdgeDTO {
+  id: string;
+  source: string;
+  target: string;
+  callName?: string;
+  [key: string]: unknown;
+}
+
+export interface StrataTierDTO {
+  tier: number;
+  name: string;
+  description: string;
+  color?: string;
+  nodeCount?: number;
+  node_count?: number;
+}
+
+export interface StrataGraphResponse {
+  repo_id?: string;
+  repoId?: string;
+  nodes: StrataNodeDTO[];
+  edges: StrataEdgeDTO[];
+  tiers: StrataTierDTO[];
+  total_nodes?: number;
+  totalNodes?: number;
+  total_edges?: number;
+  totalEdges?: number;
+}
+
 export interface UseReActAgentReturn {
   agentStatus: AgentStatus;
   messages: ChatMessage[];

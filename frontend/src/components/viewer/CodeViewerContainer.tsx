@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, ExternalLink } from 'lucide-react';
 import { AstCodeChunk, FileSymbolNode } from '../../types';
-import { CodeViewerHeader } from './CodeViewerHeader';
+import { CodeViewerHeader, ViewMode } from './CodeViewerHeader';
 import { ChunkSelectorTabs } from './ChunkSelectorTabs';
 import { CodeDisplay } from './CodeDisplay';
 import { ASTMetadataInspector } from './ASTMetadataInspector';
 import { RepoFileTree } from './RepoFileTree';
 import { apiClient } from '../../services/apiClient';
+import { StrataCanvas } from '../strata/StrataCanvas';
+import { computeStrataLayout, StrataGraphData, STRATA_TIER_COLORS } from '../../services/strata/strataLayout';
+import { getMockStrataGraph } from '../../services/mockStrataData';
 
 export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
@@ -21,6 +25,9 @@ export interface CodeViewerContainerProps {
   onCloseAllChunks?: () => void;
   activeRepoId?: string | null;
   onAddChunk?: (chunk: AstCodeChunk) => void;
+  viewMode?: ViewMode;
+  onToggleViewMode?: (mode: ViewMode) => void;
+  citedChunks?: string[];
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
@@ -37,14 +44,136 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   onCloseAllChunks,
   activeRepoId,
   onAddChunk,
+  viewMode: propViewMode,
+  onToggleViewMode,
+  citedChunks,
 }) => {
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>('code');
+  const activeViewMode = propViewMode ?? internalViewMode;
+
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
 
+  // Strata 3D graph state
+  const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() => {
+    const initialRaw = getMockStrataGraph(activeRepoId || 'requests');
+    return computeStrataLayout(initialRaw);
+  });
+  const [inspectedNodeId, setInspectedNodeId] = useState<string | null>(null);
+
+  const handleToggleViewMode = (mode: ViewMode) => {
+    setInternalViewMode(mode);
+    onToggleViewMode?.(mode);
+  };
+
+  // Fetch strata graph data when active repository changes
+  useEffect(() => {
+    let isMounted = true;
+    apiClient
+      .getRepoStrataGraph(activeRepoId || 'requests')
+      .then((rawGraph) => {
+        if (isMounted && rawGraph && rawGraph.nodes) {
+          setStrataGraphData(computeStrataLayout(rawGraph));
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load strata graph from API, using fallback:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeRepoId]);
+
   const selectedChunk =
     chunks.find((c) => c.id === selectedChunkId) ?? (chunks.length > 0 ? chunks[0] : null);
+
+  // Compute highlighted nodes for Strata map:
+  // ONLY illuminate nodes the AI agent references in electric acid lime (#68f12b),
+  // keeping unreferenced nodes in dim muted moss baseline (#162a1c).
+  const highlightedChunkIds = useMemo(() => {
+    const set = new Set<string>();
+    const targetIds = new Set<string>();
+    const targetIdents = new Set<string>();
+
+    if (citedChunks && citedChunks.length > 0) {
+      citedChunks.forEach((id) => {
+        targetIds.add(id);
+        const ident = id.includes(':') ? id.split(':')[1] : id;
+        targetIdents.add(ident);
+      });
+    } else if (chunks && chunks.length > 0) {
+      chunks.forEach((c) => {
+        targetIds.add(c.id);
+        targetIdents.add(c.identifier);
+      });
+    }
+
+    if (strataGraphData) {
+      for (const node of strataGraphData.nodes) {
+        if (targetIds.has(node.id) || targetIdents.has(node.identifier)) {
+          set.add(node.id);
+        }
+      }
+    }
+    targetIds.forEach((id) => set.add(id));
+    return set;
+  }, [citedChunks, chunks, strataGraphData]);
+
+  // Click on a node in Strata map: inspect details and sync selection
+  const handleSelectStrataNode = (chunkId: string) => {
+    setInspectedNodeId(chunkId);
+    onSelectChunk(chunkId);
+  };
+
+  const inspectedNode = useMemo(() => {
+    if (!inspectedNodeId || !strataGraphData) return null;
+    return (
+      strataGraphData.nodes.find(
+        (n) => n.id === inspectedNodeId || n.identifier === inspectedNodeId
+      ) ?? null
+    );
+  }, [inspectedNodeId, strataGraphData]);
+
+  const inspectedNodeCallees = useMemo(() => {
+    if (!inspectedNode || !strataGraphData) return [];
+    return strataGraphData.edges.filter(
+      (e) => e.source === inspectedNode.id || e.source === inspectedNode.identifier
+    );
+  }, [inspectedNode, strataGraphData]);
+
+  // Switch back to Code View from Strata node inspector and select the chunk
+  const handleOpenInCodeViewer = async () => {
+    if (!inspectedNode) return;
+    handleToggleViewMode('code');
+    onSelectChunk(inspectedNode.id);
+
+    // If chunk not present in chunks array, attempt to hydrate or add it
+    const localChunk = chunks.find(
+      (c) => c.id === inspectedNode.id || c.identifier === inspectedNode.identifier
+    );
+    if (!localChunk && onAddChunk) {
+      try {
+        const fetched = await apiClient.getChunkById(inspectedNode.id);
+        if (fetched) {
+          onAddChunk(fetched);
+          return;
+        }
+      } catch {
+        // Fallback to lookupEntity
+        try {
+          const resp = await apiClient.lookupEntity(inspectedNode.identifier);
+          if (resp?.chunks && resp.chunks.length > 0) {
+            onAddChunk(resp.chunks[0]);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  };
 
   const handleSelectCall = (callIdentifier: string) => {
     if (onSelectCall) {
@@ -112,7 +241,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onCloseAllChunks={onCloseAllChunks}
       />
 
-      {/* Code Header with Breadcrumbs, Search, Explorer Toggle and Actions */}
+      {/* Code Header with View Mode Toggle, Breadcrumbs, Search, Explorer Toggle and Actions */}
       <CodeViewerHeader
         chunk={selectedChunk}
         isInspectorOpen={isInspectorOpen}
@@ -126,11 +255,13 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         onToggleMaximize={onToggleMaximize}
         isMinimized={isMinimized}
         onMinimize={onMinimize}
+        viewMode={activeViewMode}
+        onToggleViewMode={handleToggleViewMode}
       />
 
-      {/* Main Content Area (Optional Left Explorer + Code Display) */}
+      {/* Main Content Area (Explorer + Code Display OR 3D Strata Map) */}
       <div className="flex-1 flex overflow-hidden relative">
-        {isExplorerOpen && (
+        {isExplorerOpen && activeViewMode === 'code' && (
           <RepoFileTree
             repoId={activeRepoId ?? null}
             activeChunkId={selectedChunk?.id ?? null}
@@ -140,23 +271,150 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         )}
 
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Prism Syntax Code Display with Line Numbers */}
-          <CodeDisplay
-            chunk={selectedChunk}
-            onOpenConnectRepo={onOpenConnectRepo}
-            searchTerm={searchTerm}
-            onMatchCountChange={setMatchCount}
-            hasActiveRepo={Boolean(activeRepoId)}
-            onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
-          />
+          {activeViewMode === 'strata' ? (
+            /* 3D Strata Code Dependency Map View */
+            <div className="relative w-full h-full overflow-hidden bg-[#07160c]">
+              {/* Mandatory Static Lexical Call References label */}
+              <div
+                data-testid="strata-call-reference-label"
+                className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded bg-[#0a1f10]/90 border border-[#1b3d22] text-[#68f12b] font-mono text-xs flex items-center gap-1.5 shadow-md backdrop-blur-xs select-none pointer-events-auto"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#68f12b] animate-pulse" />
+                <span className="font-semibold">Static Lexical Call References (Tree-sitter AST)</span>
+              </div>
 
-          {/* Collapsible AST Metadata Drawer */}
-          <ASTMetadataInspector
-            chunk={selectedChunk}
-            isOpen={isInspectorOpen}
-            onClose={() => setIsInspectorOpen(false)}
-            onSelectCall={handleSelectCall}
-          />
+              {/* Three.js Instanced Strata Canvas */}
+              <StrataCanvas
+                graphData={strataGraphData}
+                highlightedChunkIds={highlightedChunkIds}
+                selectedChunkId={inspectedNodeId ?? selectedChunkId}
+                onSelectNode={handleSelectStrataNode}
+              />
+
+              {/* Node Inspector Popup Overlay */}
+              {inspectedNode && (
+                <div
+                  data-testid="strata-node-inspector"
+                  className="absolute top-12 right-3 z-20 w-84 max-w-[calc(100%-24px)] rounded-lg bg-[#0a1f10]/95 border border-[#68f12b]/60 shadow-2xl p-3.5 text-xs font-mono text-[#f4f3eb] backdrop-blur-md select-text"
+                >
+                  {/* Header: Tier & Symbol Name */}
+                  <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-[#1b3d22]">
+                    <div className="overflow-hidden">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span
+                          className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                          style={{
+                            backgroundColor: inspectedNode.color || STRATA_TIER_COLORS[inspectedNode.tier],
+                            color: '#0a1f10',
+                          }}
+                        >
+                          Tier {inspectedNode.tier}: {inspectedNode.tierName}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-[#68f12b] truncate font-mono">
+                        {inspectedNode.identifier}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="close-strata-inspector-btn"
+                      onClick={() => setInspectedNodeId(null)}
+                      className="p-1 rounded text-[#f4f3eb]/60 hover:text-white hover:bg-[#13301a] cursor-pointer transition-colors"
+                      title="Close Inspector"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Entity Details */}
+                  <div className="space-y-1.5 mb-3 text-[11px] text-[#f4f3eb]/80">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#f4f3eb]/50">File:</span>
+                      <span className="truncate max-w-[200px] text-right font-mono" title={inspectedNode.filePath}>
+                        {inspectedNode.filePath}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#f4f3eb]/50">AST Type:</span>
+                      <span className="text-teal-300 font-semibold">{inspectedNode.astNodeType}</span>
+                    </div>
+                    {inspectedNode.startLine !== undefined && inspectedNode.endLine !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#f4f3eb]/50">Lines:</span>
+                        <span>
+                          {inspectedNode.startLine}–{inspectedNode.endLine}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Outgoing Lexical Call References */}
+                  <div className="mb-3 pt-2 border-t border-[#1b3d22]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#68f12b] font-semibold">
+                        Call References
+                      </span>
+                      <span className="text-[10px] text-[#f4f3eb]/50">
+                        {inspectedNodeCallees.length} {inspectedNodeCallees.length === 1 ? 'callee' : 'callees'}
+                      </span>
+                    </div>
+                    {inspectedNodeCallees.length > 0 ? (
+                      <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
+                        {inspectedNodeCallees.map((edge) => (
+                          <div
+                            key={edge.id}
+                            className="flex items-center justify-between p-1 rounded bg-[#07160c] border border-[#134721] text-[10px]"
+                          >
+                            <span className="text-[#68f12b] truncate font-mono">
+                              &rarr; {edge.callName || edge.target}
+                            </span>
+                            <span className="text-[#f4f3eb]/50 text-[9px] shrink-0 ml-1">
+                              T{edge.targetTier}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-[#f4f3eb]/40 italic">
+                        No outgoing lexical call references in AST
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Open in Code Viewer Action */}
+                  <button
+                    type="button"
+                    data-testid="open-in-code-viewer-btn"
+                    onClick={handleOpenInCodeViewer}
+                    className="w-full py-1.5 px-3 rounded bg-[#68f12b] hover:bg-[#7aff3d] text-[#0a1f10] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors emil-press font-mono"
+                  >
+                    <span>📄 Open in Code Viewer</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Standard Code Display with Prism Highlighting */
+            <>
+              <CodeDisplay
+                chunk={selectedChunk}
+                onOpenConnectRepo={onOpenConnectRepo}
+                searchTerm={searchTerm}
+                onMatchCountChange={setMatchCount}
+                hasActiveRepo={Boolean(activeRepoId)}
+                onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
+              />
+
+              {/* Collapsible AST Metadata Drawer */}
+              <ASTMetadataInspector
+                chunk={selectedChunk}
+                isOpen={isInspectorOpen}
+                onClose={() => setIsInspectorOpen(false)}
+                onSelectCall={handleSelectCall}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

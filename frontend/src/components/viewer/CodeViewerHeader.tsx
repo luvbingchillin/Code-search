@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
+export type ViewMode = 'code' | 'strata';
+
 interface CodeViewerHeaderProps {
   chunk: AstCodeChunk | null;
   onToggleInspector?: () => void;
@@ -15,6 +17,8 @@ interface CodeViewerHeaderProps {
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
   matchCount?: number;
+  viewMode?: ViewMode;
+  onToggleViewMode?: (mode: ViewMode) => void;
 }
 
 export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
@@ -30,6 +34,8 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   searchTerm = '',
   onSearchChange,
   matchCount = 0,
+  viewMode = 'code',
+  onToggleViewMode,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(Boolean(searchTerm));
@@ -71,54 +77,109 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
       className="h-10 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between text-xs select-none"
     >
       <div className="flex items-center space-x-2 overflow-hidden">
-        <FileCode className="w-4 h-4 text-sky-400 shrink-0" />
-        <div
-          data-testid="chunk-file-path"
-          className="font-mono text-slate-200 truncate max-w-[340px] font-medium flex items-center space-x-1"
-          title={chunk ? `${chunk.filePath} > ${chunk.identifier}` : 'No file selected'}
-        >
-          {chunk ? (
-            <>
-              <span className="text-slate-400 truncate">{chunk.filePath}</span>
-              <span className="text-slate-600 font-bold shrink-0">&gt;</span>
-              <span className="text-sky-300 font-semibold truncate">{chunk.identifier}</span>
-            </>
-          ) : (
-            'No file selected'
-          )}
-        </div>
-
-        {chunk && (
+        {viewMode === 'strata' ? (
+          <div className="flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-sm">🌐</span>
+            <div
+              data-testid="chunk-file-path"
+              className="font-display font-semibold text-[#68f12b] tracking-tight flex items-center space-x-1"
+            >
+              <span>3D Strata Architecture Map</span>
+              {chunk && (
+                <span className="text-slate-400 font-mono font-normal text-[11px] hidden md:inline truncate max-w-[200px]">
+                  ({chunk.identifier})
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
           <>
-            <span
-              data-testid="chunk-node-type"
-              className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium ${getNodeTypeBadgeColor(
-                chunk.astNodeType
-              )}`}
-              title={`Definition: ${chunk.astNodeType}`}
+            <FileCode className="w-4 h-4 text-sky-400 shrink-0" />
+            <div
+              data-testid="chunk-file-path"
+              className="font-mono text-slate-200 truncate max-w-[340px] font-medium flex items-center space-x-1"
+              title={chunk ? `${chunk.filePath} > ${chunk.identifier}` : 'No file selected'}
             >
-              {chunk.astNodeType}
-            </span>
+              {chunk ? (
+                <>
+                  <span className="text-slate-400 truncate">{chunk.filePath}</span>
+                  <span className="text-slate-600 font-bold shrink-0">&gt;</span>
+                  <span className="text-sky-300 font-semibold truncate">{chunk.identifier}</span>
+                </>
+              ) : (
+                'No file selected'
+              )}
+            </div>
 
-            <span
-              data-testid="chunk-line-range"
-              className="text-[11px] text-slate-400 font-mono hidden sm:inline"
-            >
-              Lines {chunk.startLine}–{chunk.endLine}
-            </span>
+            {chunk && (
+              <>
+                <span
+                  data-testid="chunk-node-type"
+                  className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium ${getNodeTypeBadgeColor(
+                    chunk.astNodeType
+                  )}`}
+                  title={`Definition: ${chunk.astNodeType}`}
+                >
+                  {chunk.astNodeType}
+                </span>
 
-            <span
-              data-testid="chunk-relevance-score"
-              className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
-              title="Vector semantic similarity score calculated by LanceDB"
-            >
-              Relevance {(chunk.relevanceScore * 100).toFixed(0)}%
-            </span>
+                <span
+                  data-testid="chunk-line-range"
+                  className="text-[11px] text-slate-400 font-mono hidden sm:inline"
+                >
+                  Lines {chunk.startLine}–{chunk.endLine}
+                </span>
+
+                <span
+                  data-testid="chunk-relevance-score"
+                  className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
+                  title="Vector semantic similarity score calculated by LanceDB"
+                >
+                  Relevance {(chunk.relevanceScore * 100).toFixed(0)}%
+                </span>
+              </>
+            )}
           </>
         )}
       </div>
 
       <div className="flex items-center space-x-1.5 shrink-0">
+        {/* View Mode Toggle: [ 📄 Code View | 🌐 3D Strata Map ] */}
+        {onToggleViewMode && (
+          <div
+            data-testid="view-mode-toggle"
+            className="inline-flex items-center p-0.5 rounded border border-[#1b3d22] bg-[#0a1f10] shadow-xs mr-1"
+          >
+            <button
+              type="button"
+              data-testid="view-mode-code-btn"
+              onClick={() => onToggleViewMode('code')}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
+                viewMode === 'code'
+                  ? 'bg-[#68f12b] text-[#0a1f10] font-bold shadow-xs'
+                  : 'text-[#f4f3eb]/70 hover:text-[#f4f3eb] hover:bg-[#13301a]'
+              }`}
+              title="Switch to 📄 Code View"
+            >
+              <span>📄</span>
+              <span className="hidden sm:inline">Code View</span>
+            </button>
+            <button
+              type="button"
+              data-testid="view-mode-strata-btn"
+              onClick={() => onToggleViewMode('strata')}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
+                viewMode === 'strata'
+                  ? 'bg-[#68f12b] text-[#0a1f10] font-bold shadow-xs'
+                  : 'text-[#f4f3eb]/70 hover:text-[#f4f3eb] hover:bg-[#13301a]'
+              }`}
+              title="Switch to 🌐 3D Strata Map"
+            >
+              <span>🌐</span>
+              <span className="hidden sm:inline">3D Strata Map</span>
+            </button>
+          </div>
+        )}
         {/* In-Pane Search Bar */}
         {onSearchChange && (
           <div className="relative flex items-center">

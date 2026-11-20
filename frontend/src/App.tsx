@@ -206,6 +206,16 @@ export const App: React.FC = () => {
     [agent]
   );
 
+  const citedChunkIds = React.useMemo(() => {
+    const ids: string[] = [];
+    for (const msg of agent.messages) {
+      if (msg.citedChunks) {
+        ids.push(...msg.citedChunks);
+      }
+    }
+    return ids;
+  }, [agent.messages]);
+
   // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -291,6 +301,7 @@ export const App: React.FC = () => {
             onCloseAllChunks={handleCloseAllChunks}
             activeRepoId={activeRepo?.id}
             onAddChunk={handleAddChunk}
+            citedChunks={citedChunkIds}
           />
         }
       />

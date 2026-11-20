@@ -9,7 +9,9 @@ import {
   RepositoryItem,
   RepositoryTreeResponse,
   RepositoryManifestResponse,
+  StrataGraphResponse,
 } from '../types';
+import { getMockStrataGraph } from './mockStrataData';
 
 export interface SearchRequest {
   query: string;
@@ -335,6 +337,20 @@ export class ApiClient {
         };
       }
       return null;
+    }
+  }
+
+  public async getRepoStrataGraph(
+    repoId: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<StrataGraphResponse> {
+    try {
+      return await this.request<StrataGraphResponse>(
+        `/api/v1/repos/${encodeURIComponent(repoId)}/strata-graph`,
+        { method: 'GET', signal: options?.signal }
+      );
+    } catch {
+      return getMockStrataGraph(repoId);
     }
   }
 }

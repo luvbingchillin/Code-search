@@ -398,8 +398,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       } else if (isHighlighted) {
         tempColor.set('#68f12b'); // Electric acid lime
       } else if (hasHighlights || hasSelection) {
-        // Dim other nodes to emphasize focus path
-        tempColor.set(node.color || STRATA_TIER_COLORS[node.tier] || '#38bdf8').multiplyScalar(0.3);
+        // Dim unreferenced nodes in dim muted moss baseline (#162a1c)
+        tempColor.set('#162a1c');
       } else {
         tempColor.set(node.color || STRATA_TIER_COLORS[node.tier] || '#38bdf8');
       }
@@ -557,6 +557,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
           {graphData.nodes.map((node) => {
             const isSelected = selectedChunkId === node.id;
             const isHighlighted = highlightedChunkIds?.has(node.id);
+            const hasActiveHighlights = Boolean(highlightedChunkIds && highlightedChunkIds.size > 0);
 
             return (
               <button
@@ -567,7 +568,9 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
                   isSelected
                     ? 'bg-[#68f12b] text-[#0a1f10] border-[#68f12b] font-bold shadow-sm'
                     : isHighlighted
-                    ? 'border-[#68f12b] text-[#68f12b] bg-[#0e3218]'
+                    ? 'border-[#68f12b] text-[#68f12b] bg-[#0a1f10] font-semibold ring-1 ring-[#68f12b]/50'
+                    : hasActiveHighlights
+                    ? 'border-[#162a1c] text-[#162a1c] bg-[#07160c] opacity-60 hover:opacity-100 hover:text-[#f4f3eb]'
                     : 'border-[#134721] text-[#f4f3eb]/70 bg-[#07160c] hover:border-[#68f12b]/60'
                 }`}
               >
