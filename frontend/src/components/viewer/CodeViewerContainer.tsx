@@ -128,6 +128,18 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
     onSelectChunk(chunkId);
   };
 
+  // P1: Dismiss floating strata node inspector on Escape key
+  useEffect(() => {
+    if (!inspectedNodeId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setInspectedNodeId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [inspectedNodeId]);
+
   const inspectedNode = useMemo(() => {
     if (!inspectedNodeId || !strataGraphData) return null;
     return (
@@ -295,6 +307,8 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
               {inspectedNode && (
                 <div
                   data-testid="strata-node-inspector"
+                  role="region"
+                  aria-label="Strata Node Details"
                   className="absolute top-12 right-3 z-20 w-84 max-w-[calc(100%-24px)] rounded-lg bg-[#0a1f10]/95 border border-[#68f12b]/60 shadow-2xl p-3.5 text-xs font-mono text-[#f4f3eb] backdrop-blur-md select-text"
                 >
                   {/* Header: Tier & Symbol Name */}
@@ -319,6 +333,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       type="button"
                       data-testid="close-strata-inspector-btn"
                       onClick={() => setInspectedNodeId(null)}
+                      aria-label="Close inspector"
                       className="p-1 rounded text-[#f4f3eb]/60 hover:text-white hover:bg-[#13301a] cursor-pointer transition-colors"
                       title="Close Inspector"
                     >

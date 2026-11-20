@@ -74,7 +74,11 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   return (
     <div
       data-testid="code-viewer-header"
-      className="h-10 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between text-xs select-none"
+      className={`h-10 px-3 flex items-center justify-between text-xs select-none transition-colors duration-200 ${
+        viewMode === 'strata'
+          ? 'bg-[#0a1f10] border-b border-[#1b3d22]'
+          : 'bg-slate-900 border-b border-slate-800'
+      }`}
     >
       <div className="flex items-center space-x-2 overflow-hidden">
         {viewMode === 'strata' ? (
@@ -148,11 +152,14 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
         {onToggleViewMode && (
           <div
             data-testid="view-mode-toggle"
+            role="group"
+            aria-label="View mode selector"
             className="inline-flex items-center p-0.5 rounded border border-[#1b3d22] bg-[#0a1f10] shadow-xs mr-1"
           >
             <button
               type="button"
               data-testid="view-mode-code-btn"
+              aria-pressed={viewMode === 'code'}
               onClick={() => onToggleViewMode('code')}
               className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'code'
@@ -167,6 +174,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             <button
               type="button"
               data-testid="view-mode-strata-btn"
+              aria-pressed={viewMode === 'strata'}
               onClick={() => onToggleViewMode('strata')}
               className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'strata'
@@ -233,6 +241,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
           <button
             type="button"
             data-testid="toggle-explorer-btn"
+            aria-expanded={isExplorerOpen}
             onClick={onToggleExplorer}
             className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
               isExplorerOpen
@@ -248,7 +257,9 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
 
         {onToggleInspector && (
           <button
+            type="button"
             data-testid="toggle-ast-inspector-btn"
+            aria-expanded={isInspectorOpen}
             onClick={onToggleInspector}
             className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
               isInspectorOpen

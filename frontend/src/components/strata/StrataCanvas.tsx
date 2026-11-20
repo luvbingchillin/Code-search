@@ -50,6 +50,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [hasWebGL, setHasWebGL] = useState<boolean>(() => isWebGLAvailable());
+  const [isContextLost, setIsContextLost] = useState<boolean>(false);
   const [hoveredNode, setHoveredNode] = useState<HoveredNodeInfo | null>(null);
 
   // References for Three.js engine objects
@@ -196,9 +197,29 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     });
     resizeObserver.observe(container);
 
+    // WebGL Context Loss & Restoration Lifecycle Handlers
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      setIsContextLost(true);
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+
+    const handleContextRestored = () => {
+      setIsContextLost(false);
+      markDirty();
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
+
     markDirty();
 
     return () => {
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       resizeObserver.disconnect();
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
@@ -655,6 +676,33 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
             <span>{hoveredNode.node.astNodeType}</span>
             <span style={{ color: hoveredNode.node.color }}>Tier {hoveredNode.node.tier}</span>
           </div>
+        </div>
+      )}
+      {/* 3D Navigation Gesture Hint */}
+      <div
+        data-testid="strata-gesture-hint"
+        className="absolute bottom-3 right-3 px-2 py-1 rounded bg-[#07160c]/80 border border-[#134721] text-[10px] font-mono text-[#f4f3eb]/50 pointer-events-none select-none hidden sm:block backdrop-blur-xs"
+      >
+        Left-drag: Orbit · Right-drag: Pan · Scroll: Zoom
+      </div>
+
+      {/* WebGL Context Suspended / Lost Overlay */}
+      {isContextLost && (
+        <div
+          data-testid="strata-context-lost-overlay"
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#07160c]/90 text-center p-4 font-mono select-none"
+        >
+          <span className="text-amber-400 text-sm font-semibold mb-1">GPU Context Suspended</span>
+          <span className="text-[#f4f3eb]/70 text-xs max-w-sm mb-3">
+            The browser reclaimed WebGL resources (e.g. system sleep or driver reset). Restoring scene...
+          </span>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-3 py-1 rounded bg-[#0a1f10] border border-[#68f12b] text-[#68f12b] text-xs hover:bg-[#68f12b] hover:text-[#0a1f10] transition-colors cursor-pointer"
+          >
+            Reload View
+          </button>
         </div>
       )}
     </div>

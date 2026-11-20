@@ -446,4 +446,52 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       spy.mockRestore();
     });
   });
+
+  describe('7. Accessibility, Polish & Escape Key Dismissal', () => {
+    it('sets proper aria-pressed and role="group" attributes on view mode toggle', () => {
+      render(
+        <CodeViewerHeader
+          chunk={mockAstChunks[0]}
+          viewMode="strata"
+          onToggleViewMode={() => {}}
+        />
+      );
+
+      const toggleGroup = screen.getByTestId('view-mode-toggle');
+      expect(toggleGroup).toHaveAttribute('role', 'group');
+      expect(toggleGroup).toHaveAttribute('aria-label', 'View mode selector');
+
+      const codeBtn = screen.getByTestId('view-mode-code-btn');
+      const strataBtn = screen.getByTestId('view-mode-strata-btn');
+
+      expect(codeBtn).toHaveAttribute('aria-pressed', 'false');
+      expect(strataBtn).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('dismisses the floating node inspector when Escape key is pressed', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <CodeViewerContainer
+          chunks={mockAstChunks}
+          selectedChunkId={mockAstChunks[0].id}
+          onSelectChunk={() => {}}
+          activeRepoId="requests"
+        />
+      );
+
+      await user.click(screen.getByTestId('view-mode-strata-btn'));
+
+      // Select a node in fallback mode to open inspector
+      const nodeBtn = screen.getByTestId('strata-node-requests:Session');
+      await user.click(nodeBtn);
+
+      expect(screen.getByTestId('strata-node-inspector')).toBeInTheDocument();
+
+      // Press Escape key
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByTestId('strata-node-inspector')).not.toBeInTheDocument();
+    });
+  });
 });
