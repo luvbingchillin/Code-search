@@ -61,8 +61,8 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       // Switch to 3D Strata View
       await user.click(screen.getByTestId('view-mode-strata-btn'));
 
-      // Strata canvas and call references label should be visible
-      expect(screen.getByTestId('strata-canvas')).toBeInTheDocument();
+      // Strata canvas (lazy-loaded) and call references label should be visible
+      expect(await screen.findByTestId('strata-canvas')).toBeInTheDocument();
       expect(screen.queryByTestId('code-display')).not.toBeInTheDocument();
 
       const label = screen.getByTestId('strata-call-reference-label');

@@ -119,7 +119,12 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
       className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-y-1.5 text-xs select-none shrink-0"
     >
       {/* Left: State Badge & Step Description */}
-      <div className="flex items-center space-x-2.5 min-w-0">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="flex items-center space-x-2.5 min-w-0"
+      >
         <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shrink-0 shadow-xs ${getStateColor(status.state)}`}>
           {getStateIcon(status.state)}
           <span data-testid="agentic-state-label">{status.state}</span>

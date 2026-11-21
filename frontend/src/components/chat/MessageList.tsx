@@ -210,6 +210,9 @@ export const MessageList: React.FC<MessageListProps> = ({
   return (
     <div
       data-testid="message-list"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation messages"
       className="flex-1 overflow-y-auto p-4 space-y-4 text-sm"
     >
       {messages.length === 0 && (

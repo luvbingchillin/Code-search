@@ -186,24 +186,26 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
             return (
               <div key={fileNode.filePath} className="space-y-0.5" data-testid={`tree-file-${fileNode.fileName}`}>
                 {/* File Row */}
-                <div
+                <button
+                  type="button"
+                  aria-expanded={isExpanded}
                   onClick={() => toggleFile(fileNode.filePath)}
-                  className="flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800/70 text-slate-300 hover:text-white cursor-pointer group transition-colors"
+                  className="w-full text-left flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800/70 text-slate-300 hover:text-white cursor-pointer group transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
                   title={fileNode.filePath}
                 >
                   <div className="flex items-center space-x-1.5 truncate">
                     {isExpanded ? (
                       <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
                     ) : (
-                      <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />
+                      <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
                     )}
                     <FileCode className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate font-medium">{fileNode.fileName}</span>
                   </div>
-                  <span className="text-[10px] text-slate-500 group-hover:text-slate-400 font-sans">
+                  <span className="text-[10px] text-slate-400 group-hover:text-slate-300 font-sans">
                     {fileNode.symbolsCount}
                   </span>
-                </div>
+                </button>
 
                 {/* Nested Symbols */}
                 {isExpanded && (
@@ -213,11 +215,13 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                       const isClass = symbol.astNodeType.toLowerCase().includes('class');
 
                       return (
-                        <div
+                        <button
                           key={symbol.id}
+                          type="button"
                           data-testid={`tree-symbol-${symbol.identifier}`}
+                          aria-current={isSymbolActive ? 'true' : undefined}
                           onClick={() => onSelectSymbol(symbol, fileNode.filePath)}
-                          className={`flex items-center justify-between px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                          className={`w-full text-left flex items-center justify-between px-2 py-0.5 rounded cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
                             isSymbolActive
                               ? 'bg-sky-950/70 border border-sky-600/60 text-sky-200 font-semibold'
                               : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
@@ -232,10 +236,10 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                             )}
                             <span className="truncate">{symbol.identifier}</span>
                           </div>
-                          <span className="text-[9px] text-slate-500 font-mono shrink-0 ml-1">
+                          <span className="text-[9px] text-slate-400 font-mono shrink-0 ml-1">
                             L{symbol.startLine}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

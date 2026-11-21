@@ -82,6 +82,18 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
     };
   }, [isOpen]);
 
+  // Dismiss modal on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleFolderPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,7 +186,15 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   return (
     <div
       data-testid="connect-repo-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 select-none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="connect-repo-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4"
     >
       <div className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl p-6 text-slate-100 flex flex-col space-y-4 max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
@@ -184,7 +204,10 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               <FolderGit2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-slate-100 font-sans flex items-center space-x-2">
+              <h3
+                id="connect-repo-modal-title"
+                className="text-base font-semibold text-slate-100 font-sans flex items-center space-x-2"
+              >
                 <span>Codebase Repository Hub</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
                   Code Index + LanceDB
@@ -497,13 +520,14 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                 Discovered in Workspace
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div
+                <button
+                  type="button"
                   data-testid="preset-requests-btn"
                   onClick={() => {
                     setRepoPath('fixtures/requests');
                     setPickedFolderInfo(null);
                   }}
-                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
+                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                     repoPath === 'fixtures/requests'
                       ? 'bg-slate-800 border-sky-500 text-white shadow-xs'
                       : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
@@ -514,15 +538,16 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">fixtures/requests</span>
                   </div>
                   <p className="text-[11px] text-slate-400">Production HTTP client repository with 17 Python modules and 284 code definitions.</p>
-                </div>
+                </button>
 
-                <div
+                <button
+                  type="button"
                   data-testid="preset-sample-btn"
                   onClick={() => {
                     setRepoPath('backend/sample_codebase');
                     setPickedFolderInfo(null);
                   }}
-                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all ${
+                  className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                     repoPath === 'backend/sample_codebase'
                       ? 'bg-slate-800 border-sky-500 text-white shadow-xs'
                       : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
@@ -533,7 +558,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">backend/sample</span>
                   </div>
                   <p className="text-[11px] text-slate-400">FastAPI microservice sample codebase with math utilities and decorators.</p>
-                </div>
+                </button>
               </div>
             </div>
 
@@ -578,7 +603,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
 
         {/* Footer */}
         <div className="pt-3 flex justify-between items-center border-t border-slate-800 text-xs">
-          <span className="text-[11px] text-slate-500 font-mono">
+          <span className="text-[11px] text-slate-400 font-mono">
             {repos.length} repositories registered
           </span>
           <button

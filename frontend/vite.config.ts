@@ -3,14 +3,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), wasm(), topLevelAwait()],
+  plugins: [react(), tailwindcss(), wasm()],
   worker: {
     format: 'es',
-    plugins: () => [wasm(), topLevelAwait()],
+    plugins: () => [wasm()],
   },
   server: {
     headers: {
@@ -28,11 +27,15 @@ export default defineConfig({
     exclude: ['@nemoir/compiler-wasm'],
   },
   build: {
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks: (id) => {
           if (id.includes('@mlc-ai/web-llm')) {
             return 'web-llm';
+          }
+          if (id.includes('three')) {
+            return 'three-strata';
           }
           if (id.includes('@nemoir/compiler-wasm') || id.includes('@nemoir/web-ui')) {
             return 'nemoir-wasm';

@@ -93,8 +93,8 @@ describe('3D Strata Code Dependency Model UI Integration Suite', () => {
 
       await user.click(screen.getByTestId('view-mode-strata-btn'));
 
-      // Strata view elements are rendered
-      expect(screen.getByTestId('strata-canvas')).toBeInTheDocument();
+      // Strata view elements are rendered (lazy-loaded on first switch)
+      expect(await screen.findByTestId('strata-canvas')).toBeInTheDocument();
       expect(screen.queryByTestId('code-display')).not.toBeInTheDocument();
 
       // Displays mandatory call references label

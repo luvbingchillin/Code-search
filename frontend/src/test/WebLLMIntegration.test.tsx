@@ -246,6 +246,11 @@ describe('WebLLM Edge Inference & Stream Wiring Acceptance Suite (Milestone 3 â€
         initPromise = result.current.initEngine();
       });
 
+      // Wait for dynamic import('@mlc-ai/web-llm') microtask to resolve and invoke CreateMLCEngine
+      await waitFor(() => {
+        expect(capturedCallback).toBeTypeOf('function');
+      });
+
       // Fractional progress: 0.35 -> 35%
       act(() => {
         capturedCallback({ progress: 0.35, timeElapsed: 0.2, text: '35% loaded' });

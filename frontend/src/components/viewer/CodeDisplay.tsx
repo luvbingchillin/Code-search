@@ -197,7 +197,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
       {/* Aligned Line Numbers Gutter with High Contrast Border */}
       <div
         data-testid="code-line-numbers"
-        className="select-none py-3 px-3.5 text-right text-slate-500 bg-[#06090f] border-r border-slate-800 sticky left-0 z-10 shrink-0 font-mono"
+        className="select-none py-3 px-3.5 text-right text-slate-400 bg-[#06090f] border-r border-slate-800 sticky left-0 z-10 shrink-0 font-mono"
       >
         {lines.map((_, index) => {
           const lineNumber = startLineOffset + index;

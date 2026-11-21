@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
+import { X, ExternalLink, Loader2 } from 'lucide-react';
 import { AstCodeChunk, FileSymbolNode } from '../../types';
 import { CodeViewerHeader, ViewMode } from './CodeViewerHeader';
 import { ChunkSelectorTabs } from './ChunkSelectorTabs';
@@ -7,9 +7,12 @@ import { CodeDisplay } from './CodeDisplay';
 import { ASTMetadataInspector } from './ASTMetadataInspector';
 import { RepoFileTree } from './RepoFileTree';
 import { apiClient } from '../../services/apiClient';
-import { StrataCanvas } from '../strata/StrataCanvas';
 import { computeStrataLayout, StrataGraphData, STRATA_TIER_COLORS } from '../../services/strata/strataLayout';
 import { getMockStrataGraph } from '../../services/mockStrataData';
+
+const LazyStrataCanvas = lazy(() =>
+  import('../strata/StrataCanvas').then((mod) => ({ default: mod.StrataCanvas }))
+);
 
 export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
@@ -431,13 +434,22 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                 <span className="font-semibold">Static Lexical Call References (Tree-sitter AST)</span>
               </div>
 
-              {/* Three.js Instanced Strata Canvas */}
-              <StrataCanvas
-                graphData={strataGraphData}
-                highlightedChunkIds={highlightedChunkIds}
-                selectedChunkId={inspectedNodeId ?? selectedChunkId}
-                onSelectNode={handleSelectStrataNode}
-              />
+              {/* Three.js Instanced Strata Canvas (lazy-loaded on demand) */}
+              <Suspense
+                fallback={
+                  <div className="w-full h-full flex items-center justify-center bg-[#070a12] text-slate-400 font-mono text-xs gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                    <span>Loading 3D Strata Map...</span>
+                  </div>
+                }
+              >
+                <LazyStrataCanvas
+                  graphData={strataGraphData}
+                  highlightedChunkIds={highlightedChunkIds}
+                  selectedChunkId={inspectedNodeId ?? selectedChunkId}
+                  onSelectNode={handleSelectStrataNode}
+                />
+              </Suspense>
 
               {/* Node Inspector Popup Overlay */}
               {inspectedNode && (

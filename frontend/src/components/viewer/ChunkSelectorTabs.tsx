@@ -33,9 +33,11 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
   return (
     <div
       data-testid="chunk-selector-tabs"
+      role="tablist"
+      aria-label="Open code definitions"
       className="bg-slate-950 border-b border-slate-800 px-2 pt-1.5 flex items-center space-x-1.5 overflow-x-auto no-scrollbar"
     >
-      {chunks.map((chunk) => {
+      {chunks.map((chunk, idx) => {
         const isSelected = chunk.id === selectedChunkId;
         const isClass = chunk.astNodeType?.toLowerCase().includes('class');
         const scorePct = Math.round(chunk.relevanceScore * 100);
@@ -45,10 +47,24 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
           <div
             key={chunk.id}
             data-testid={`chunk-tab-${chunk.id}`}
+            role="tab"
+            tabIndex={isSelected ? 0 : -1}
             aria-selected={isSelected}
             onClick={() => onSelectChunk(chunk.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectChunk(chunk.id);
+              } else if (e.key === 'ArrowRight' && chunks.length > 1) {
+                e.preventDefault();
+                onSelectChunk(chunks[(idx + 1) % chunks.length].id);
+              } else if (e.key === 'ArrowLeft' && chunks.length > 1) {
+                e.preventDefault();
+                onSelectChunk(chunks[(idx - 1 + chunks.length) % chunks.length].id);
+              }
+            }}
             title={`${chunk.identifier} (${isClass ? 'Class' : 'Function'})\nFile: ${chunk.filePath}\nSemantic Match: ${scorePct}%`}
-            className={`group px-3 py-1.5 text-xs font-mono rounded-t-md border-t border-x flex items-center space-x-2 transition-all shrink-0 cursor-pointer select-none ${
+            className={`group px-3 py-1.5 text-xs font-mono rounded-t-md border-t border-x flex items-center space-x-2 transition-all shrink-0 cursor-pointer select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
               isSelected
                 ? 'bg-slate-800 border-t-2 border-t-sky-400 border-x-slate-700 border-b-slate-800 text-white shadow-sm font-semibold'
                 : 'bg-slate-900/70 hover:bg-slate-800/80 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
@@ -80,7 +96,9 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
                   e.stopPropagation();
                   onCloseChunk(chunk.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:bg-slate-700 text-slate-400 hover:text-slate-100 rounded min-w-[24px] min-h-[24px] flex items-center justify-center transition-all ml-1 cursor-pointer"
+                className={`${
+                  isSelected ? 'opacity-80 hover:opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+                } hover:bg-slate-700 text-slate-400 hover:text-slate-100 rounded min-w-[24px] min-h-[24px] flex items-center justify-center transition-all ml-1 cursor-pointer focus:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400`}
                 title="Close tab"
                 aria-label={`Close tab: ${chunk.identifier}`}
               >

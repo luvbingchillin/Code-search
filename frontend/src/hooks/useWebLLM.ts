@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  CreateMLCEngine,
-  type MLCEngineInterface,
-  type InitProgressReport,
-  type InitProgressCallback,
+import type {
+  MLCEngineInterface,
+  InitProgressReport,
+  InitProgressCallback,
 } from '@mlc-ai/web-llm';
 import { UseWebLLMReturn, WebLLMLoadingStatus, WebLLMGenerateOptions } from '../types';
 
@@ -109,6 +108,7 @@ export function useWebLLM(
         if (engineRef.current && typeof (engineRef.current as any).reload === 'function') {
           await (engineRef.current as any).reload(targetModel);
         } else {
+          const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
           const mlcEngine = await CreateMLCEngine(targetModel, {
             initProgressCallback: progressCallback,
           });

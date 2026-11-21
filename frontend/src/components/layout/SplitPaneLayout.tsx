@@ -48,28 +48,67 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const updateWidthFromClientX = useCallback((clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const newPercent = ((clientX - rect.left) / rect.width) * 100;
+    const clamped = Math.max(25, Math.min(75, newPercent));
+    setLeftWidthPercent(clamped);
+  }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     isDraggingRef.current = true;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDraggingRef.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const newPercent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-      const clamped = Math.max(25, Math.min(75, newPercent));
-      setLeftWidthPercent(clamped);
-    };
-
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    if (typeof e.currentTarget.setPointerCapture === 'function') {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Ignore in synthetic environments without active pointerId
+      }
+    }
   }, []);
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDraggingRef.current) return;
+      updateWidthFromClientX(e.clientX);
+    },
+    [updateWidthFromClientX]
+  );
+
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    if (typeof e.currentTarget.releasePointerCapture === 'function') {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Ignore if capture was not set
+      }
+    }
+  }, []);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      isDraggingRef.current = true;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!isDraggingRef.current) return;
+        updateWidthFromClientX(moveEvent.clientX);
+      };
+
+      const handleMouseUp = () => {
+        isDraggingRef.current = false;
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    },
+    [updateWidthFromClientX]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') {
@@ -175,8 +214,12 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
             aria-valuemax={75}
             tabIndex={0}
             onKeyDown={handleKeyDown}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
             onMouseDown={handleMouseDown}
-            className="w-1.5 bg-slate-800 hover:bg-sky-500 focus:bg-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none shrink-0 z-10"
+            className="w-1.5 bg-slate-800 hover:bg-sky-500 focus:bg-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-400 transition-colors cursor-col-resize hidden md:flex items-center justify-center group select-none touch-none shrink-0 z-10"
             title="Drag to resize panes"
             aria-label="Drag to resize panes or use left and right arrow keys"
           >
