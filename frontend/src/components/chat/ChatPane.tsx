@@ -87,7 +87,13 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
       />
 
       {/* Scrollable Conversation Stream */}
-      <MessageList messages={messages} chunks={chunks} onSelectChunk={onSelectChunk} />
+      <MessageList
+        messages={messages}
+        chunks={chunks}
+        onSelectChunk={onSelectChunk}
+        streamingTokens={streamingTokens}
+        isSynthesizing={status.state === 'Synthesizing'}
+      />
 
       {/* Suggested Quick Queries */}
       <QuerySuggestions

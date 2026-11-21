@@ -13,6 +13,7 @@ import { AgentSimulator } from '../services/agentSimulator';
 import { mockAstChunks } from '../services/mockAstData';
 import { detectOverviewIntent } from '../utils/intentDetection';
 import { apiClient } from '../services/apiClient';
+import { PYTHON_BUILTINS } from '../components/viewer/ASTMetadataInspector';
 
 export interface UseReActAgentOptions {
   webLLM?: UseWebLLMReturn;
@@ -642,10 +643,16 @@ Please select or connect a Python repository before querying code definitions.
 
         let finalResponseText = '';
         let citedChunksList: AstCodeChunk[] = [];
+        const executionThoughts: string[] = [];
 
         if (hasReadyLLM) {
           // 1. Thinking phase
-          await new Promise((r) => setTimeout(r, 100));
+          executionThoughts.push(
+            isOverview
+              ? `Classified intent as repository architectural overview for "${activeRepoRef.current?.name || 'active codebase'}".`
+              : `Analyzed query intent: "${effectiveQuery}".`
+          );
+          await new Promise((r) => setTimeout(r, 80));
           if (isCancelledRef.current) throw new Error('Query cancelled by user');
 
           // 2. Searching AST phase
@@ -653,7 +660,7 @@ Please select or connect a Python repository before querying code definitions.
             ...statusRef.current,
             state: 'Searching AST',
             currentStepMessage: isOverview
-              ? 'Retrieving foundational architecture and model definitions from LanceDB...'
+              ? 'Retrieving foundational architecture and model definitions...'
               : 'Searching indexed codebase for relevant functions & classes...',
           };
           statusRef.current = searchingStatus;
@@ -688,17 +695,70 @@ Please select or connect a Python repository before querying code definitions.
           };
           statusRef.current = foundStatus;
           setAgentStatus(foundStatus);
-          await new Promise((r) => setTimeout(r, 100));
-          if (isCancelledRef.current) throw new Error('Query cancelled by user');
+          if (matchedChunks.length > 0) {
+            executionThoughts.push(
+              `Retrieved ${matchedChunks.length} matching definitions: ${matchedChunks.slice(0, 4).map((c) => c.identifier).join(', ')}.`
+            );
+          }
 
-          // Execute compiled NemoIR workflow IR
+          // Execute compiled NemoIR workflow IR and ground pipeline stages
           if (nemoIRRef.current && typeof nemoIRRef.current.executeWorkflow === 'function') {
             try {
-              await nemoIRRef.current.executeWorkflow({ query: effectiveQuery });
+              const wfResult = (await nemoIRRef.current.executeWorkflow({ query: effectiveQuery })) as {
+                success?: boolean;
+                workflow?: string;
+                stages?: string[];
+                ir?: unknown;
+              } | null;
+              if (wfResult && Array.isArray(wfResult.stages) && wfResult.stages.length > 0) {
+                executionThoughts.push(
+                  `NemoIR workflow (${wfResult.workflow || 'codeRetrieval.nemo'}) verified stages: ${wfResult.stages.join(' → ')}.`
+                );
+              }
             } catch {
               // Graceful continuation
             }
           }
+
+          // Genuine 1-Hop Callee Context Enrichment: fetch up to 2 direct local callees of Rank #1
+          const enrichedChunks: AstCodeChunk[] = [...matchedChunks];
+          if (
+            !isOverview &&
+            matchedChunks.length > 0 &&
+            nemoIRRef.current &&
+            typeof nemoIRRef.current.lookupEntity === 'function'
+          ) {
+            const focalCalls = matchedChunks[0].calls || [];
+            const existingIds = new Set(enrichedChunks.map((c) => c.id));
+            const existingIdents = new Set(enrichedChunks.map((c) => c.identifier));
+            let fetchedCallees = 0;
+
+            for (const rawCall of focalCalls) {
+              if (fetchedCallees >= 2 || isCancelledRef.current) break;
+              const cleanCall = rawCall.replace(/^self\./, '').trim();
+              const baseName = cleanCall.split('.').pop() || cleanCall;
+              if (!cleanCall || PYTHON_BUILTINS.has(baseName) || existingIdents.has(cleanCall)) {
+                continue;
+              }
+              try {
+                const hits = await nemoIRRef.current.lookupEntity(cleanCall);
+                const firstNew = hits?.find((h) => !existingIds.has(h.id));
+                if (firstNew) {
+                  enrichedChunks.push(firstNew);
+                  existingIds.add(firstNew.id);
+                  existingIdents.add(firstNew.identifier);
+                  fetchedCallees += 1;
+                  executionThoughts.push(
+                    `1-hop callee enrichment: loaded ${firstNew.identifier} (${firstNew.filePath}:${firstNew.startLine}) called by ${matchedChunks[0].identifier}.`
+                  );
+                }
+              } catch {
+                // Ignore external/unresolvable callees
+              }
+            }
+          }
+
+          if (isCancelledRef.current) throw new Error('Query cancelled by user');
 
           if (matchedChunks.length === 0) {
             finalResponseText = `### 🔍 No Matching Code Definitions Found for "${effectiveQuery}"<!-- No Matching AST Nodes Found -->\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse indexed files and definitions.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
@@ -714,12 +774,23 @@ Please select or connect a Python repository before querying code definitions.
 
             // Enforce intent-aware focal prompt budget to ensure fast local WebGPU prefill (<2s)
             // Overview queries use tight architectural context; targeted queries preserve full implementation for Rank #1
-            const MAX_PROMPT_TOKENS = isOverview ? 500 : 850;
+            const MAX_PROMPT_TOKENS = isOverview ? 500 : 900;
             const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
-            let currentTokens = estimateTokens(effectiveQuery) + 100;
+            // Include compact 1-turn follow-up memory if a prior exchange exists
+            const priorMsgs = messagesRef.current.slice(0, -1).filter((m) => m.id !== 'welcome-msg');
+            let followUpContext = '';
+            if (priorMsgs.length >= 2) {
+              const prevAsst = priorMsgs[priorMsgs.length - 1];
+              const prevUser = priorMsgs[priorMsgs.length - 2];
+              if (prevUser?.role === 'user' && prevAsst?.role === 'assistant') {
+                followUpContext = `Previous Turn:\nUser: ${prevUser.content.slice(0, 140)}\nAssistant: ${prevAsst.content.slice(0, 220)}\n\n`;
+              }
+            }
+
+            let currentTokens = estimateTokens(effectiveQuery) + estimateTokens(followUpContext) + 100;
             const budgetedChunks: AstCodeChunk[] = [];
-            const candidateChunks = matchedChunks.slice(0, isOverview ? 4 : 5);
+            const candidateChunks = enrichedChunks.slice(0, isOverview ? 4 : 6);
 
             for (let idx = 0; idx < candidateChunks.length; idx++) {
               const chunk = candidateChunks[idx];
@@ -768,7 +839,7 @@ Please select or connect a Python repository before querying code definitions.
 
             const prompt = isOverview
               ? `${manifestContext}Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a clear, concise architectural summary (under 150 words):\n1. Primary Purpose: What core problem does this library solve?\n2. Core Components: Key classes/modules and their roles.\n3. Request Pipeline: Summary of the request-to-response execution flow.\nBe direct, structured, and avoid boilerplate disclaimers.`
-              : `Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 140 words) highlighting key definitions, line numbers, and implementation roles.`;
+              : `${followUpContext}Context AST nodes:\n${astContext}\n\nUser Question: ${effectiveQuery}\n\nPlease synthesize a concise technical explanation (under 140 words) highlighting key definitions, line numbers, and implementation roles.`;
 
             finalResponseText = await currentLLM.generate(
               prompt,
@@ -870,6 +941,7 @@ Please select or connect a Python repository before querying code definitions.
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           reActState: 'Complete',
           citedChunks: citedChunksList.map((c) => c.id),
+          thoughts: executionThoughts.length > 0 ? executionThoughts : undefined,
           metrics: {
             latencyMs: Date.now() - startTime,
             tokensGenerated: tokensCount,

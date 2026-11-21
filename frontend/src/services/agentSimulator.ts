@@ -81,15 +81,16 @@ export class AgentSimulator {
     providedChunks?: AstCodeChunk[]
   ): Promise<{ response: string; citedChunks: AstCodeChunk[] }> {
     this.isCancelled = false;
+    const cycleStart = Date.now();
 
     // 1. Thinking
     onStateChange('Thinking', 'Analyzing query intent and identifying relevant code definitions...');
-    await this.delay(400);
+    await this.delay(80);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
     // 2. Searching AST
     onStateChange('Searching AST', 'Searching indexed codebase for matching functions & classes...');
-    await this.delay(500);
+    await this.delay(100);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
     const matchedChunks =
@@ -111,7 +112,7 @@ export class AgentSimulator {
       `Found ${matchedChunks.length} relevant code definitions (${matchedChunks.map((c) => c.identifier).join(', ')})`,
       matchedChunks
     );
-    await this.delay(300);
+    await this.delay(60);
     if (this.isCancelled) throw new Error('Query cancelled by user');
 
     const topChunk = matchedChunks[0];
@@ -185,16 +186,35 @@ export class AgentSimulator {
           `The primary architectural anchor identified is \`${topChunk.identifier}\` (${formatNodeType(topChunk.astNodeType)}) in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\`.`;
       }
     } else {
+      const paramsLine =
+        topChunk.parameters && topChunk.parameters.length > 0
+          ? `- **Parameters:** \`(${topChunk.parameters.join(', ')})\`\n`
+          : '';
+      const decoratorsLine =
+        topChunk.decorators && topChunk.decorators.length > 0
+          ? `- **Decorators:** ${topChunk.decorators.map((d) => `\`${d}\``).join(', ')}\n`
+          : '';
+      const callsLine =
+        topChunk.calls && topChunk.calls.length > 0
+          ? `- **Calls:** ${topChunk.calls.slice(0, 6).map((c) => `\`${c}\``).join(', ')}\n`
+          : '';
+      const docSummary = topChunk.docstring
+        ? `\n**Purpose:** ${topChunk.docstring.split('\n')[0].trim()}\n`
+        : '';
+
       response =
-        `Based on the codebase analysis, here is the implementation details for **"${query}"**:\n\n` +
+        `Based on the codebase analysis, here are the implementation details for **"${query}"**:\n\n` +
         `### Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}\n\n` +
-        `### Code Explanation\n` +
-        `The primary component identified is \`${topChunk.identifier}\` (${formatNodeType(topChunk.astNodeType)}) located in \`${topChunk.filePath}:${topChunk.startLine}-${topChunk.endLine}\` ` +
-        `with a semantic relevance score of ${(topChunk.relevanceScore * 100).toFixed(0)}%.`;
+        `### Code Breakdown: \`${topChunk.identifier}\`\n` +
+        `- **Location:** \`${topChunk.filePath}:${topChunk.startLine}–${topChunk.endLine}\` (${formatNodeType(topChunk.astNodeType)}, ${(topChunk.relevanceScore * 100).toFixed(0)}% match)\n` +
+        paramsLine +
+        decoratorsLine +
+        callsLine +
+        docSummary;
     }
 
     // 3. Synthesizing
-    onStateChange('Synthesizing', 'Synthesizing response with referenced code context via WebLLM...');
+    onStateChange('Synthesizing', 'Synthesizing structured code summary (deterministic AST mode)...');
     if (onTokenStream) {
       const words = response.split(' ');
       let currentAcc = '';
@@ -203,15 +223,16 @@ export class AgentSimulator {
         const chunk = (i === 0 ? '' : ' ') + words[i];
         currentAcc += chunk;
         onTokenStream(chunk, currentAcc);
-        await this.delay(8);
+        await this.delay(2);
       }
     } else {
-      await this.delay(600);
+      await this.delay(80);
       if (this.isCancelled) throw new Error('Query cancelled by user');
     }
 
     // 4. Complete
-    onStateChange('Complete', `Completed retrieval and synthesis in ${(1.8).toFixed(1)}s`, matchedChunks);
+    const elapsedSec = Math.max(0.1, (Date.now() - cycleStart) / 1000).toFixed(1);
+    onStateChange('Complete', `Completed retrieval and synthesis in ${elapsedSec}s`, matchedChunks);
 
     return {
       response,

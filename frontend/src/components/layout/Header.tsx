@@ -57,7 +57,12 @@ export const Header: React.FC<HeaderProps> = ({
       isMounted = false;
     };
   }, [client, healthRefreshTrigger, activeRepo]);
+  const isWebGPUUnsupported = !webLLM.isWebGPUSupported && webLLM.status === 'error';
+
   const getWebLLMStatusColor = () => {
+    if (isWebGPUUnsupported) {
+      return 'text-slate-300 border-slate-700 bg-slate-800/80';
+    }
     switch (webLLM.status) {
       case 'ready':
         return 'text-emerald-300 border-emerald-600/70 bg-emerald-950/50';
@@ -72,6 +77,9 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const getWebLLMIcon = () => {
+    if (isWebGPUUnsupported) {
+      return <Cpu className="w-3.5 h-3.5 text-slate-400" />;
+    }
     if (webLLM.status === 'loading') {
       return <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />;
     }
@@ -82,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const getWebLLMLabel = () => {
+    if (isWebGPUUnsupported) return 'No WebGPU';
     if (webLLM.status === 'ready') return 'Ready';
     if (webLLM.status === 'unloaded') return 'Offline';
     if (webLLM.status === 'loading') {

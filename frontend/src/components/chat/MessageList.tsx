@@ -11,6 +11,8 @@ interface MessageListProps {
   messages: ChatMessage[];
   chunks: AstCodeChunk[];
   onSelectChunk: (chunkId: string) => void;
+  streamingTokens?: string;
+  isSynthesizing?: boolean;
 }
 
 interface CodeBlockProps {
@@ -186,14 +188,20 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
   );
 };
 
-export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSelectChunk }) => {
+export const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  chunks,
+  onSelectChunk,
+  streamingTokens,
+  isSynthesizing = false,
+}) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof bottomRef.current?.scrollIntoView === 'function') {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, streamingTokens]);
 
   const getChunkById = (id: string): AstCodeChunk | undefined => {
     return chunks.find((c) => c.id === id);
@@ -330,6 +338,25 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, chunks, onSe
           </div>
         );
       })}
+      {/* Live Streaming Assistant Bubble during active synthesis */}
+      {isSynthesizing && Boolean(streamingTokens && streamingTokens.trim()) && (
+        <div
+          data-testid="streaming-assistant-bubble"
+          className="flex items-start space-x-3"
+        >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-xs bg-slate-900 border border-[#68f12b]/50 text-[#68f12b]">
+            <Bot className="w-4 h-4 animate-pulse" />
+          </div>
+          <div className="max-w-[85%] rounded-xl px-3.5 py-2.5 bg-slate-900/90 border border-[#68f12b]/40 text-slate-100 rounded-tl-none shadow-sm">
+            <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
+              <span className="font-semibold text-[#68f12b]">CodeSeek Agent</span>
+              <span className="text-[#68f12b]/80 font-mono text-[10px]">Streaming...</span>
+            </div>
+            <MarkdownMessageContent content={streamingTokens || ''} isUser={false} />
+            <span className="inline-block w-1.5 h-3.5 bg-[#68f12b] animate-pulse ml-1 align-middle" />
+          </div>
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   );
