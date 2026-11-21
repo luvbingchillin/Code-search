@@ -102,18 +102,19 @@ export function smartDistillAstChunk(
 }
 
 function getHelpContent(): string {
-  return `### 💡 CodeSeek AI Command & Workflow Guide
+  return `### CodeSeek AI Command & Workflow Guide
 
 **CodeSeek AI** is a 100% edge-computed code intelligence assistant powered by Tree-sitter symbol indexing, LanceDB vector storage, and local SLM inference (Qwen2.5-Coder on WebGPU).
 
-#### 🛠️ Available Commands
+#### Available Commands
 - \`/help\` — Display this command reference and workflow guide.
 - \`/status\` (or \`/repo\`) — Check current repository, indexed code definitions, and edge engine status.
+- \`/overview\` — Summarize repository architecture, core components, and execution pipeline.
 - \`/ask <query>\` — Query the codebase index and synthesize an answer.
 
-#### 🚀 Getting Started
+#### Getting Started
 1. **Connect a Repository**: Click **Repositories** in the header to open \`psf/requests\` or index your local codebase.
-2. **Load WebLLM**: Click **WebLLM: Load** in the header to activate real-time local neural code synthesis via WebGPU.
+2. **Load WebLLM**: Click **WebLLM: Offline -> Click to Load** in the header to activate real-time local neural code synthesis via WebGPU.
 3. **Explore Code Structure**: Ask natural language questions like *"Where is Session.send defined?"* or *"How does CaseInsensitiveDict work?"*.`;
 }
 
@@ -130,24 +131,24 @@ function getStatusContent(
   const modelName = webLLM?.currentModel || 'Qwen2.5-Coder (1.5B)';
 
   if (!repoName) {
-    return `### 📊 System & Repository Status
+    return `### System & Repository Status
 
 - **Active Repository**: *None connected*
-- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Offline - using AST Simulator)'}
 - **Code Definitions Loaded**: ${activeChunksCount}
 
 *Click **Repositories** in the top header to connect \`psf/requests\` or index a local codebase.*`;
   }
 
-  return `### 📊 System & Repository Status
+  return `### System & Repository Status
 
 - **Active Repository**: **${repoName}** (\`${repoPath}\`)
 - **Indexed Definitions**: **${chunksCount}** definitions (functions, classes, methods)
 - **Active Code Tabs**: **${activeChunksCount}** loaded in viewer
-- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '🟢 (WebGPU Active)' : '⚪ (Offline - using AST Simulator)'}
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Offline - using AST Simulator)'}
 - **NemoIR WebAssembly JIT**: Ready & compiled
 
-${!isWebLLMReady ? '> 💡 *Tip: Click **WebLLM: Load** in the top header to switch from template simulation to real-time neural edge inference on your GPU.*' : ''}`;
+${!isWebLLMReady ? '> *Tip: Click **WebLLM: Offline -> Click to Load** in the top header to switch from template simulation to real-time neural edge inference on your GPU.*' : ''}`;
 }
 
 export function useReActAgent(
@@ -203,7 +204,7 @@ export function useReActAgent(
       content:
         defaultChunks.length > 0
           ? 'Welcome to **CodeSeek AI**! Enter a code query or select a suggestion chip to search the indexed repository using our Edge AI ReAct engine.'
-          : 'Welcome to **CodeSeek AI**! Click **Connect Repo** in the header or in the code pane to index a local Python repository into LanceDB.',
+          : 'Welcome to **CodeSeek AI**! Click **Repositories** in the header or **Connect Repository** in the code pane to index a local Python codebase.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       reActState: 'Complete',
       citedChunks: defaultChunks.length > 0 ? [defaultChunks[0].id] : [],

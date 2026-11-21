@@ -62,7 +62,7 @@ export const App: React.FC = () => {
           agent.addMessage({
             id: `sys-${Date.now()}`,
             role: 'assistant',
-            content: `### 🔄 Connected Repository: **${repo.name}**\n\nActive codebase connected (${count} initial definitions loaded in viewer). You can now ask questions about this codebase or browse functions and classes using the Explorer.`,
+            content: `### Connected Repository: **${repo.name}**\n\nActive codebase connected (${count} initial definitions loaded in viewer). You can now ask questions about this codebase or browse functions and classes using the Explorer.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           });
         }
@@ -220,7 +220,7 @@ export const App: React.FC = () => {
   );
 
   // Scope 3D Strata highlights to the most recent assistant message with citations
-  // so earlier queries don't permanently bleed lime across the entire architecture.
+  // so earlier queries don't permanently highlight unrelated nodes across the architecture.
   const citedChunkIds = React.useMemo(() => {
     for (let i = agent.messages.length - 1; i >= 0; i--) {
       const msg = agent.messages[i];

@@ -91,8 +91,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
 };
 
 function renderFormattedInlineText(text: string, isUser: boolean) {
-  // Regex to match **bold** or `code`
-  const regex = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  // Regex to match **bold**, *italic*, or `code`
+  const regex = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`)/g;
   const parts = text.split(regex);
 
   return parts.map((part, index) => {
@@ -104,6 +104,13 @@ function renderFormattedInlineText(text: string, isUser: boolean) {
         >
           {part.slice(2, -2)}
         </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return (
+        <em key={index} className="italic text-slate-300">
+          {part.slice(1, -1)}
+        </em>
       );
     }
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
@@ -151,6 +158,13 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
               if (!trimmed) {
                 return <div key={lineIdx} className="h-1" />;
               }
+              if (trimmed.startsWith('#### ')) {
+                return (
+                  <h5 key={lineIdx} className="font-semibold text-sky-300 text-xs uppercase tracking-wider mt-2.5 mb-0.5">
+                    {renderFormattedInlineText(trimmed.slice(5), isUser)}
+                  </h5>
+                );
+              }
               if (trimmed.startsWith('### ')) {
                 return (
                   <h4 key={lineIdx} className="font-semibold text-gray-100 text-sm mt-2 mb-0.5">
@@ -163,6 +177,27 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
                   <h3 key={lineIdx} className="font-bold text-gray-100 text-base mt-2.5 mb-1">
                     {renderFormattedInlineText(trimmed.slice(3), isUser)}
                   </h3>
+                );
+              }
+              if (trimmed.startsWith('> ')) {
+                return (
+                  <div
+                    key={lineIdx}
+                    className="pl-2.5 py-1 my-1 border-l border-sky-500/60 bg-slate-950/50 rounded-r text-xs text-slate-300"
+                  >
+                    {renderFormattedInlineText(trimmed.slice(2), isUser)}
+                  </div>
+                );
+              }
+              const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+              if (orderedMatch) {
+                return (
+                  <div key={lineIdx} className="flex items-start space-x-2 pl-1 my-0.5">
+                    <span className="text-sky-400 font-mono text-xs mt-0.5 select-none shrink-0">
+                      {orderedMatch[1]}.
+                    </span>
+                    <span className="flex-1">{renderFormattedInlineText(orderedMatch[2], isUser)}</span>
+                  </div>
                 );
               }
               if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
@@ -345,6 +380,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       {isSynthesizing && Boolean(streamingTokens && streamingTokens.trim()) && (
         <div
           data-testid="streaming-assistant-bubble"
+          aria-live="off"
           className="flex items-start space-x-3"
         >
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-xs bg-slate-900 border border-sky-500/50 text-sky-400">

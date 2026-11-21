@@ -29,24 +29,33 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
 }) => {
   const [treeData, setTreeData] = useState<RepositoryTreeResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [fetchError, setFetchError] = useState<boolean>(false);
+  const [retryToken, setRetryToken] = useState<number>(0);
   const [filterQuery, setFilterQuery] = useState<string>('');
   const [expandedFiles, setExpandedFiles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!repoId) {
       setTreeData(null);
+      setFetchError(false);
       return;
     }
 
     let isMounted = true;
     setIsLoading(true);
+    setFetchError(false);
 
     apiClient
       .getRepoTree(repoId)
       .then((data) => {
         if (!isMounted) return;
+        if (!data) {
+          setTreeData(null);
+          setFetchError(true);
+          return;
+        }
         setTreeData(data);
-        if (data && data.tree.length > 0) {
+        if (data.tree.length > 0) {
           // Expand first 3 files by default
           const initialExpanded: Record<string, boolean> = {};
           data.tree.slice(0, 3).forEach((node) => {
@@ -57,6 +66,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
       })
       .catch((err) => {
         console.error('Failed to load repo tree:', err);
+        if (isMounted) setFetchError(true);
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);
@@ -65,7 +75,7 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [repoId]);
+  }, [repoId, retryToken]);
 
   const toggleFile = (filePath: string) => {
     setExpandedFiles((prev) => ({
@@ -131,7 +141,8 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
             type="button"
             data-testid="close-explorer-btn"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 cursor-pointer"
+            aria-label="Close Explorer"
+            className="text-slate-400 hover:text-white p-1.5 rounded hover:bg-slate-800 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
             title="Close Explorer"
           >
             <X className="w-3.5 h-3.5" />
@@ -142,19 +153,21 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
       {/* Filter / Search Input */}
       <div className="p-2 border-b border-slate-800/80 bg-slate-950/60 shrink-0">
         <div className="relative flex items-center">
-          <Search className="w-3 h-3 text-slate-500 absolute left-2 pointer-events-none" />
+          <Search className="w-3 h-3 text-slate-400 absolute left-2 pointer-events-none" />
           <input
             type="text"
             data-testid="file-tree-filter-input"
+            aria-label="Filter files and symbols"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
             placeholder="Filter files & symbols..."
-            className="w-full bg-slate-900 border border-slate-800 rounded pl-7 pr-2 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+            className="w-full bg-slate-900 border border-slate-800 rounded pl-7 pr-6 py-1 text-[11px] text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition-colors"
           />
           {filterQuery && (
             <button
               type="button"
               onClick={() => setFilterQuery('')}
+              aria-label="Clear filter"
               className="absolute right-1.5 text-slate-400 hover:text-slate-200 cursor-pointer"
             >
               <X className="w-3 h-3" />
@@ -171,12 +184,24 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
             <span>Scanning repository symbols...</span>
           </div>
         ) : !repoId ? (
-          <div className="p-4 text-center text-slate-500 font-sans">
-            <FolderOpen className="w-6 h-6 mx-auto mb-2 opacity-50 text-sky-400" />
-            <p className="text-[11px]">Connect a repository to browse source files & code symbols.</p>
+          <div className="p-4 text-center text-slate-400 font-sans">
+            <FolderOpen className="w-6 h-6 mx-auto mb-2 opacity-60 text-sky-400" />
+            <p className="text-[11px]">Connect a repository to browse source files &amp; code symbols.</p>
+          </div>
+        ) : fetchError || !treeData ? (
+          <div className="p-4 text-center text-slate-400 font-sans space-y-2">
+            <p className="text-[11px] text-amber-300">Local backend (localhost:8000) is offline.</p>
+            <p className="text-[11px] text-slate-400">Start the API server to browse full file trees.</p>
+            <button
+              type="button"
+              onClick={() => setRetryToken((t) => t + 1)}
+              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-sky-300 cursor-pointer transition-colors"
+            >
+              Retry Connection
+            </button>
           </div>
         ) : filteredTree.length === 0 ? (
-          <div className="p-4 text-center text-slate-500 font-sans">
+          <div className="p-4 text-center text-slate-400 font-sans">
             <p className="text-[11px]">No matching files or symbols found.</p>
           </div>
         ) : (

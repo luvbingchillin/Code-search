@@ -136,7 +136,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
               type="button"
               data-testid="empty-state-open-explorer-btn"
               onClick={onToggleExplorer}
-              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors shadow-md shadow-emerald-950/40 flex items-center space-x-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-lg bg-sky-700 hover:bg-sky-600 text-white text-xs font-medium transition-colors shadow-md shadow-sky-950/40 flex items-center space-x-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
             >
               <FolderTree className="w-3.5 h-3.5" />
               <span>Open File Explorer</span>
@@ -162,15 +162,15 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
           <span className="sr-only">No AST code chunk selected.</span>
         </p>
         {onOpenConnectRepo && (
-          <button
-            type="button"
-            data-testid="empty-state-connect-repo-btn"
-            onClick={onOpenConnectRepo}
-            className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium transition-colors shadow-md shadow-sky-950/40 flex items-center space-x-1.5 cursor-pointer emil-press active:scale-95"
-          >
-            <FolderPlus className="w-3.5 h-3.5" />
-            <span>Connect Local Repository</span>
-          </button>
+            <button
+              type="button"
+              data-testid="empty-state-connect-repo-btn"
+              onClick={onOpenConnectRepo}
+              className="px-3.5 py-2 rounded-lg bg-sky-700 hover:bg-sky-600 text-white text-xs font-medium transition-colors shadow-md shadow-sky-950/40 flex items-center space-x-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press active:scale-95"
+            >
+              <FolderPlus className="w-3.5 h-3.5" />
+              <span>Connect Repository</span>
+            </button>
         )}
       </div>
     );
