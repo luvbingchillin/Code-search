@@ -298,6 +298,7 @@ export const App: React.FC = () => {
             onMinimize={toggleChatMinimized}
             activeRepoId={activeRepo?.id}
             activeRepoName={activeRepo?.name}
+            activeRepoManifest={activeRepo?.manifest}
             onClearChat={agent.clearMessages}
           />
         }

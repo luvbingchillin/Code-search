@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Send, Square, Terminal, HelpCircle, Activity, Search, FolderCode } from 'lucide-react';
+import { Send, Square, Terminal, HelpCircle, Activity, Search, FolderCode, Compass } from 'lucide-react';
 import { AgentStatus } from '../../types';
 
 export interface ChatInputProps {
@@ -46,6 +46,13 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     desc: 'Query codebase and synthesize an answer',
     icon: <Search className="w-3.5 h-3.5 text-amber-400" />,
     directSubmit: false,
+  },
+  {
+    cmd: '/overview',
+    label: '/overview',
+    desc: 'Summarize repository architecture, core components, and execution pipeline',
+    icon: <Compass className="w-3.5 h-3.5 text-[#68f12b]" />,
+    directSubmit: true,
   },
 ];
 

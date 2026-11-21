@@ -44,7 +44,11 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   const [isIndexing, setIsIndexing] = useState<boolean>(false);
   const [indexingRepoId, setIndexingRepoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pickedFolderInfo, setPickedFolderInfo] = useState<{ name: string; fileCount: number } | null>(null);
+  const [pickedFolderInfo, setPickedFolderInfo] = useState<{
+    name: string;
+    fileCount: number;
+    needsFullPath?: boolean;
+  } | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const [successStats, setSuccessStats] = useState<{
     files: number;
@@ -85,14 +89,16 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
     if (files && files.length > 0) {
       const firstRelative = files[0].webkitRelativePath || '';
       const folderName = firstRelative.split('/')[0] || 'repository';
-      setPickedFolderInfo({ name: folderName, fileCount: files.length });
 
       if (folderName.toLowerCase().includes('request')) {
         setRepoPath('fixtures/requests');
+        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: false });
       } else if (folderName.toLowerCase().includes('sample')) {
         setRepoPath('backend/sample_codebase');
+        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: false });
       } else {
         setRepoPath(folderName);
+        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: true });
       }
     }
   };
@@ -459,11 +465,27 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
               {pickedFolderInfo && (
                 <div
                   data-testid="picked-folder-banner"
-                  className="text-[11px] text-sky-300 bg-sky-950/40 border border-sky-800/60 rounded-md px-2.5 py-1.5 flex items-center space-x-1.5"
+                  className={`text-[11px] rounded-md px-2.5 py-1.5 flex items-center space-x-1.5 border ${
+                    pickedFolderInfo.needsFullPath
+                      ? 'text-amber-200 bg-amber-950/40 border-amber-700/60'
+                      : 'text-sky-300 bg-sky-950/40 border-sky-800/60'
+                  }`}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  {pickedFolderInfo.needsFullPath ? (
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  )}
                   <span>
-                    Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files detected). Ready to index.
+                    {pickedFolderInfo.needsFullPath ? (
+                      <>
+                        Browser security hides full OS paths for <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files). Please paste the full directory path above (e.g. <code className="font-mono text-amber-300">C:/repos/{pickedFolderInfo.name}</code>) before indexing.
+                      </>
+                    ) : (
+                      <>
+                        Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files detected). Ready to index.
+                      </>
+                    )}
                   </span>
                 </div>
               )}

@@ -5,6 +5,8 @@ export interface QuerySuggestionsProps {
   onSelectSuggestion: (query: string) => void;
   disabled?: boolean;
   activeRepoId?: string;
+  activeRepoName?: string | null;
+  activeRepoManifest?: string | null;
 }
 
 export const REPO_SUGGESTIONS: Record<string, string[]> = {
@@ -29,13 +31,34 @@ export const DEFAULT_SUGGESTIONS: string[] = [
   'What is CodeSeek AI?',
 ];
 
+function buildDynamicRepoSuggestions(repoName: string, manifest: string): string[] {
+  const components = manifest
+    .split('\n')
+    .filter((line) => line.trim().startsWith('- '))
+    .map((line) => line.replace(/^-\s*([A-Za-z0-9_.]+).*/, '$1').trim())
+    .filter((comp) => comp.length > 1 && !comp.includes(' '))
+    .slice(0, 3);
+
+  const dynamic: string[] = [`Give me an overview of ${repoName}`];
+  for (const comp of components) {
+    dynamic.push(`Explain ${comp}`);
+  }
+  return dynamic;
+}
+
 export const QuerySuggestions: React.FC<QuerySuggestionsProps> = ({
   onSelectSuggestion,
   disabled,
   activeRepoId,
+  activeRepoName,
+  activeRepoManifest,
 }) => {
   const repoKey = activeRepoId?.toLowerCase();
-  const suggestions = (repoKey && REPO_SUGGESTIONS[repoKey]) || DEFAULT_SUGGESTIONS;
+  const suggestions =
+    (repoKey && REPO_SUGGESTIONS[repoKey]) ||
+    (activeRepoManifest && activeRepoName
+      ? buildDynamicRepoSuggestions(activeRepoName, activeRepoManifest)
+      : DEFAULT_SUGGESTIONS);
 
   return (
     <div

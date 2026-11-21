@@ -81,3 +81,17 @@ def test_get_repository_manifest(repo_test_client: TestClient):
 
     not_found = repo_test_client.get("/api/v1/repos/nonexistent_repo/manifest")
     assert not_found.status_code == 404
+
+
+def test_get_repository_file_content_and_path_traversal_guard(repo_test_client: TestClient):
+    """Verify GET /api/v1/repos/{repo_id}/file reads valid repo files and rejects path traversal."""
+    resp = repo_test_client.get("/api/v1/repos/sample_codebase/file", params={"path": "sample_service.py"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["repo_id"] == "sample_codebase"
+    assert data["total_lines"] > 0
+    assert "def " in data["content"] or "class " in data["content"]
+
+    # Path traversal attempt must be rejected with 400
+    bad = repo_test_client.get("/api/v1/repos/sample_codebase/file", params={"path": "../../pyproject.toml"})
+    assert bad.status_code == 400

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree } from 'lucide-react';
+import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree, ChevronUp, ChevronDown, FileText } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 export type ViewMode = 'code' | 'strata';
@@ -17,8 +17,13 @@ interface CodeViewerHeaderProps {
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
   matchCount?: number;
+  currentMatchIndex?: number;
+  onNextMatch?: () => void;
+  onPrevMatch?: () => void;
   viewMode?: ViewMode;
   onToggleViewMode?: (mode: ViewMode) => void;
+  isFullFileMode?: boolean;
+  onToggleFullFile?: () => void;
 }
 
 export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
@@ -34,8 +39,13 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   searchTerm = '',
   onSearchChange,
   matchCount = 0,
+  currentMatchIndex = 0,
+  onNextMatch,
+  onPrevMatch,
   viewMode = 'code',
   onToggleViewMode,
+  isFullFileMode = false,
+  onToggleFullFile,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(Boolean(searchTerm));
@@ -199,17 +209,58 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                   data-testid="code-search-input"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && matchCount > 0) {
+                      e.preventDefault();
+                      if (e.shiftKey) {
+                        onPrevMatch?.();
+                      } else {
+                        onNextMatch?.();
+                      }
+                    } else if (e.key === 'Escape') {
+                      onSearchChange('');
+                      setIsSearchActive(false);
+                    }
+                  }}
                   placeholder="Find in code..."
                   autoFocus
                   className="bg-transparent text-slate-100 text-xs focus:outline-none w-28 sm:w-36 font-mono placeholder-slate-500"
                 />
                 {searchTerm.trim().length > 0 && (
-                  <span
-                    data-testid="search-match-count"
-                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800 text-amber-300 border border-slate-700 whitespace-nowrap"
-                  >
-                    {matchCount} {matchCount === 1 ? 'match' : 'matches'}
-                  </span>
+                  <div className="flex items-center space-x-1">
+                    <span
+                      data-testid="search-match-count"
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800 text-amber-300 border border-slate-700 whitespace-nowrap"
+                    >
+                      {matchCount > 0
+                        ? `${Math.min(currentMatchIndex + 1, matchCount)}/${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`
+                        : '0 matches'}
+                    </span>
+                    {matchCount > 1 && onPrevMatch && onNextMatch && (
+                      <>
+                        <button
+                          type="button"
+                          data-testid="search-prev-match-btn"
+                          onClick={onPrevMatch}
+                          className="p-0.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                          title="Previous match (Shift+Enter)"
+                          aria-label="Previous match"
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="search-next-match-btn"
+                          onClick={onNextMatch}
+                          className="p-0.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                          title="Next match (Enter)"
+                          aria-label="Next match"
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )}
                 <button
                   data-testid="clear-code-search-btn"
@@ -235,6 +286,24 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               </button>
             )}
           </div>
+        )}
+
+        {onToggleFullFile && viewMode === 'code' && chunk && (
+          <button
+            type="button"
+            data-testid="toggle-full-file-btn"
+            aria-pressed={isFullFileMode}
+            onClick={onToggleFullFile}
+            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
+              isFullFileMode
+                ? 'bg-[#0a1f10] text-[#68f12b] border-[#68f12b]/60 font-semibold'
+                : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
+            }`}
+            title={isFullFileMode ? 'Switch back to isolated symbol view' : 'View full source file with surrounding context'}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">{isFullFileMode ? 'Full File' : 'Full File'}</span>
+          </button>
         )}
 
         {onToggleExplorer && (

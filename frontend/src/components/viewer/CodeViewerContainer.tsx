@@ -55,7 +55,11 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [navHistory, setNavHistory] = useState<string[]>([]);
+  const [isFullFileMode, setIsFullFileMode] = useState(false);
+  const [fullFileContent, setFullFileContent] = useState<string | null>(null);
+  const [isLoadingFullFile, setIsLoadingFullFile] = useState(false);
 
   // Strata 3D graph state
   const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() => {
@@ -90,6 +94,47 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
   const selectedChunk =
     chunks.find((c) => c.id === selectedChunkId) ?? (chunks.length > 0 ? chunks[0] : null);
+
+  // Reset active match index when query or active chunk changes
+  useEffect(() => {
+    setCurrentMatchIndex(0);
+  }, [searchTerm, selectedChunk?.id, isFullFileMode]);
+
+  // Fetch full file source when Full File toggle is active
+  useEffect(() => {
+    if (!isFullFileMode || !selectedChunk) {
+      setFullFileContent(null);
+      setIsLoadingFullFile(false);
+      return;
+    }
+    let isMounted = true;
+    setIsLoadingFullFile(true);
+    apiClient
+      .getRepoFileContent(activeRepoId || 'requests', selectedChunk.filePath)
+      .then((resp) => {
+        if (!isMounted) return;
+        setFullFileContent(resp?.content ?? null);
+      })
+      .catch(() => {
+        if (isMounted) setFullFileContent(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingFullFile(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isFullFileMode, activeRepoId, selectedChunk?.filePath]);
+
+  const handleNextMatch = () => {
+    if (matchCount <= 0) return;
+    setCurrentMatchIndex((prev) => (prev + 1) % matchCount);
+  };
+
+  const handlePrevMatch = () => {
+    if (matchCount <= 0) return;
+    setCurrentMatchIndex((prev) => (prev - 1 + matchCount) % matchCount);
+  };
 
   // Compute highlighted nodes for Strata map:
   // ONLY illuminate nodes the AI agent references in electric acid lime (#68f12b),
@@ -344,12 +389,17 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         matchCount={matchCount}
+        currentMatchIndex={currentMatchIndex}
+        onNextMatch={handleNextMatch}
+        onPrevMatch={handlePrevMatch}
         isMaximized={isMaximized}
         onToggleMaximize={onToggleMaximize}
         isMinimized={isMinimized}
         onMinimize={onMinimize}
         viewMode={activeViewMode}
         onToggleViewMode={handleToggleViewMode}
+        isFullFileMode={isFullFileMode}
+        onToggleFullFile={() => setIsFullFileMode((prev) => !prev)}
       />
 
       {/* Main Content Area (Explorer + Code Display OR 3D Strata Map) */}
@@ -505,8 +555,12 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                 onOpenConnectRepo={onOpenConnectRepo}
                 searchTerm={searchTerm}
                 onMatchCountChange={setMatchCount}
+                currentMatchIndex={currentMatchIndex}
                 hasActiveRepo={Boolean(activeRepoId)}
                 onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
+                isFullFileMode={isFullFileMode}
+                fullFileContent={fullFileContent}
+                isLoadingFullFile={isLoadingFullFile}
               />
 
               {/* Collapsible AST Metadata Drawer */}

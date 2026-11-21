@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
-import { FolderCode, FolderPlus, FolderTree } from 'lucide-react';
+import { FolderCode, FolderPlus, FolderTree, Loader2 } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 interface CodeDisplayProps {
@@ -9,8 +9,12 @@ interface CodeDisplayProps {
   onOpenConnectRepo?: () => void;
   searchTerm?: string;
   onMatchCountChange?: (count: number) => void;
+  currentMatchIndex?: number;
   hasActiveRepo?: boolean;
   onToggleExplorer?: () => void;
+  isFullFileMode?: boolean;
+  fullFileContent?: string | null;
+  isLoadingFullFile?: boolean;
 }
 
 const escapeRegex = (s: string) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -20,25 +24,34 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
   onOpenConnectRepo,
   searchTerm = '',
   onMatchCountChange,
+  currentMatchIndex = 0,
   hasActiveRepo = false,
   onToggleExplorer,
+  isFullFileMode = false,
+  fullFileContent = null,
+  isLoadingFullFile = false,
 }) => {
+  const codeContainerRef = useRef<HTMLDivElement | null>(null);
+  const showingFullFile = Boolean(isFullFileMode && fullFileContent !== null);
+  const displayCode = showingFullFile ? fullFileContent || '' : chunk?.code || '';
+  const startLineOffset = showingFullFile ? 1 : chunk?.startLine ?? 1;
+
   const lines = useMemo(() => {
-    return chunk ? chunk.code.split('\n') : [];
-  }, [chunk?.code]);
+    return chunk ? displayCode.split('\n') : [];
+  }, [chunk, displayCode]);
 
   const highlightedHtml = useMemo(() => {
-    if (!chunk?.code) return '';
+    if (!displayCode) return '';
     try {
       if (Prism.languages.python) {
-        return Prism.highlight(chunk.code, Prism.languages.python, 'python');
+        return Prism.highlight(displayCode, Prism.languages.python, 'python');
       }
-      return chunk.code;
+      return displayCode;
     } catch (err) {
       console.error('Prism Python highlighting error:', err);
-      return chunk.code;
+      return displayCode;
     }
-  }, [chunk?.code]);
+  }, [displayCode]);
 
   const { safeHtml, matchCount } = useMemo(() => {
     if (!highlightedHtml || !searchTerm || !searchTerm.trim()) {
@@ -69,6 +82,37 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
   useEffect(() => {
     onMatchCountChange?.(matchCount);
   }, [matchCount, onMatchCountChange]);
+
+  // Highlight and auto-scroll to active search match when stepping Next/Prev
+  useEffect(() => {
+    if (!codeContainerRef.current) return;
+    const marks = codeContainerRef.current.querySelectorAll<HTMLElement>('mark');
+    marks.forEach((m, idx) => {
+      if (marks.length > 1 && idx === currentMatchIndex) {
+        m.style.outline = '2px solid #68f12b';
+        m.style.outlineOffset = '1px';
+      } else {
+        m.style.outline = '';
+        m.style.outlineOffset = '';
+      }
+    });
+    if (!searchTerm.trim() || matchCount === 0) return;
+    const activeMark = marks[currentMatchIndex];
+    if (activeMark && typeof activeMark.scrollIntoView === 'function') {
+      activeMark.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [currentMatchIndex, matchCount, searchTerm]);
+
+  // Auto-scroll to the active symbol's start line when entering Full File mode
+  useEffect(() => {
+    if (!showingFullFile || !chunk || !codeContainerRef.current) return;
+    const targetLineEl = codeContainerRef.current.querySelector<HTMLElement>(
+      `[data-line-number="${chunk.startLine}"]`
+    );
+    if (targetLineEl && typeof targetLineEl.scrollIntoView === 'function') {
+      targetLineEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [showingFullFile, chunk?.id, chunk?.startLine]);
 
   if (!chunk) {
     if (hasActiveRepo) {
@@ -132,8 +176,21 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
     );
   }
 
+  if (isFullFileMode && isLoadingFullFile) {
+    return (
+      <div
+        data-testid="code-display"
+        className="flex-1 flex items-center justify-center p-8 bg-[#070a12] text-xs font-mono text-slate-400 space-x-2"
+      >
+        <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+        <span>Loading full source file ({chunk.filePath})...</span>
+      </div>
+    );
+  }
+
   return (
     <div
+      ref={codeContainerRef}
       data-testid="code-display"
       className="flex-1 overflow-auto bg-[#070a12] font-mono text-xs sm:text-sm leading-6 flex"
     >
@@ -143,9 +200,18 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
         className="select-none py-3 px-3.5 text-right text-slate-500 bg-[#06090f] border-r border-slate-800 sticky left-0 z-10 shrink-0 font-mono"
       >
         {lines.map((_, index) => {
-          const lineNumber = chunk.startLine + index;
+          const lineNumber = startLineOffset + index;
+          const isInSymbolRange =
+            showingFullFile && lineNumber >= chunk.startLine && lineNumber <= chunk.endLine;
           return (
-            <div key={index} data-testid="line-number" className="h-6 font-mono">
+            <div
+              key={index}
+              data-testid="line-number"
+              data-line-number={lineNumber}
+              className={`h-6 font-mono ${
+                isInSymbolRange ? 'text-[#68f12b] font-semibold pr-1 border-r-2 border-[#68f12b]' : ''
+              }`}
+            >
               {lineNumber}
             </div>
           );

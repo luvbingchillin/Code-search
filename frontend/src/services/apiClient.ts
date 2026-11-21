@@ -353,6 +353,22 @@ export class ApiClient {
       return getMockStrataGraph(repoId);
     }
   }
+
+  public async getRepoFileContent(
+    repoId: string,
+    filePath: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ repo_id: string; file_path: string; content: string; total_lines: number } | null> {
+    try {
+      const url = `/api/v1/repos/${encodeURIComponent(repoId)}/file?path=${encodeURIComponent(filePath)}`;
+      return await this.request<{ repo_id: string; file_path: string; content: string; total_lines: number }>(url, {
+        method: 'GET',
+        signal: options?.signal,
+      });
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

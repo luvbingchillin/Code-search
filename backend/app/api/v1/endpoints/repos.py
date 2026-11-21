@@ -329,3 +329,75 @@ def get_repository_strata_graph(
     graph_response = build_strata_graph(unique_chunks, repo_id=repo.id)
     _strata_graph_cache[cache_key] = graph_response
     return graph_response
+
+
+@router.get(
+    "/repos/{repo_id}/file",
+    summary="Get Full Source File Content for Context Viewing",
+)
+def get_repository_file_content(
+    repo_id: str,
+    path: str = Query(..., min_length=1, description="Relative file path inside the repository"),
+):
+    """Safely read a full Python source file belonging to an indexed repository."""
+    repo = repo_registry.get_repository(repo_id)
+    if not repo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repository '{repo_id}' not found in registry",
+        )
+
+    candidates = [
+        Path(repo.path),
+        Path("backend") / repo.path,
+        Path("..") / repo.path,
+    ]
+    repo_dir: Optional[Path] = None
+    for cand in candidates:
+        if cand.exists() and cand.is_dir():
+            repo_dir = cand.resolve()
+            break
+
+    if repo_dir is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repository directory for '{repo_id}' is not accessible on disk",
+        )
+
+    norm_rel = path.replace("\\", "/").lstrip("/")
+    # Strip redundant repo path prefix if chunk.filePath already includes it
+    repo_prefix = repo.path.replace("\\", "/").strip("/")
+    if repo_prefix and norm_rel.lower().startswith(repo_prefix.lower() + "/"):
+        norm_rel = norm_rel[len(repo_prefix) + 1 :]
+
+    try:
+        target_file = (repo_dir / norm_rel).resolve()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file path",
+        )
+
+    # Strict path traversal protection: target must reside inside repo_dir
+    try:
+        target_file.relative_to(repo_dir)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Access denied: file path escapes repository root",
+        )
+
+    if not target_file.exists() or not target_file.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File '{path}' not found in repository '{repo_id}'",
+        )
+
+    content = target_file.read_text(encoding="utf-8", errors="replace")
+    total_lines = len(content.splitlines())
+    return {
+        "repo_id": repo.id,
+        "file_path": norm_rel,
+        "content": content,
+        "total_lines": total_lines,
+    }
