@@ -189,9 +189,9 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     renderer.toneMappingExposure = 1.1;
     rendererRef.current = renderer;
 
-    // Scene setup with neo-tactile brutalist background
+    // Scene setup with Precision Dark Slate IDE obsidian canvas
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#07160c');
+    scene.background = new THREE.Color('#070a12');
     sceneRef.current = scene;
 
     // Camera setup
@@ -218,8 +218,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     dirLight1.position.set(60, 120, 60);
     scene.add(dirLight1);
 
-    // Subtle electric acid lime rim light for neo-tactile brutalist aesthetic
-    const rimLight = new THREE.DirectionalLight(0x68f12b, 0.35);
+    // Subtle electric sky rim light for Dark Slate IDE depth
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
     rimLight.position.set(-60, 20, -60);
     scene.add(rimLight);
 
@@ -309,8 +309,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
         4, // radial divisions
         6, // concentric rings
         64, // segments
-        new THREE.Color('#134721'),
-        new THREE.Color('#0a2b15')
+        new THREE.Color('#1e293b'),
+        new THREE.Color('#0f172a')
       );
       gridHelper.position.set(0, tier.yPosition, 0);
       (gridHelper.material as THREE.Material).transparent = true;
@@ -456,18 +456,18 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
 
       // Color mapping:
       // - Selected: Brilliant pure white (#ffffff)
-      // - Highlighted: Electric acid lime (#68f12b)
-      // - Dimmed (when active filter): darkened stratum color
+      // - Highlighted: Electric Sky (#38bdf8)
+      // - Dimmed (when active filter): calm slate baseline (#1e293b)
       // - Normal: Stratum tier color
       if (isSelected) {
         tempColor.set('#ffffff');
       } else if (isHighlighted) {
-        tempColor.set('#68f12b'); // Electric acid lime
+        tempColor.set('#38bdf8'); // Electric Sky citation highlight
       } else if (hasHighlights || hasSelection) {
-        // Dim unreferenced nodes in dim muted moss baseline (#162a1c)
-        tempColor.set('#162a1c');
+        // Dim unreferenced nodes in calm slate baseline (#1e293b)
+        tempColor.set('#1e293b');
       } else {
-        tempColor.set(node.color || STRATA_TIER_COLORS[node.tier] || '#38bdf8');
+        tempColor.set(node.color || STRATA_TIER_COLORS[node.tier] || '#818cf8');
       }
 
       instancedMesh.setColorAt(i, tempColor);
@@ -492,7 +492,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
             (selectedChunkId && (edge.source === selectedChunkId || edge.target === selectedChunkId)) ||
             (highlightedChunkIds && (highlightedChunkIds.has(edge.source) || highlightedChunkIds.has(edge.target)));
 
-          const edgeColor = new THREE.Color(isEdgeActive ? '#68f12b' : '#195f2d');
+          const edgeColor = new THREE.Color(isEdgeActive ? '#38bdf8' : '#1e293b');
           const idx = i * 6;
           edgeColors[idx] = edgeColor.r;
           edgeColors[idx + 1] = edgeColor.g;
@@ -624,16 +624,16 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     return (
       <div
         data-testid="strata-canvas"
-        className={`relative w-full h-full flex flex-col items-center justify-center bg-[#07160c] text-[#f4f3eb] p-6 select-none ${className}`}
+        className={`relative w-full h-full flex flex-col items-center justify-center bg-[#070a12] text-slate-100 p-6 select-none ${className}`}
       >
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#68f12b] animate-pulse" />
-          <span className="font-mono text-xs uppercase tracking-wider text-[#68f12b] font-semibold">
+          <div className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
+          <span className="font-mono text-xs uppercase tracking-wider text-sky-400 font-semibold">
             3D Strata Architecture Canvas (Headless Mode)
           </span>
         </div>
 
-        <p className="text-xs text-[#f4f3eb]/70 mb-4 max-w-md text-center">
+        <p className="text-xs text-slate-400 mb-4 max-w-md text-center">
           {graphData.nodes.length} nodes · {graphData.edges.length} caller-callee edges · 4 layered tiers
         </p>
 
@@ -642,23 +642,23 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
           {graphData.tiers.map((t) => (
             <div
               key={t.tier}
-              className="border border-[#134721] bg-[#0a2212] p-2.5 rounded text-xs flex flex-col gap-0.5"
+              className="border border-slate-800 bg-slate-900 p-2.5 rounded text-xs flex flex-col gap-0.5"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono font-bold" style={{ color: t.color }}>
                   Tier {t.tier}
                 </span>
-                <span className="text-[10px] font-mono text-[#f4f3eb]/60 bg-[#07160c] px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded">
                   {t.nodeCount} nodes
                 </span>
               </div>
-              <span className="font-medium text-[11px] text-[#f4f3eb]">{t.name}</span>
+              <span className="font-medium text-[11px] text-slate-200">{t.name}</span>
             </div>
           ))}
         </div>
 
         {/* Interactive node chips for testing click selection */}
-        <div className="flex flex-wrap gap-1.5 max-w-lg max-h-36 overflow-y-auto p-2 bg-[#051008] border border-[#134721]/60 rounded">
+        <div className="flex flex-wrap gap-1.5 max-w-lg max-h-36 overflow-y-auto p-2 bg-slate-950 border border-slate-800 rounded">
           {graphData.nodes.map((node) => {
             const isSelected = selectedChunkId === node.id;
             const isHighlighted = highlightedChunkIds?.has(node.id);
@@ -671,12 +671,12 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
                 onClick={() => onSelectNode?.(node.id)}
                 className={`text-[10px] font-mono px-2 py-1 rounded border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#68f12b] text-[#0a1f10] border-[#68f12b] font-bold shadow-sm'
+                    ? 'bg-[#38bdf8] text-slate-950 border-[#38bdf8] font-bold shadow-sm'
                     : isHighlighted
-                    ? 'border-[#68f12b] text-[#68f12b] bg-[#0a1f10] font-semibold ring-1 ring-[#68f12b]/50'
+                    ? 'border-[#38bdf8] text-[#38bdf8] bg-sky-950/70 font-semibold ring-1 ring-sky-400/50'
                     : hasActiveHighlights
-                    ? 'border-[#162a1c] text-[#162a1c] bg-[#07160c] opacity-60 hover:opacity-100 hover:text-[#f4f3eb]'
-                    : 'border-[#134721] text-[#f4f3eb]/70 bg-[#07160c] hover:border-[#68f12b]/60'
+                    ? 'border-[#1e293b] text-[#64748b] bg-[#070a12] opacity-60 hover:opacity-100 hover:text-slate-100'
+                    : 'border-slate-800 text-slate-300 bg-[#070a12] hover:border-sky-500/60'
                 }`}
               >
                 {node.identifier}
@@ -692,7 +692,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     <div
       ref={containerRef}
       data-testid="strata-canvas"
-      className={`relative w-full h-full overflow-hidden bg-[#07160c] select-none ${className}`}
+      className={`relative w-full h-full overflow-hidden bg-[#070a12] select-none ${className}`}
     >
       <canvas
         ref={canvasRef}
@@ -709,7 +709,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
             type="button"
             data-testid="strata-focus-cited-btn"
             onClick={handleFocusCited}
-            className="px-2.5 py-1 text-xs font-mono font-semibold rounded border border-[#68f12b]/60 bg-[#0a2212]/90 text-[#68f12b] hover:bg-[#68f12b] hover:text-[#0a1f10] transition-colors cursor-pointer shadow-sm"
+            className="px-2.5 py-1 text-xs font-mono font-semibold rounded border border-sky-500/60 bg-slate-900/90 text-sky-400 hover:bg-sky-500 hover:text-slate-950 transition-colors cursor-pointer shadow-sm"
             title="Frame camera on highlighted/selected nodes"
           >
             Focus Cited
@@ -717,7 +717,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
         )}
         <button
           onClick={handleResetCamera}
-          className="px-2.5 py-1 text-xs font-mono font-medium rounded border border-[#134721] bg-[#0a2212]/90 text-[#f4f3eb] hover:border-[#68f12b] hover:text-[#68f12b] transition-colors cursor-pointer shadow-sm"
+          className="px-2.5 py-1 text-xs font-mono font-medium rounded border border-slate-700 bg-slate-900/90 text-slate-200 hover:border-sky-400 hover:text-sky-300 transition-colors cursor-pointer shadow-sm"
           title="Reset 3D Camera"
         >
           Reset View
@@ -740,8 +740,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
               }}
               className={`absolute pointer-events-auto px-1.5 py-0.5 rounded text-[10px] font-mono whitespace-nowrap shadow-md transition-colors cursor-pointer ${
                 lbl.isSelected
-                  ? 'bg-white text-[#0a1f10] font-bold border border-[#68f12b]'
-                  : 'bg-[#0a1f10]/90 text-[#68f12b] border border-[#68f12b]/60 hover:bg-[#68f12b] hover:text-[#0a1f10]'
+                  ? 'bg-white text-slate-950 font-bold border border-sky-400'
+                  : 'bg-slate-900/90 text-sky-300 border border-sky-500/60 hover:bg-sky-500 hover:text-slate-950'
               }`}
             >
               {lbl.identifier}
@@ -751,15 +751,15 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       )}
 
       {/* Architectural Tier Legend */}
-      <div className="absolute bottom-3 left-3 flex flex-col gap-1 p-2.5 rounded bg-[#07160c]/85 border border-[#134721] backdrop-blur-sm z-10 pointer-events-none text-xs font-mono">
-        <div className="text-[10px] uppercase tracking-wider text-[#68f12b] font-semibold mb-0.5">
+      <div className="absolute bottom-3 left-3 flex flex-col gap-1 p-2.5 rounded bg-slate-900/90 border border-slate-800 backdrop-blur-sm z-10 pointer-events-none text-xs font-mono">
+        <div className="text-[10px] uppercase tracking-wider text-sky-400 font-semibold mb-0.5">
           Strata Tiers
         </div>
         {[3, 2, 1, 0].map((tierNum) => {
           const tier = graphData.tiers.find((t) => t.tier === tierNum);
           if (!tier) return null;
           return (
-            <div key={tierNum} className="flex items-center gap-2 text-[11px] text-[#f4f3eb]/80">
+            <div key={tierNum} className="flex items-center gap-2 text-[11px] text-slate-200">
               <span
                 className="w-2.5 h-2.5 rounded-sm inline-block shrink-0"
                 style={{ backgroundColor: tier.color }}
@@ -768,7 +768,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
                 T{tier.tier}:
               </span>
               <span className="truncate max-w-[140px]">{tier.name}</span>
-              <span className="text-[10px] text-[#f4f3eb]/50 ml-auto">({tier.nodeCount})</span>
+              <span className="text-[10px] text-slate-400 ml-auto">({tier.nodeCount})</span>
             </div>
           );
         })}
@@ -777,7 +777,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       {/* Hover Node Tooltip */}
       {hoveredNode && (
         <div
-          className="absolute z-20 pointer-events-none p-2.5 rounded bg-[#0a2212]/95 border border-[#68f12b]/60 shadow-lg text-xs font-mono text-[#f4f3eb] backdrop-blur-md max-w-xs transition-opacity duration-75"
+          className="absolute z-20 pointer-events-none p-2.5 rounded bg-slate-900/95 border border-sky-500/50 shadow-lg text-xs font-mono text-slate-100 backdrop-blur-md max-w-xs transition-opacity duration-75"
           style={{
             left: `${Math.min(hoveredNode.screenX + 14, (containerRef.current?.clientWidth || 500) - 220)}px`,
             top: `${Math.min(hoveredNode.screenY + 14, (containerRef.current?.clientHeight || 500) - 120)}px`,
@@ -788,12 +788,12 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: hoveredNode.node.color }}
             />
-            <span className="font-bold text-[#68f12b] truncate">{hoveredNode.node.identifier}</span>
+            <span className="font-bold text-sky-300 truncate">{hoveredNode.node.identifier}</span>
           </div>
-          <div className="text-[10px] text-[#f4f3eb]/70 truncate">
+          <div className="text-[10px] text-slate-300 truncate">
             {hoveredNode.node.filePath}
           </div>
-          <div className="mt-1 flex items-center justify-between text-[10px] text-[#f4f3eb]/60 border-t border-[#134721] pt-1">
+          <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800 pt-1">
             <span>{hoveredNode.node.astNodeType}</span>
             <span style={{ color: hoveredNode.node.color }}>Tier {hoveredNode.node.tier}</span>
           </div>
@@ -802,7 +802,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       {/* 3D Navigation Gesture Hint */}
       <div
         data-testid="strata-gesture-hint"
-        className="absolute bottom-3 right-3 px-2 py-1 rounded bg-[#07160c]/80 border border-[#134721] text-[10px] font-mono text-[#f4f3eb]/50 pointer-events-none select-none hidden sm:block backdrop-blur-xs"
+        className="absolute bottom-3 right-3 px-2 py-1 rounded bg-slate-900/85 border border-slate-800 text-[10px] font-mono text-slate-400 pointer-events-none select-none hidden sm:block backdrop-blur-xs"
       >
         Left-drag: Orbit · Right-drag: Pan · Scroll: Zoom
       </div>
@@ -811,16 +811,16 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       {isContextLost && (
         <div
           data-testid="strata-context-lost-overlay"
-          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#07160c]/90 text-center p-4 font-mono select-none"
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#070a12]/90 text-center p-4 font-mono select-none"
         >
           <span className="text-amber-400 text-sm font-semibold mb-1">GPU Context Suspended</span>
-          <span className="text-[#f4f3eb]/70 text-xs max-w-sm mb-3">
+          <span className="text-slate-300 text-xs max-w-sm mb-3">
             The browser reclaimed WebGL resources (e.g. system sleep or driver reset). Restoring scene...
           </span>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-3 py-1 rounded bg-[#0a1f10] border border-[#68f12b] text-[#68f12b] text-xs hover:bg-[#68f12b] hover:text-[#0a1f10] transition-colors cursor-pointer"
+            className="px-3 py-1 rounded bg-slate-900 border border-sky-400 text-sky-400 text-xs hover:bg-sky-500 hover:text-slate-950 transition-colors cursor-pointer"
           >
             Reload View
           </button>

@@ -84,11 +84,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   return (
     <div
       data-testid="code-viewer-header"
-      className={`h-10 px-3 flex items-center justify-between text-xs select-none transition-colors duration-200 ${
-        viewMode === 'strata'
-          ? 'bg-[#0a1f10] border-b border-[#1b3d22]'
-          : 'bg-slate-900 border-b border-slate-800'
-      }`}
+      className="h-10 px-3 flex items-center justify-between text-xs select-none transition-colors duration-200 bg-slate-900 border-b border-slate-800"
     >
       <div className="flex items-center space-x-2 overflow-hidden">
         {viewMode === 'strata' ? (
@@ -96,7 +92,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             <span className="text-sm">🌐</span>
             <div
               data-testid="chunk-file-path"
-              className="font-display font-semibold text-[#68f12b] tracking-tight flex items-center space-x-1"
+              className="font-sans font-semibold text-sky-400 tracking-tight flex items-center space-x-1"
             >
               <span>3D Strata Architecture Map</span>
               {chunk && (
@@ -164,7 +160,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             data-testid="view-mode-toggle"
             role="group"
             aria-label="View mode selector"
-            className="inline-flex items-center p-0.5 rounded border border-[#1b3d22] bg-[#0a1f10] shadow-xs mr-1"
+            className="inline-flex items-center p-0.5 rounded border border-slate-700 bg-slate-950 shadow-xs mr-1"
           >
             <button
               type="button"
@@ -173,8 +169,8 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               onClick={() => onToggleViewMode('code')}
               className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'code'
-                  ? 'bg-[#68f12b] text-[#0a1f10] font-bold shadow-xs'
-                  : 'text-[#f4f3eb]/70 hover:text-[#f4f3eb] hover:bg-[#13301a]'
+                  ? 'bg-sky-500 text-slate-950 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
               }`}
               title="Switch to 📄 Code View"
             >
@@ -188,8 +184,8 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               onClick={() => onToggleViewMode('strata')}
               className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'strata'
-                  ? 'bg-[#68f12b] text-[#0a1f10] font-bold shadow-xs'
-                  : 'text-[#f4f3eb]/70 hover:text-[#f4f3eb] hover:bg-[#13301a]'
+                  ? 'bg-sky-500 text-slate-950 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
               }`}
               title="Switch to 🌐 3D Strata Map"
             >
@@ -296,7 +292,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             onClick={onToggleFullFile}
             className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
               isFullFileMode
-                ? 'bg-[#0a1f10] text-[#68f12b] border-[#68f12b]/60 font-semibold'
+                ? 'bg-sky-950 text-sky-300 border-sky-500/60 font-semibold'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title={isFullFileMode ? 'Switch back to isolated symbol view' : 'View full source file with surrounding context'}

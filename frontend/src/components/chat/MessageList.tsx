@@ -305,7 +305,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               {msg.citedChunks && msg.citedChunks.length > 0 && (
                 <div className="mt-3 pt-2 border-t border-slate-800">
                   <div className="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-                    <Code2 className="w-3.5 h-3.5 text-[#68f12b]" />
+                    <Code2 className="w-3.5 h-3.5 text-sky-400" />
                     <span>Referenced Code:</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -323,10 +323,10 @@ export const MessageList: React.FC<MessageListProps> = ({
                           type="button"
                           data-testid={`chunk-citation-${chunkId}`}
                           onClick={() => onSelectChunk(chunkId)}
-                          className="group flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded bg-[#0a1f10] hover:bg-[#0f2e18] border border-[#68f12b]/30 hover:border-[#68f12b]/70 text-[#68f12b] font-mono transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#68f12b] emil-press hover:-translate-y-0.5 hover:shadow-[#68f12b]/10 active:scale-95"
+                          className="group flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded bg-sky-950/70 hover:bg-sky-900/80 border border-sky-500/40 hover:border-sky-400/80 text-sky-300 font-mono transition-all duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press hover:-translate-y-0.5 hover:shadow-sky-500/10 active:scale-95"
                           title="Click to view definition in code viewer"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#68f12b] transition-transform duration-150 group-hover:scale-125" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 transition-transform duration-150 group-hover:scale-125" />
                           <span>{label}</span>
                         </button>
                       );
@@ -344,16 +344,16 @@ export const MessageList: React.FC<MessageListProps> = ({
           data-testid="streaming-assistant-bubble"
           className="flex items-start space-x-3"
         >
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-xs bg-slate-900 border border-[#68f12b]/50 text-[#68f12b]">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-xs bg-slate-900 border border-sky-500/50 text-sky-400">
             <Bot className="w-4 h-4 animate-pulse" />
           </div>
-          <div className="max-w-[85%] rounded-xl px-3.5 py-2.5 bg-slate-900/90 border border-[#68f12b]/40 text-slate-100 rounded-tl-none shadow-sm">
+          <div className="max-w-[85%] rounded-xl px-3.5 py-2.5 bg-slate-900/90 border border-sky-500/40 text-slate-100 rounded-tl-none shadow-sm">
             <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
-              <span className="font-semibold text-[#68f12b]">CodeSeek Agent</span>
-              <span className="text-[#68f12b]/80 font-mono text-[10px]">Streaming...</span>
+              <span className="font-semibold text-sky-400">CodeSeek Agent</span>
+              <span className="text-sky-300/80 font-mono text-[10px]">Streaming...</span>
             </div>
             <MarkdownMessageContent content={streamingTokens || ''} isUser={false} />
-            <span className="inline-block w-1.5 h-3.5 bg-[#68f12b] animate-pulse ml-1 align-middle" />
+            <span className="inline-block w-1.5 h-3.5 bg-sky-400 animate-pulse ml-1 align-middle" />
           </div>
         </div>
       )}

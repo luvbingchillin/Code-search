@@ -137,8 +137,8 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   };
 
   // Compute highlighted nodes for Strata map:
-  // ONLY illuminate nodes the AI agent references in electric acid lime (#68f12b),
-  // keeping unreferenced nodes in dim muted moss baseline (#162a1c).
+  // ONLY illuminate nodes the AI agent references in Electric Sky (#38bdf8),
+  // keeping unreferenced nodes in calm slate baseline (#1e293b).
   const highlightedChunkIds = useMemo(() => {
     const set = new Set<string>();
     const targetIds = new Set<string>();
@@ -416,13 +416,13 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {activeViewMode === 'strata' ? (
             /* 3D Strata Code Dependency Map View */
-            <div className="relative w-full h-full overflow-hidden bg-[#07160c]">
+            <div className="relative w-full h-full overflow-hidden bg-[#070a12]">
               {/* Mandatory Static Lexical Call References label */}
               <div
                 data-testid="strata-call-reference-label"
-                className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded bg-[#0a1f10]/90 border border-[#1b3d22] text-[#68f12b] font-mono text-xs flex items-center gap-1.5 shadow-md backdrop-blur-xs select-none pointer-events-auto"
+                className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/80 text-sky-400 font-mono text-xs flex items-center gap-1.5 shadow-md backdrop-blur-xs select-none pointer-events-auto"
               >
-                <span className="w-2 h-2 rounded-full bg-[#68f12b] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
                 <span className="font-semibold">Static Lexical Call References (Tree-sitter AST)</span>
               </div>
 
@@ -440,23 +440,23 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                   data-testid="strata-node-inspector"
                   role="region"
                   aria-label="Strata Node Details"
-                  className="absolute top-12 right-3 z-20 w-84 max-w-[calc(100%-24px)] rounded-lg bg-[#0a1f10]/95 border border-[#68f12b]/60 shadow-2xl p-3.5 text-xs font-mono text-[#f4f3eb] backdrop-blur-md select-text"
+                  className="absolute top-12 right-3 z-20 w-84 max-w-[calc(100%-24px)] rounded-lg bg-slate-900/95 border border-sky-500/50 shadow-2xl p-3.5 text-xs font-mono text-slate-100 backdrop-blur-md select-text"
                 >
                   {/* Header: Tier & Symbol Name */}
-                  <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-[#1b3d22]">
+                  <div className="flex items-start justify-between gap-2 mb-2 pb-2 border-b border-slate-800">
                     <div className="overflow-hidden">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span
                           className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                           style={{
                             backgroundColor: inspectedNode.color || STRATA_TIER_COLORS[inspectedNode.tier],
-                            color: '#0a1f10',
+                            color: '#070a12',
                           }}
                         >
                           Tier {inspectedNode.tier}: {inspectedNode.tierName}
                         </span>
                       </div>
-                      <h3 className="font-bold text-sm text-[#68f12b] truncate font-mono">
+                      <h3 className="font-bold text-sm text-sky-400 truncate font-mono">
                         {inspectedNode.identifier}
                       </h3>
                     </div>
@@ -465,7 +465,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       data-testid="close-strata-inspector-btn"
                       onClick={() => setInspectedNodeId(null)}
                       aria-label="Close inspector"
-                      className="p-1 rounded text-[#f4f3eb]/60 hover:text-white hover:bg-[#13301a] cursor-pointer transition-colors"
+                      className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer transition-colors"
                       title="Close Inspector"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -473,27 +473,27 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                   </div>
 
                   {/* Entity Details */}
-                  <div className="space-y-1.5 mb-3 text-[11px] text-[#f4f3eb]/80">
+                  <div className="space-y-1.5 mb-3 text-[11px] text-slate-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-[#f4f3eb]/50">File:</span>
+                      <span className="text-slate-400">File:</span>
                       <span className="truncate max-w-[200px] text-right font-mono" title={inspectedNode.filePath}>
                         {inspectedNode.filePath}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[#f4f3eb]/50">Kind:</span>
+                      <span className="text-slate-400">Kind:</span>
                       <span className="text-teal-300 font-semibold font-mono">
                         {inspectedNode.astNodeType === 'FunctionDef'
                           ? 'Function'
                           : inspectedNode.astNodeType === 'ClassDef'
                           ? 'Class'
                           : inspectedNode.astNodeType}
-                        <span className="text-[10px] text-[#f4f3eb]/40 font-mono ml-1">({inspectedNode.astNodeType})</span>
+                        <span className="text-[10px] text-slate-400 font-mono ml-1">({inspectedNode.astNodeType})</span>
                       </span>
                     </div>
                     {inspectedNode.startLine !== undefined && inspectedNode.endLine !== undefined && (
                       <div className="flex justify-between items-center">
-                        <span className="text-[#f4f3eb]/50">Scope:</span>
+                        <span className="text-slate-400">Scope:</span>
                         <span>
                           Lines {inspectedNode.startLine}–{inspectedNode.endLine}
                         </span>
@@ -502,12 +502,12 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                   </div>
 
                   {/* Outgoing Call References */}
-                  <div className="mb-3 pt-2 border-t border-[#1b3d22]">
+                  <div className="mb-3 pt-2 border-t border-slate-800">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] uppercase tracking-wider text-[#68f12b] font-semibold">
+                      <span className="text-[10px] uppercase tracking-wider text-sky-400 font-semibold">
                         Call References
                       </span>
-                      <span className="text-[10px] text-[#f4f3eb]/50">
+                      <span className="text-[10px] text-slate-400">
                         {inspectedNodeCallees.length} {inspectedNodeCallees.length === 1 ? 'called function' : 'called functions'}
                       </span>
                     </div>
@@ -516,19 +516,19 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                         {inspectedNodeCallees.map((edge) => (
                           <div
                             key={edge.id}
-                            className="flex items-center justify-between p-1 rounded bg-[#07160c] border border-[#134721] text-[10px]"
+                            className="flex items-center justify-between p-1 rounded bg-slate-950 border border-slate-800 text-[10px]"
                           >
-                            <span className="text-[#68f12b] truncate font-mono">
+                            <span className="text-sky-300 truncate font-mono">
                               &rarr; {edge.callName || edge.target}
                             </span>
-                            <span className="text-[#f4f3eb]/50 text-[9px] shrink-0 ml-1">
+                            <span className="text-slate-400 text-[9px] shrink-0 ml-1">
                               T{edge.targetTier}
                             </span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-[10px] text-[#f4f3eb]/40 italic">
+                      <div className="text-[10px] text-slate-400 italic">
                         No outgoing function calls detected
                       </div>
                     )}
@@ -539,7 +539,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                     type="button"
                     data-testid="open-in-code-viewer-btn"
                     onClick={handleOpenInCodeViewer}
-                    className="w-full py-1.5 px-3 rounded bg-[#68f12b] hover:bg-[#7aff3d] text-[#0a1f10] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors emil-press font-mono"
+                    className="w-full py-1.5 px-3 rounded bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors emil-press font-mono"
                   >
                     <span>📄 Open in Code Viewer</span>
                     <ExternalLink className="w-3 h-3" />

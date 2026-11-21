@@ -103,14 +103,14 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between select-none">
       <div className="flex items-center space-x-3">
-        {/* Distinctive Neo-Tactile Brutalist Developer Brand Icon */}
-        <div className="w-8 h-8 rounded-lg bg-[#0a1f10] border border-[#68f12b]/40 flex items-center justify-center shadow-xs">
-          <Terminal className="w-4 h-4 text-[#68f12b]" />
+        {/* Precision Dark Slate IDE Brand Icon */}
+        <div className="w-8 h-8 rounded-lg bg-slate-950 border border-sky-500/40 flex items-center justify-center shadow-xs shrink-0">
+          <Terminal className="w-4 h-4 text-sky-400" />
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-100 tracking-tight text-base font-display">CodeSeek AI</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#0a1f10] text-[#68f12b] border border-[#68f12b]/40 font-mono font-medium">
+            <span className="font-bold text-slate-100 tracking-tight text-base font-sans whitespace-nowrap">CodeSeek AI</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-sky-300 border border-slate-700 font-mono font-medium whitespace-nowrap">
               Edge AI v1.0
             </span>
           </div>

@@ -143,12 +143,12 @@ describe('3D Strata Code Dependency Model UI Integration Suite', () => {
       // Cited node: requests:Session
       const sessionNode = screen.getByTestId('strata-node-requests:Session');
       expect(sessionNode).toBeInTheDocument();
-      expect(sessionNode.className).toContain('text-[#68f12b]'); // Electric acid lime
+      expect(sessionNode.className).toContain('text-[#38bdf8]'); // Electric Sky citation highlight
 
       // Unreferenced node: requests:HTTPAdapter
       const adapterNode = screen.getByTestId('strata-node-requests:HTTPAdapter');
       expect(adapterNode).toBeInTheDocument();
-      expect(adapterNode.className).toContain('text-[#162a1c]'); // Dim muted moss baseline
+      expect(adapterNode.className).toContain('text-[#64748b]'); // Calm slate dimmed baseline
     });
   });
 

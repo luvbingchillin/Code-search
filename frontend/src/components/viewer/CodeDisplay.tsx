@@ -89,7 +89,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
     const marks = codeContainerRef.current.querySelectorAll<HTMLElement>('mark');
     marks.forEach((m, idx) => {
       if (marks.length > 1 && idx === currentMatchIndex) {
-        m.style.outline = '2px solid #68f12b';
+        m.style.outline = '2px solid #38bdf8';
         m.style.outlineOffset = '1px';
       } else {
         m.style.outline = '';
@@ -209,7 +209,7 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
               data-testid="line-number"
               data-line-number={lineNumber}
               className={`h-6 font-mono ${
-                isInSymbolRange ? 'text-[#68f12b] font-semibold pr-1 border-r-2 border-[#68f12b]' : ''
+                isInSymbolRange ? 'text-sky-400 font-semibold pr-1 border-r-2 border-sky-400' : ''
               }`}
             >
               {lineNumber}

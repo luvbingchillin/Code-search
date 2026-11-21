@@ -51,7 +51,7 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     cmd: '/overview',
     label: '/overview',
     desc: 'Summarize repository architecture, core components, and execution pipeline',
-    icon: <Compass className="w-3.5 h-3.5 text-[#68f12b]" />,
+    icon: <Compass className="w-3.5 h-3.5 text-sky-400" />,
     directSubmit: true,
   },
 ];

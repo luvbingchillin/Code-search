@@ -123,14 +123,14 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       // Cited node: requests:Session
       const sessionNode = screen.getByTestId('strata-node-requests:Session');
       expect(sessionNode).toBeInTheDocument();
-      expect(sessionNode.className).toContain('text-[#68f12b]');
-      expect(sessionNode.className).toContain('border-[#68f12b]');
+      expect(sessionNode.className).toContain('text-[#38bdf8]');
+      expect(sessionNode.className).toContain('border-[#38bdf8]');
 
       // Unreferenced node: requests:HTTPAdapter
       const adapterNode = screen.getByTestId('strata-node-requests:HTTPAdapter');
       expect(adapterNode).toBeInTheDocument();
-      expect(adapterNode.className).toContain('text-[#162a1c]');
-      expect(adapterNode.className).toContain('border-[#162a1c]');
+      expect(adapterNode.className).toContain('text-[#64748b]');
+      expect(adapterNode.className).toContain('border-[#1e293b]');
     });
 
     it('dynamically illuminates multiple cited nodes across different architectural tiers', async () => {
@@ -153,10 +153,10 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       const requestNode = screen.getByTestId('strata-node-requests:Request');
       const getNode = screen.getByTestId('strata-node-requests:get');
 
-      expect(sessionNode.className).toContain('text-[#68f12b]');
-      expect(adapterNode.className).toContain('text-[#68f12b]');
-      expect(requestNode.className).toContain('text-[#68f12b]');
-      expect(getNode.className).toContain('text-[#68f12b]');
+      expect(sessionNode.className).toContain('text-[#38bdf8]');
+      expect(adapterNode.className).toContain('text-[#38bdf8]');
+      expect(requestNode.className).toContain('text-[#38bdf8]');
+      expect(getNode.className).toContain('text-[#38bdf8]');
     });
 
     it('falls back to active chunks highlighting when no explicit agent citation is present', async () => {
@@ -188,7 +188,7 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       const sessionNode = screen.getByTestId('strata-node-requests:Session');
       expect(sessionNode).toBeInTheDocument();
       // Since Session is in chunks array and no citedChunks provided, it gets highlighted
-      expect(sessionNode.className).toContain('text-[#68f12b]');
+      expect(sessionNode.className).toContain('text-[#38bdf8]');
     });
   });
 

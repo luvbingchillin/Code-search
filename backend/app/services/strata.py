@@ -14,14 +14,14 @@ from app.schemas.strata import (
 
 logger = logging.getLogger(__name__)
 
-# Canonical Tier Metadata Definitions conforming to architecture specification
-# Note: Electric Acid Lime (#68f12b) is reserved exclusively for active AI citations.
+# Canonical Tier Metadata Definitions conforming to Precision Dark Slate IDE palette
+# Note: Electric Sky (#38bdf8) is reserved exclusively for active AI citations.
 TIER_DEFINITIONS = [
     {
         "tier": 0,
         "name": "Foundation / Primitives",
         "description": "Data structures, models, schemas, types, and configuration (models, types, config)",
-        "color": "#38bdf8",
+        "color": "#818cf8",
     },
     {
         "tier": 1,

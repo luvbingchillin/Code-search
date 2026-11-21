@@ -59,10 +59,10 @@ describe('StrataCanvas Component Suite', () => {
     expect(node3Btn).toBeInTheDocument();
 
     // Verify selected state
-    expect(node2Btn.className).toContain('bg-[#68f12b]');
+    expect(node2Btn.className).toContain('bg-[#38bdf8]');
 
     // Verify highlighted state
-    expect(node3Btn.className).toContain('border-[#68f12b]');
+    expect(node3Btn.className).toContain('border-[#38bdf8]');
 
     // Click node 1
     fireEvent.click(node1Btn);

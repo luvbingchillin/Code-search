@@ -77,18 +77,18 @@ export interface StrataLayoutOptions {
 }
 
 /**
- * Architectural Tier Colors aligned with the FYP Neo-Tactile Brutalist Design System:
- * - Tier 0: Foundation / Primitives (Cyan / Azure)
+ * Architectural Tier Colors aligned with the Precision Dark Slate IDE palette:
+ * - Tier 0: Foundation / Primitives (Indigo)
  * - Tier 1: Adapters / Transport (Electric Violet)
  * - Tier 2: Core Logic (Warm Amber)
  * - Tier 3: Entrypoints / Interfaces (Emerald)
- * Note: Electric Acid Lime (#68f12b) is reserved exclusively for active AI citations.
+ * Note: Electric Sky (#38bdf8) is reserved exclusively for active AI citations.
  */
 export const STRATA_TIER_COLORS: Record<number, string> = {
-  0: '#38bdf8', // Foundation & Primitives
-  1: '#a855f7', // Adapters & Storage
-  2: '#f59e0b', // Core Logic
-  3: '#34d399', // Entrypoints & Interfaces
+  0: '#818cf8', // Foundation & Primitives (Indigo)
+  1: '#a855f7', // Adapters & Storage (Violet)
+  2: '#f59e0b', // Core Logic (Amber)
+  3: '#34d399', // Entrypoints & Interfaces (Emerald)
 };
 
 export const DEFAULT_STRATA_TIERS: StrataTierInfo[] = [

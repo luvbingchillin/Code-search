@@ -90,7 +90,7 @@ export function getMockStrataGraph(repoId: string): StrataGraphResponse {
         { id: 'e7', source: 'sample:calculate_endpoint', target: 'sample:CalculationRequest', callName: 'validate' },
       ],
       tiers: [
-        { tier: 0, name: 'Foundation / Primitives', description: 'Data models, schemas and types', color: '#38bdf8', nodeCount: 2 },
+        { tier: 0, name: 'Foundation / Primitives', description: 'Data models, schemas and types', color: '#818cf8', nodeCount: 2 },
         { tier: 1, name: 'Adapters / Transport', description: 'Services, DB clients and storage', color: '#a855f7', nodeCount: 1 },
         { tier: 2, name: 'Core Logic', description: 'Calculation logic and algorithms', color: '#f59e0b', nodeCount: 3 },
         { tier: 3, name: 'Entrypoints', description: 'FastAPI routes and application entrypoints', color: '#34d399', nodeCount: 2 },
@@ -236,7 +236,7 @@ export function getMockStrataGraph(repoId: string): StrataGraphResponse {
       { id: 'e11', source: 'requests:Request', target: 'requests:CaseInsensitiveDict', callName: 'CaseInsensitiveDict' },
     ],
     tiers: [
-      { tier: 0, name: 'Foundation / Primitives', description: 'Data structures, models, schemas and types', color: '#38bdf8', nodeCount: 4 },
+      { tier: 0, name: 'Foundation / Primitives', description: 'Data structures, models, schemas and types', color: '#818cf8', nodeCount: 4 },
       { tier: 1, name: 'Adapters / Transport', description: 'I/O adapters, transport, and connection pools', color: '#a855f7', nodeCount: 2 },
       { tier: 2, name: 'Core Logic', description: 'Session management and HTTP request pipelines', color: '#f59e0b', nodeCount: 3 },
       { tier: 3, name: 'Entrypoints', description: 'Public HTTP verb convenience functions (get, post, etc.)', color: '#34d399', nodeCount: 4 },
