@@ -333,6 +333,11 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   };
 
   const handleSelectTreeSymbol = async (symbol: FileSymbolNode) => {
+    // Sync 3D Strata inspection when picking a symbol from the Explorer while in Strata mode
+    if (activeViewMode === 'strata') {
+      setInspectedNodeId(symbol.id);
+    }
+
     // 1. Check if chunk already loaded locally
     const local = chunks.find((c) => c.id === symbol.id || c.identifier === symbol.identifier);
     if (local) {
@@ -404,7 +409,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
       {/* Main Content Area (Explorer + Code Display OR 3D Strata Map) */}
       <div className="flex-1 flex overflow-hidden relative">
-        {isExplorerOpen && activeViewMode === 'code' && (
+        {isExplorerOpen && (
           <RepoFileTree
             repoId={activeRepoId ?? null}
             activeChunkId={selectedChunk?.id ?? null}

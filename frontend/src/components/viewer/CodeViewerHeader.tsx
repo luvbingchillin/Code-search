@@ -135,14 +135,14 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
 
                 <span
                   data-testid="chunk-line-range"
-                  className="text-[11px] text-slate-400 font-mono hidden sm:inline"
+                  className="text-[11px] text-slate-400 font-mono hidden xl:inline shrink-0"
                 >
                   Lines {chunk.startLine}–{chunk.endLine}
                 </span>
 
                 <span
                   data-testid="chunk-relevance-score"
-                  className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden md:inline font-semibold"
+                  className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/70 hidden xl:inline font-semibold shrink-0"
                   title="Semantic match score: how closely this code relates to your query"
                 >
                   Match {(chunk.relevanceScore * 100).toFixed(0)}%
@@ -298,7 +298,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             title={isFullFileMode ? 'Switch back to isolated symbol view' : 'View full source file with surrounding context'}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">{isFullFileMode ? 'Full File' : 'Full File'}</span>
+            <span className="hidden lg:inline">{isFullFileMode ? 'Symbol Only' : 'Full File'}</span>
           </button>
         )}
 

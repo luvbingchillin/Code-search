@@ -498,7 +498,8 @@ describe('NemoIR AgentRunner Acceptance Suite (AC2)', () => {
       expect(screen.getByTestId('agent-step-message')).toHaveTextContent('Analyzing AST query');
     });
 
-    it('passes streamingTokens from ChatPane into AgentRunner', () => {
+    it('passes streamingTokens from ChatPane into AgentRunner', async () => {
+      const user = userEvent.setup();
       const synthStatus: AgentStatus = {
         state: 'Synthesizing',
         currentStepMessage: 'Synthesizing solution',
@@ -518,6 +519,13 @@ describe('NemoIR AgentRunner Acceptance Suite (AC2)', () => {
         />
       );
 
+      // Streaming tokens appear immediately in the live chat bubble without auto-expanding the trace drawer
+      expect(screen.getByTestId('streaming-assistant-bubble')).toHaveTextContent(
+        'def solve_dependencies(): pass'
+      );
+
+      // Expanding the Traces drawer on demand exposes AgentRunner's streaming output pane
+      await user.click(screen.getByTestId('banner-toggle-traces-btn'));
       expect(screen.getByTestId('agent-streaming-output')).toBeInTheDocument();
       expect(screen.getByTestId('agent-streaming-tokens')).toHaveTextContent(
         'def solve_dependencies(): pass'

@@ -114,7 +114,9 @@ export const Header: React.FC<HeaderProps> = ({
               Edge AI v1.0
             </span>
           </div>
-          <p className="text-xs text-slate-400">Generative Code Retrieval & Semantic Search Engine</p>
+          <p className="hidden 2xl:block text-xs text-slate-400 truncate">
+            Generative Code Retrieval &amp; Semantic Search Engine
+          </p>
         </div>
       </div>
 
