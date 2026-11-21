@@ -11,6 +11,7 @@ interface HeaderProps {
   activeRepo?: RepositoryItem | null;
   healthRefreshTrigger?: number;
   apiClient?: { getHealth: (options?: { signal?: AbortSignal }) => Promise<HealthResponse> };
+  onBackendHealthChange?: (healthy: boolean) => void;
   isChatMinimized?: boolean;
   onToggleChatMinimized?: () => void;
   isCodeMinimized?: boolean;
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeRepo,
   healthRefreshTrigger = 0,
   apiClient: apiClientProp,
+  onBackendHealthChange,
   isChatMinimized = false,
   onToggleChatMinimized,
   isCodeMinimized = false,
@@ -40,11 +42,13 @@ export const Header: React.FC<HeaderProps> = ({
       const healthy = Boolean(resp && (resp.status === 'healthy' || resp.status === 'ok'));
       setHealth(resp);
       setIsBackendHealthy(healthy);
+      onBackendHealthChange?.(healthy);
     } catch {
       setHealth(null);
       setIsBackendHealthy(false);
+      onBackendHealthChange?.(false);
     }
-  }, [client]);
+  }, [client, onBackendHealthChange]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -55,17 +59,19 @@ export const Header: React.FC<HeaderProps> = ({
         const healthy = Boolean(resp && (resp.status === 'healthy' || resp.status === 'ok'));
         setHealth(resp);
         setIsBackendHealthy(healthy);
+        onBackendHealthChange?.(healthy);
       } catch {
         if (!isMounted) return;
         setHealth(null);
         setIsBackendHealthy(false);
+        onBackendHealthChange?.(false);
       }
     };
     run();
     return () => {
       isMounted = false;
     };
-  }, [client, healthRefreshTrigger, activeRepo]);
+  }, [client, healthRefreshTrigger, activeRepo, onBackendHealthChange]);
   const isWebGPUUnsupported = !webLLM.isWebGPUSupported && webLLM.status === 'error';
 
   const getWebLLMStatusColor = () => {
@@ -180,7 +186,7 @@ export const Header: React.FC<HeaderProps> = ({
           title={
             isBackendHealthy
               ? `Backend API connected at localhost:8000 (${health?.total_chunks ?? 0} indexed chunks in LanceDB). Click to refresh.`
-              : 'Backend API offline - operating in local simulator mode. Click to retry connection.'
+              : 'Backend API offline — start local FastAPI server (localhost:8000). Click to retry.'
           }
         >
           <span
@@ -192,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span data-testid="backend-health-label" className="font-semibold">
             {isBackendHealthy
               ? `API:8000 (LanceDB: ${health?.total_chunks ?? 0})`
-              : 'API: Offline (Simulator)'}
+              : 'API: Offline (Start Backend)'}
           </span>
         </button>
 

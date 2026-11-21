@@ -8,7 +8,6 @@ import { ASTMetadataInspector } from './ASTMetadataInspector';
 import { RepoFileTree } from './RepoFileTree';
 import { apiClient } from '../../services/apiClient';
 import { computeStrataLayout, StrataGraphData, STRATA_TIER_COLORS } from '../../services/strata/strataLayout';
-import { getMockStrataGraph } from '../../services/mockStrataData';
 
 const LazyStrataCanvas = lazy(() =>
   import('../strata/StrataCanvas').then((mod) => ({ default: mod.StrataCanvas }))
@@ -64,11 +63,12 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   const [fullFileContent, setFullFileContent] = useState<string | null>(null);
   const [isLoadingFullFile, setIsLoadingFullFile] = useState(false);
 
-  // Strata 3D graph state
-  const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() => {
-    const initialRaw = getMockStrataGraph(activeRepoId || 'requests');
-    return computeStrataLayout(initialRaw);
-  });
+  // Strata 3D graph state (fetched strictly from local FastAPI backend)
+  const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() =>
+    computeStrataLayout({ nodes: [], edges: [] })
+  );
+  const [strataOfflineError, setStrataOfflineError] = useState<boolean>(false);
+  const [strataRetryTick, setStrataRetryTick] = useState<number>(0);
   const [inspectedNodeId, setInspectedNodeId] = useState<string | null>(null);
 
   const handleToggleViewMode = (mode: ViewMode) => {
@@ -78,22 +78,34 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
   // Fetch strata graph data when active repository changes
   useEffect(() => {
+    if (!activeRepoId) {
+      setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }));
+      setStrataOfflineError(false);
+      return;
+    }
+
     let isMounted = true;
+    setStrataOfflineError(false);
     apiClient
-      .getRepoStrataGraph(activeRepoId || 'requests')
+      .getRepoStrataGraph(activeRepoId)
       .then((rawGraph) => {
         if (isMounted && rawGraph && rawGraph.nodes) {
           setStrataGraphData(computeStrataLayout(rawGraph));
+          setStrataOfflineError(false);
         }
       })
       .catch((err) => {
-        console.warn('Failed to load strata graph from API, using fallback:', err);
+        console.warn('Failed to load strata graph from backend:', err);
+        if (isMounted) {
+          setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }));
+          setStrataOfflineError(true);
+        }
       });
 
     return () => {
       isMounted = false;
     };
-  }, [activeRepoId]);
+  }, [activeRepoId, strataRetryTick]);
 
   const selectedChunk =
     chunks.find((c) => c.id === selectedChunkId) ?? (chunks.length > 0 ? chunks[0] : null);
@@ -435,21 +447,45 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
               </div>
 
               {/* Three.js Instanced Strata Canvas (lazy-loaded on demand) */}
-              <Suspense
-                fallback={
-                  <div className="w-full h-full flex items-center justify-center bg-[#070a12] text-slate-400 font-mono text-xs gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
-                    <span>Loading 3D Strata Map...</span>
-                  </div>
-                }
-              >
-                <LazyStrataCanvas
-                  graphData={strataGraphData}
-                  highlightedChunkIds={highlightedChunkIds}
-                  selectedChunkId={inspectedNodeId ?? selectedChunkId}
-                  onSelectNode={handleSelectStrataNode}
-                />
-              </Suspense>
+              {strataOfflineError ? (
+                <div
+                  data-testid="strata-backend-offline"
+                  className="w-full h-full flex flex-col items-center justify-center bg-[#070a12] text-center p-6 font-mono space-y-3"
+                >
+                  <p className="text-sm font-semibold text-amber-300">
+                    Local Backend Offline (3D Strata Unavailable)
+                  </p>
+                  <p className="text-xs text-slate-400 max-w-md font-sans">
+                    Start the FastAPI backend on <code className="font-mono text-sky-300">localhost:8000</code> to compute live 3D AST call graphs:
+                  </p>
+                  <pre className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 text-[11px] text-sky-300 select-all">
+                    uvicorn app.main:app --app-dir backend --port 8000
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => setStrataRetryTick((t) => t + 1)}
+                    className="px-3.5 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-600 text-white text-xs font-sans font-medium cursor-pointer transition-colors"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              ) : (
+                <Suspense
+                  fallback={
+                    <div className="w-full h-full flex items-center justify-center bg-[#070a12] text-slate-400 font-mono text-xs gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                      <span>Loading 3D Strata Map...</span>
+                    </div>
+                  }
+                >
+                  <LazyStrataCanvas
+                    graphData={strataGraphData}
+                    highlightedChunkIds={highlightedChunkIds}
+                    selectedChunkId={inspectedNodeId ?? selectedChunkId}
+                    onSelectNode={handleSelectStrataNode}
+                  />
+                </Suspense>
+              )}
 
               {/* Node Inspector Popup Overlay */}
               {inspectedNode && (

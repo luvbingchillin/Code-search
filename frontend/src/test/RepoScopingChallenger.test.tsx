@@ -262,7 +262,7 @@ describe('Challenger 1 Empirical Stress Test: Scope ReAct Agent Search Queries (
     expect(mockSearch.mock.calls[2][0]).toBe('Sim Query 3');
   });
 
-  it('H7 [Graceful Degradation]: Simulator branch survives if nemoIR.searchAstChunks throws', async () => {
+  it('H7 [Backend Required]: transitions cleanly to Error state if nemoIR.searchAstChunks throws (backend offline)', async () => {
     const errorNemoIR: UseNemoIRReturn = {
       ...mockNemoIR,
       searchAstChunks: vi.fn().mockRejectedValue(new Error('Backend connection refused')),
@@ -275,7 +275,7 @@ describe('Challenger 1 Empirical Stress Test: Scope ReAct Agent Search Queries (
       })
     );
 
-    // Should not reject or crash the hook
+    // Should not reject or crash the hook; enters clear Error state instead of silent mock fallback
     await act(async () => {
       await result.current.submitQuery('Resilience check');
     });
@@ -283,8 +283,8 @@ describe('Challenger 1 Empirical Stress Test: Scope ReAct Agent Search Queries (
     expect(errorNemoIR.searchAstChunks).toHaveBeenCalledWith('Resilience check', {
       filePath: 'fixtures/requests',
     });
-    expect(result.current.agentStatus.state).toBe('Complete');
-    expect(result.current.messages.length).toBeGreaterThan(1);
+    expect(result.current.agentStatus.state).toBe('Error');
+    expect(result.current.agentStatus.error).toContain('Backend connection refused');
   });
 
   it('H8 [E2E ApiClient Scoping]: ApiClient sends file_path in POST /api/v1/search request body', async () => {

@@ -13,7 +13,13 @@ import { apiClient } from './services/apiClient';
 export const App: React.FC = () => {
   const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const [healthRefreshTrigger, setHealthRefreshTrigger] = React.useState<number>(0);
+  const [isBackendOffline, setIsBackendOffline] = React.useState<boolean>(false);
+  const [copiedBackendCmd, setCopiedBackendCmd] = React.useState<boolean>(false);
   const webLLM = useWebLLM();
+
+  const handleBackendHealthChange = React.useCallback((healthy: boolean) => {
+    setIsBackendOffline(!healthy);
+  }, []);
   const nemoIR = useNemoIR();
   const agent = useReActAgent({
     webLLM,
@@ -271,12 +277,53 @@ export const App: React.FC = () => {
         agentStatus={agent.agentStatus}
         activeRepo={activeRepo}
         healthRefreshTrigger={healthRefreshTrigger}
+        onBackendHealthChange={handleBackendHealthChange}
         isChatMinimized={isChatMinimized}
         onToggleChatMinimized={toggleChatMinimized}
         isCodeMinimized={isCodeMinimized}
         onToggleCodeMinimized={toggleCodeMinimized}
         onOpenConnectRepo={handleOpenConnectRepo}
       />
+
+      {/* Actionable Prompt when Local FastAPI Backend is Not Running */}
+      {isBackendOffline && (
+        <div
+          data-testid="backend-offline-banner"
+          role="alert"
+          className="px-4 py-2 bg-amber-950/60 border-b border-amber-700/70 text-xs flex flex-wrap items-center justify-between gap-2 shrink-0"
+        >
+          <div className="flex flex-wrap items-center gap-2 text-amber-100">
+            <span className="font-semibold text-amber-300">Local Backend Required:</span>
+            <span>Start the FastAPI server on port 8000 to index &amp; search repositories:</span>
+            <code className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 font-mono text-[11px] text-sky-300 select-all">
+              uvicorn app.main:app --app-dir backend --port 8000
+            </code>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard?.writeText('uvicorn app.main:app --app-dir backend --port 8000');
+                  setCopiedBackendCmd(true);
+                  setTimeout(() => setCopiedBackendCmd(false), 2000);
+                } catch {
+                  // Ignore clipboard restrictions
+                }
+              }}
+              className="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-[11px] cursor-pointer transition-colors"
+            >
+              {copiedBackendCmd ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+          <button
+            type="button"
+            data-testid="retry-backend-btn"
+            onClick={() => setHealthRefreshTrigger((t) => t + 1)}
+            className="px-3 py-1 rounded bg-sky-700 hover:bg-sky-600 text-white font-medium text-xs cursor-pointer transition-colors shrink-0"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Main Resilient Split-Pane Interface */}
       <SplitPaneLayout

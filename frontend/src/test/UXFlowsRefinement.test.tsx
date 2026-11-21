@@ -271,7 +271,7 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       });
 
       const firstMsg = result.current.messages[result.current.messages.length - 1];
-      expect(firstMsg.content).toContain('Note: Synthesized using deterministic AST Simulator');
+      expect(firstMsg.content).toContain('Note: Formatted as a deterministic AST summary from live backend results');
 
       // Turn 2
       await act(async () => {
@@ -279,7 +279,7 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       });
 
       const secondMsg = result.current.messages[result.current.messages.length - 1];
-      expect(secondMsg.content).not.toContain('Note: Synthesized using deterministic AST Simulator');
+      expect(secondMsg.content).not.toContain('Note: Formatted as a deterministic AST summary from live backend results');
     });
   });
 

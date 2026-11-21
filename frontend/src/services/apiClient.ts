@@ -11,7 +11,6 @@ import {
   RepositoryManifestResponse,
   StrataGraphResponse,
 } from '../types';
-import { getMockStrataGraph } from './mockStrataData';
 
 export interface SearchRequest {
   query: string;
@@ -246,35 +245,12 @@ export class ApiClient {
   }
 
   public async getRepositories(): Promise<RepositoryItem[]> {
-    try {
-      const resp = await this.request<{ repositories: RepositoryItem[]; total: number }>('/api/v1/repos');
-      return resp.repositories.map((r: RepositoryItem) => ({
-        ...r,
-        chunksCount: r.chunks_count ?? r.chunksCount ?? 0,
-        filesCount: r.files_count ?? r.filesCount ?? 0,
-      }));
-    } catch {
-      return [
-        {
-          id: 'requests',
-          name: 'psf/requests',
-          path: 'fixtures/requests',
-          chunksCount: 284,
-          filesCount: 17,
-          status: 'indexed',
-          description: 'Python HTTP for Humans (284 AST nodes, Session, models, adapters)',
-        },
-        {
-          id: 'sample_codebase',
-          name: 'sample_codebase',
-          path: 'backend/sample_codebase',
-          chunksCount: 14,
-          filesCount: 3,
-          status: 'indexed',
-          description: 'FastAPI service sample with math functions, classes, and decorators',
-        },
-      ];
-    }
+    const resp = await this.request<{ repositories: RepositoryItem[]; total: number }>('/api/v1/repos');
+    return resp.repositories.map((r: RepositoryItem) => ({
+      ...r,
+      chunksCount: r.chunks_count ?? r.chunksCount ?? 0,
+      filesCount: r.files_count ?? r.filesCount ?? 0,
+    }));
   }
 
   public async getRepoChunks(repoIdOrPath: string, limit: number = 10): Promise<AstCodeChunk[]> {
@@ -307,35 +283,6 @@ export class ApiClient {
         { method: 'GET', signal: options?.signal }
       );
     } catch {
-      // Fallback if backend offline or endpoint unavailable
-      if (repoId.toLowerCase().includes('requests')) {
-        return {
-          repo_id: 'requests',
-          repo_name: 'psf/requests',
-          manifest:
-            'psf/requests is a human-friendly HTTP client library for Python.\n' +
-            'Core Components:\n' +
-            '- Session: Maintains cookies, connection pooling, and configuration across requests.\n' +
-            '- Request & PreparedRequest: Represents outgoing HTTP requests before and after URL/header preparation.\n' +
-            '- Response: Encapsulates server response data, status codes, encoding detection, and JSON parsing.\n' +
-            '- HTTPAdapter: Transport adapter connecting Sessions to urllib3 socket pools.\n' +
-            'Pipeline: Session.request() builds Request -> prepares PreparedRequest -> dispatches via HTTPAdapter.send() -> returns Response.',
-          core_components: ['Session', 'Request', 'PreparedRequest', 'Response', 'HTTPAdapter'],
-        };
-      } else if (repoId.toLowerCase().includes('sample')) {
-        return {
-          repo_id: 'sample_codebase',
-          repo_name: 'sample_codebase',
-          manifest:
-            'sample_codebase is a demonstration service showcasing FastAPI routes, mathematical operations, and utility classes.\n' +
-            'Core Components:\n' +
-            '- Calculator: Core calculation class supporting arithmetic operations, memory storage, and error handling.\n' +
-            '- FastAPI Routes: API endpoints exposing calculation services and health checks.\n' +
-            '- Utility Functions: Helper validation and formatting routines.\n' +
-            'Pipeline: Client request -> FastAPI route validation -> Calculator business logic execution -> JSON response.',
-          core_components: ['Calculator', 'FastAPI Routes', 'Utility Functions'],
-        };
-      }
       return null;
     }
   }
@@ -344,14 +291,10 @@ export class ApiClient {
     repoId: string,
     options?: { signal?: AbortSignal }
   ): Promise<StrataGraphResponse> {
-    try {
-      return await this.request<StrataGraphResponse>(
-        `/api/v1/repos/${encodeURIComponent(repoId)}/strata-graph`,
-        { method: 'GET', signal: options?.signal }
-      );
-    } catch {
-      return getMockStrataGraph(repoId);
-    }
+    return this.request<StrataGraphResponse>(
+      `/api/v1/repos/${encodeURIComponent(repoId)}/strata-graph`,
+      { method: 'GET', signal: options?.signal }
+    );
   }
 
   public async getRepoFileContent(

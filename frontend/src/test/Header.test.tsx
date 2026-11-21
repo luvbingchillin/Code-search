@@ -108,7 +108,7 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
     expect(healthDot.className).toContain('bg-emerald-400');
   });
 
-  it('renders offline status pill with API: Offline (Simulator) when getHealth() rejects', async () => {
+  it('renders offline status pill with API: Offline (Start Backend) when getHealth() rejects', async () => {
     vi.spyOn(apiClient, 'getHealth').mockRejectedValue(new Error('Connection refused: localhost:8000'));
 
     render(
@@ -120,7 +120,7 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
     );
 
     const healthLabel = await screen.findByTestId('backend-health-label');
-    expect(healthLabel).toHaveTextContent('API: Offline (Simulator)');
+    expect(healthLabel).toHaveTextContent('API: Offline (Start Backend)');
 
     const healthPill = screen.getByTestId('backend-health-pill');
     expect(healthPill.className).toContain('bg-amber-950/50');
@@ -151,7 +151,7 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
     );
 
     const healthLabel = await screen.findByTestId('backend-health-label');
-    expect(healthLabel).toHaveTextContent('API: Offline (Simulator)');
+    expect(healthLabel).toHaveTextContent('API: Offline (Start Backend)');
 
     const healthPill = screen.getByTestId('backend-health-pill');
     expect(healthPill.className).toContain('bg-amber-950/50');
@@ -288,7 +288,7 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('backend-health-label')).toHaveTextContent('API: Offline (Simulator)');
+      expect(screen.getByTestId('backend-health-label')).toHaveTextContent('API: Offline (Start Backend)');
     });
 
     // Trigger refresh after backend comes online
@@ -409,7 +409,7 @@ describe('Header Backend Health & LanceDB Status Indicator Suite (Requirement R5
       );
 
       const healthLabel = await screen.findByTestId('backend-health-label');
-      expect(healthLabel).toHaveTextContent('API: Offline (Simulator)');
+      expect(healthLabel).toHaveTextContent('API: Offline (Start Backend)');
       const healthPill = screen.getByTestId('backend-health-pill');
       expect(healthPill.className).toContain('bg-amber-950/50');
     });

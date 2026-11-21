@@ -13,6 +13,9 @@ import { AstCodeChunk } from '../types';
 describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(apiClient, 'getRepoStrataGraph').mockImplementation(async (repoId: string) =>
+      getMockStrataGraph(repoId)
+    );
   });
 
   describe('1. View Mode Toggling between Code View and 3D Strata View', () => {
@@ -424,7 +427,7 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
       spy.mockRestore();
     });
 
-    it('falls back gracefully to mock strata data when API returns network error', async () => {
+    it('displays actionable backend-offline prompt in Strata view when API returns network error', async () => {
       const spy = vi.spyOn(apiClient, 'getRepoStrataGraph').mockRejectedValueOnce(new Error('Connection refused'));
       const user = userEvent.setup();
 
@@ -439,9 +442,9 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
 
       await user.click(screen.getByTestId('view-mode-strata-btn'));
 
-      // Does not crash, renders fallback mock data
-      expect(screen.getByTestId('strata-canvas')).toBeInTheDocument();
-      expect(screen.getByTestId('strata-call-reference-label')).toBeInTheDocument();
+      // Displays honest backend-offline startup prompt instead of fake graph data
+      expect(await screen.findByTestId('strata-backend-offline')).toBeInTheDocument();
+      expect(screen.getByText(/uvicorn app\.main:app/i)).toBeInTheDocument();
 
       spy.mockRestore();
     });

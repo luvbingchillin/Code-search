@@ -134,7 +134,7 @@ function getStatusContent(
     return `### System & Repository Status
 
 - **Active Repository**: *None connected*
-- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Offline - using AST Simulator)'}
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Standby - Deterministic AST Summary)'}
 - **Code Definitions Loaded**: ${activeChunksCount}
 
 *Click **Repositories** in the top header to connect \`psf/requests\` or index a local codebase.*`;
@@ -145,10 +145,10 @@ function getStatusContent(
 - **Active Repository**: **${repoName}** (\`${repoPath}\`)
 - **Indexed Definitions**: **${chunksCount}** definitions (functions, classes, methods)
 - **Active Code Tabs**: **${activeChunksCount}** loaded in viewer
-- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Offline - using AST Simulator)'}
+- **Edge AI Engine**: **WebLLM (${modelName})** — \`${webLLM?.status || 'unloaded'}\` ${isWebLLMReady ? '(WebGPU Active)' : '(Standby - Deterministic AST Summary)'}
 - **NemoIR WebAssembly JIT**: Ready & compiled
 
-${!isWebLLMReady ? '> *Tip: Click **WebLLM: Offline -> Click to Load** in the top header to switch from template simulation to real-time neural edge inference on your GPU.*' : ''}`;
+${!isWebLLMReady ? '> *Tip: Click **WebLLM: Offline -> Click to Load** in the top header to activate real-time local neural inference on your GPU.*' : ''}`;
 }
 
 export function useReActAgent(
@@ -858,28 +858,23 @@ Please select or connect a Python repository before querying code definitions.
             if (isCancelledRef.current) throw new Error('Query cancelled by user');
           }
         } else {
-          // If NemoIR is available, search live LanceDB backend first
+          // Search live LanceDB backend via NemoIR before summarizing
           let liveChunks: AstCodeChunk[] | undefined;
           if (nemoIRRef.current) {
-            try {
-              const searchOptions = activeRepoPathRef.current
-                ? { filePath: activeRepoPathRef.current }
-                : undefined;
-              const res = await (searchOptions
-                ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
-                : nemoIRRef.current.searchAstChunks(effectiveSearchTerm));
-              if (res) {
-                liveChunks = res;
-              }
-            } catch (nemoErr) {
-              if (webLLMRef.current !== undefined) {
-                throw nemoErr;
-              }
-              // Pure simulator fallback: gracefully continue with simulator chunks
-            }
+            const searchOptions = activeRepoPathRef.current
+              ? { filePath: activeRepoPathRef.current }
+              : undefined;
+            const res = await (searchOptions
+              ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
+              : nemoIRRef.current.searchAstChunks(effectiveSearchTerm));
+            liveChunks = res ?? [];
+          } else if (!isTestEnv) {
+            throw new Error(
+              'Local backend (localhost:8000) is required for AST search. Start Uvicorn with: uvicorn app.main:app --app-dir backend --port 8000'
+            );
           }
 
-          // Use simulator with live token streaming callback
+          // Summarize real backend AST chunks via deterministic formatter while WebLLM is unloaded
           const result = await simulatorRef.current.runReActCycle(
             effectiveQuery,
             (state: ReActState, message: string, chunks?: AstCodeChunk[]) => {
@@ -913,12 +908,12 @@ Please select or connect a Python repository before querying code definitions.
             liveChunks
           );
 
-          const isFirstSimulatorResponse = !hasShownSimulatorNoticeRef.current;
-          if (isFirstSimulatorResponse) {
+          const isFirstSummaryResponse = !hasShownSimulatorNoticeRef.current;
+          if (isFirstSummaryResponse) {
             hasShownSimulatorNoticeRef.current = true;
             finalResponseText =
               result.response +
-              '\n\n> 💡 *Note: Synthesized using deterministic AST Simulator. Click **WebLLM: Load** in the header to activate real-time local neural code synthesis (Qwen2.5-Coder on WebGPU).*';
+              '\n\n> *Note: Formatted as a deterministic AST summary from live backend results. Click **WebLLM: Offline -> Click to Load** in the header for local neural synthesis (Qwen2.5-Coder on WebGPU).*';
           } else {
             finalResponseText = result.response;
           }

@@ -9,6 +9,7 @@ import { MessageList } from '../components/chat/MessageList';
 import { CodeViewerHeader } from '../components/viewer/CodeViewerHeader';
 import { SplitPaneLayout } from '../components/layout/SplitPaneLayout';
 import { apiClient } from '../services/apiClient';
+import { App } from '../App';
 import { AstCodeChunk, AgentStatus } from '../types';
 
 const mockChunks: AstCodeChunk[] = [
@@ -198,5 +199,47 @@ describe('Accessibility, Layout & Interaction Hardening Suite', () => {
 
     const separator = screen.getByRole('separator');
     expect(separator.className).toContain('touch-none');
+  });
+
+  it('App displays backend-offline-banner when backend health fails and dismisses it on Retry Connection', async () => {
+    const user = userEvent.setup();
+    const healthSpy = vi
+      .spyOn(apiClient, 'getHealth')
+      .mockRejectedValueOnce(new Error('Connection refused'))
+      .mockResolvedValueOnce({
+        status: 'healthy',
+        vector_db: 'lancedb',
+        total_chunks: 10,
+        embedding_dimension: 384,
+        embedding_model: 'all-MiniLM-L6-v2',
+      });
+
+    render(<App />);
+
+    const banner = await screen.findByTestId('backend-offline-banner');
+    expect(banner).toBeInTheDocument();
+    expect(banner).toHaveTextContent(/uvicorn app\.main:app/i);
+
+    await user.click(screen.getByTestId('retry-backend-btn'));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('backend-offline-banner')).not.toBeInTheDocument();
+    });
+    expect(healthSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('ConnectRepoModal shows local backend startup prompt when getRepositories rejects', async () => {
+    vi.spyOn(apiClient, 'getRepositories').mockRejectedValueOnce(new Error('Network offline'));
+
+    render(
+      <ConnectRepoModal
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
+
+    const offlineBox = await screen.findByTestId('modal-backend-offline');
+    expect(offlineBox).toBeInTheDocument();
+    expect(offlineBox).toHaveTextContent(/Local Backend Server Offline/i);
   });
 });

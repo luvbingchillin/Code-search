@@ -524,7 +524,7 @@ describe('Sequential Improvements Consolidated E2E Integration Suite', () => {
       await user.click(await screen.findByTestId('open-repo-btn-sample_codebase'));
 
       await waitFor(() => {
-        expect(label).toHaveTextContent('API: Offline (Simulator)');
+        expect(label).toHaveTextContent('API: Offline (Start Backend)');
         expect(dot).toHaveClass('bg-amber-400');
       });
     });

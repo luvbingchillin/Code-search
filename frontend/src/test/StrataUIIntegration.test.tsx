@@ -5,10 +5,14 @@ import { CodeViewerContainer } from '../components/viewer/CodeViewerContainer';
 import { CodeViewerHeader } from '../components/viewer/CodeViewerHeader';
 import { mockAstChunks } from './fixtures/mockData';
 import { apiClient } from '../services/apiClient';
+import { getMockStrataGraph } from '../services/mockStrataData';
 
 describe('3D Strata Code Dependency Model UI Integration Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(apiClient, 'getRepoStrataGraph').mockImplementation(async (repoId: string) =>
+      getMockStrataGraph(repoId)
+    );
   });
 
   describe('1. CodeViewerHeader View Mode Toggle', () => {
@@ -234,8 +238,8 @@ describe('3D Strata Code Dependency Model UI Integration Suite', () => {
     });
   });
 
-  describe('5. API Resilience & Offline Mock Fallback', () => {
-    it('falls back to mock strata graph without crashing if API rejects', async () => {
+  describe('5. Backend Required & Offline Startup Prompt', () => {
+    it('displays actionable backend startup prompt without crashing if API rejects', async () => {
       const spy = vi.spyOn(apiClient, 'getRepoStrataGraph').mockRejectedValueOnce(new Error('Network offline'));
       const user = userEvent.setup();
 
@@ -249,8 +253,8 @@ describe('3D Strata Code Dependency Model UI Integration Suite', () => {
       );
 
       await user.click(screen.getByTestId('view-mode-strata-btn'));
-      expect(screen.getByTestId('strata-canvas')).toBeInTheDocument();
-      expect(screen.getByTestId('strata-call-reference-label')).toBeInTheDocument();
+      expect(await screen.findByTestId('strata-backend-offline')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Retry Connection/i })).toBeInTheDocument();
 
       spy.mockRestore();
     });

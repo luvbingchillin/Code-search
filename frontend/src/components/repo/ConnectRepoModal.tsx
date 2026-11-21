@@ -37,6 +37,8 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   const [activeTab, setActiveTab] = useState<'existing' | 'add'>('existing');
   const [repos, setRepos] = useState<RepositoryItem[]>([]);
   const [isLoadingRepos, setIsLoadingRepos] = useState<boolean>(false);
+  const [reposOffline, setReposOffline] = useState<boolean>(false);
+  const [retryReposTick, setRetryReposTick] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Add / Index Form State
@@ -64,13 +66,18 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
     let mounted = true;
     const fetchRepos = async () => {
       setIsLoadingRepos(true);
+      setReposOffline(false);
       try {
         const list = await apiClient.getRepositories();
         if (mounted) {
           setRepos(list);
+          setReposOffline(false);
         }
       } catch {
-        // Fallback handled in apiClient
+        if (mounted) {
+          setRepos([]);
+          setReposOffline(true);
+        }
       } finally {
         if (mounted) setIsLoadingRepos(false);
       }
@@ -80,7 +87,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
     return () => {
       mounted = false;
     };
-  }, [isOpen]);
+  }, [isOpen, retryReposTick]);
 
   // Dismiss modal on Escape key
   useEffect(() => {
@@ -302,6 +309,31 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                 <div className="flex items-center justify-center py-12 text-slate-400 space-x-2 text-xs">
                   <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
                   <span>Loading indexed repositories...</span>
+                </div>
+              ) : reposOffline ? (
+                <div
+                  data-testid="modal-backend-offline"
+                  className="text-center py-8 px-4 bg-amber-950/20 rounded-xl border border-amber-700/50 text-slate-200 text-xs space-y-3"
+                >
+                  <AlertCircle className="w-7 h-7 text-amber-400 mx-auto" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-amber-200">Local Backend Server Offline</p>
+                    <p className="text-slate-400">
+                      Start the FastAPI server on <code className="font-mono text-sky-300">localhost:8000</code> to list and index repositories:
+                    </p>
+                  </div>
+                  <pre className="inline-block px-3 py-1.5 rounded bg-slate-950 border border-slate-800 font-mono text-[11px] text-sky-300 select-all">
+                    uvicorn app.main:app --app-dir backend --port 8000
+                  </pre>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setRetryReposTick((t) => t + 1)}
+                      className="px-3.5 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-600 text-white font-medium text-xs transition-colors cursor-pointer"
+                    >
+                      Retry Connection
+                    </button>
+                  </div>
                 </div>
               ) : filteredRepos.length === 0 ? (
                 <div className="text-center py-10 bg-slate-950/50 rounded-xl border border-slate-800 text-slate-400 text-xs">
