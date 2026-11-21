@@ -94,7 +94,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               data-testid="chunk-file-path"
               className="font-sans font-semibold text-sky-400 tracking-tight flex items-center space-x-1 whitespace-nowrap truncate"
             >
-              <span>3D Strata</span>
+              <span>3D Strata<span className="sr-only 2xl:not-sr-only"> Architecture Map</span></span>
               {chunk && (
                 <span className="text-slate-400 font-mono font-normal text-[11px] hidden lg:inline truncate max-w-[180px]">
                   ({chunk.identifier})

@@ -346,44 +346,44 @@ export const AgentRunner: React.FC<AgentRunnerProps> = ({
           )}
         </div>
 
-        {/* Action Controls */}
-        <div data-testid="agent-controls" className="flex items-center space-x-1.5 shrink-0 ml-2">
-          {isBusy && onCancel && (
-            <button
-              onClick={onCancel}
-              data-testid="agent-cancel-btn"
-              className={`flex items-center space-x-1 text-xs text-rose-300 hover:text-white bg-rose-950 hover:bg-rose-900 border border-rose-700 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs ${
-                embedded ? 'sr-only' : ''
-              }`}
-              title="Cancel current query"
-            >
-              <StopCircle className="w-3 h-3" />
-              <span>Stop</span>
-            </button>
-          )}
+        {/* Action Controls (omitted when embedded since AgenticLoopBanner owns controls) */}
+        {!embedded && (
+          <div data-testid="agent-controls" className="flex items-center space-x-1.5 shrink-0 ml-2">
+            {isBusy && onCancel && (
+              <button
+                onClick={onCancel}
+                data-testid="agent-cancel-btn"
+                className="flex items-center space-x-1 text-xs text-rose-300 hover:text-white bg-rose-950 hover:bg-rose-900 border border-rose-700 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs"
+                title="Cancel current query"
+              >
+                <StopCircle className="w-3 h-3" />
+                <span>Stop</span>
+              </button>
+            )}
 
-          {(normState === 'complete' || normState === 'error') && onReset && (
-            <button
-              onClick={onReset}
-              data-testid="agent-reset-btn"
-              className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
-              title="Reset agent state"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset</span>
-            </button>
-          )}
+            {(normState === 'complete' || normState === 'error') && onReset && (
+              <button
+                onClick={onReset}
+                data-testid="agent-reset-btn"
+                className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
+                title="Reset agent state"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
 
-          <button
-            onClick={toggleExpanded}
-            data-testid="agent-toggle-traces-btn"
-            className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
-            title={isExpanded ? 'Collapse agent traces' : 'Expand agent traces'}
-          >
-            <span className="text-[11px] font-sans">Traces</span>
-            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
-          </button>
-        </div>
+            <button
+              onClick={toggleExpanded}
+              data-testid="agent-toggle-traces-btn"
+              className="flex items-center space-x-1 text-xs text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer shadow-xs emil-press active:scale-95"
+              title={isExpanded ? 'Collapse agent traces' : 'Expand agent traces'}
+            >
+              <span className="text-[11px] font-sans">Traces</span>
+              {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Expandable Body */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Layers, Code2, Inbox, X } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
@@ -17,6 +17,8 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
   onCloseChunk,
   onCloseAllChunks,
 }) => {
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
   if (chunks.length === 0) {
     return (
       <div
@@ -50,6 +52,9 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
             role="tab"
             tabIndex={isSelected ? 0 : -1}
             aria-selected={isSelected}
+            ref={(el) => {
+              tabRefs.current[chunk.id] = el as unknown as HTMLButtonElement | null;
+            }}
             onClick={() => onSelectChunk(chunk.id)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -57,10 +62,14 @@ export const ChunkSelectorTabs: React.FC<ChunkSelectorTabsProps> = ({
                 onSelectChunk(chunk.id);
               } else if (e.key === 'ArrowRight' && chunks.length > 1) {
                 e.preventDefault();
-                onSelectChunk(chunks[(idx + 1) % chunks.length].id);
+                const nextId = chunks[(idx + 1) % chunks.length].id;
+                onSelectChunk(nextId);
+                tabRefs.current[nextId]?.focus();
               } else if (e.key === 'ArrowLeft' && chunks.length > 1) {
                 e.preventDefault();
-                onSelectChunk(chunks[(idx - 1 + chunks.length) % chunks.length].id);
+                const prevId = chunks[(idx - 1 + chunks.length) % chunks.length].id;
+                onSelectChunk(prevId);
+                tabRefs.current[prevId]?.focus();
               }
             }}
             title={`${chunk.identifier} (${isClass ? 'Class' : 'Function'})\nFile: ${chunk.filePath}\nSemantic Match: ${scorePct}%`}

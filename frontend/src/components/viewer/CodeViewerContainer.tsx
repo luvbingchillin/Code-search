@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import { X, ExternalLink, Loader2 } from 'lucide-react';
+import { X, ExternalLink, Loader2, FileCode2 } from 'lucide-react';
 import { AstCodeChunk, FileSymbolNode } from '../../types';
 import { CodeViewerHeader, ViewMode } from './CodeViewerHeader';
 import { ChunkSelectorTabs } from './ChunkSelectorTabs';
@@ -531,9 +531,12 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                     {inspectedNodeCallees.length > 0 ? (
                       <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
                         {inspectedNodeCallees.map((edge) => (
-                          <div
+                          <button
                             key={edge.id}
-                            className="flex items-center justify-between p-1 rounded bg-slate-950 border border-slate-800 text-[10px]"
+                            type="button"
+                            onClick={() => handleSelectStrataNode(edge.target)}
+                            className="w-full text-left flex items-center justify-between p-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-[10px] cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
+                            title={`Inspect ${edge.callName || edge.target} in 3D Strata`}
                           >
                             <span className="text-sky-300 truncate font-mono">
                               &rarr; {edge.callName || edge.target}
@@ -541,7 +544,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                             <span className="text-slate-400 text-[9px] shrink-0 ml-1">
                               T{edge.targetTier}
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     ) : (
@@ -558,7 +561,8 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                     onClick={handleOpenInCodeViewer}
                     className="w-full py-1.5 px-3 rounded bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors emil-press font-mono"
                   >
-                    <span>📄 Open in Code Viewer</span>
+                    <FileCode2 className="w-3.5 h-3.5" />
+                    <span>Open in Code Viewer</span>
                     <ExternalLink className="w-3 h-3" />
                   </button>
                 </div>

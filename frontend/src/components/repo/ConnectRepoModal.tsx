@@ -230,17 +230,19 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center space-x-2 border-b border-slate-800/80 pb-2">
+        <div role="tablist" aria-label="Repository modal views" className="flex items-center space-x-2 border-b border-slate-800/80 pb-2">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'existing'}
             data-testid="tab-existing-repos"
             onClick={() => {
               setActiveTab('existing');
               setError(null);
             }}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer emil-press ${
+            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
               activeTab === 'existing'
-                ? 'bg-sky-600 text-white shadow-xs'
+                ? 'bg-sky-700 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
@@ -249,7 +251,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             <span
               className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeTab === 'existing'
-                  ? 'bg-sky-700/80 text-white'
+                  ? 'bg-sky-800 text-white'
                   : 'bg-slate-800 text-slate-400'
               }`}
             >
@@ -259,14 +261,16 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'add'}
             data-testid="tab-add-repo"
             onClick={() => {
               setActiveTab('add');
               setError(null);
             }}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer emil-press ${
+            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
               activeTab === 'add'
-                ? 'bg-sky-600 text-white shadow-xs'
+                ? 'bg-sky-700 text-white shadow-xs'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
@@ -280,14 +284,15 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
           <div className="flex-1 flex flex-col space-y-3 overflow-hidden min-h-[300px]">
             {/* Search filter bar */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 data-testid="search-repos-input"
+                aria-label="Filter repositories by name or path"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Filter repositories by name or path..."
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500"
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-hidden focus:border-sky-500"
               />
             </div>
 
@@ -432,7 +437,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
             {/* Path Input Form with Native Browse Button */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-300">
+                <label htmlFor="repo-path-input" className="text-xs font-medium text-slate-300">
                   Local Repository Path:
                 </label>
                 <button
@@ -604,7 +609,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
         {/* Footer */}
         <div className="pt-3 flex justify-between items-center border-t border-slate-800 text-xs">
           <span className="text-[11px] text-slate-400 font-mono">
-            {repos.length} repositories registered
+            {repos.length} repositories registered · 100% local indexing (zero cloud upload)
           </span>
           <button
             type="button"

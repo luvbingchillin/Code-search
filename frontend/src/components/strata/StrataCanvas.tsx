@@ -401,8 +401,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
         positions[idx + 4] = ty;
         positions[idx + 5] = tz;
 
-        // Default edge color: deep moss / emerald wire
-        const baseEdgeColor = new THREE.Color('#195f2d');
+        // Default edge color: calm slate wire on obsidian canvas
+        const baseEdgeColor = new THREE.Color('#334155');
         colors[idx] = baseEdgeColor.r;
         colors[idx + 1] = baseEdgeColor.g;
         colors[idx + 2] = baseEdgeColor.b;
@@ -418,7 +418,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       const edgeMaterial = new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.7,
         depthWrite: false,
       });
 
@@ -767,7 +767,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
               <span className="font-semibold" style={{ color: tier.color }}>
                 T{tier.tier}:
               </span>
-              <span className="truncate max-w-[140px]">{tier.name}</span>
+              <span className="truncate max-w-[185px]">{tier.name}</span>
               <span className="text-[10px] text-slate-400 ml-auto">({tier.nodeCount})</span>
             </div>
           );
