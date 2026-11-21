@@ -443,7 +443,7 @@ class TestStrataGraphBuilder:
             assert t.node_count == 0
 
     def test_tier_definitions_integrity(self):
-        """Verify standard tier metadata definitions conform to design tokens and specs."""
+        """Verify standard tier metadata definitions conform to design tokens and reserve lime for citations."""
         assert len(TIER_DEFINITIONS) == 4
         for i, t in enumerate(TIER_DEFINITIONS):
             assert t["tier"] == i
@@ -451,3 +451,44 @@ class TestStrataGraphBuilder:
             assert "description" in t
             assert "color" in t
             assert t["color"].startswith("#")
+            # Electric acid lime (#68f12b) must be reserved exclusively for AI citation highlights
+            assert t["color"].lower() != "#68f12b"
+
+    def test_ambiguous_container_calls_do_not_create_cross_file_spiderweb(self):
+        """Generic calls like dict.get() or resp.close() must not link unrelated classes across files."""
+        c_caller = AstCodeChunk(
+            id="utils.py:parse_headers:1",
+            filePath="utils.py",
+            fileName="utils.py",
+            astNodeType="FunctionDef",
+            identifier="parse_headers",
+            startLine=1,
+            endLine=10,
+            code="def parse_headers(d): return d.get('host')",
+            calls=["d.get", "resp.close"],
+        )
+        c_other_get = AstCodeChunk(
+            id="api.py:get:1",
+            filePath="api.py",
+            fileName="api.py",
+            astNodeType="FunctionDef",
+            identifier="get",
+            startLine=1,
+            endLine=10,
+            code="def get(url): pass",
+            calls=[],
+        )
+        c_other_close = AstCodeChunk(
+            id="sessions.py:Session.close:1",
+            filePath="sessions.py",
+            fileName="sessions.py",
+            astNodeType="FunctionDef",
+            identifier="Session.close",
+            startLine=1,
+            endLine=10,
+            code="def close(self): pass",
+            calls=[],
+        )
+
+        graph = build_strata_graph([c_caller, c_other_get, c_other_close], repo_id="test_repo")
+        assert graph.total_edges == 0

@@ -38,6 +38,14 @@ interface HoveredNodeInfo {
   screenY: number;
 }
 
+interface ProjectedLabel {
+  id: string;
+  identifier: string;
+  x: number;
+  y: number;
+  isSelected: boolean;
+}
+
 export const StrataCanvas: React.FC<StrataCanvasProps> = ({
   graphData,
   highlightedChunkIds,
@@ -52,6 +60,12 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
   const [hasWebGL, setHasWebGL] = useState<boolean>(() => isWebGLAvailable());
   const [isContextLost, setIsContextLost] = useState<boolean>(false);
   const [hoveredNode, setHoveredNode] = useState<HoveredNodeInfo | null>(null);
+  const [projectedLabels, setProjectedLabels] = useState<ProjectedLabel[]>([]);
+
+  // Refs for latest projection inputs without re-creating markDirty
+  const labelTargetsRef = useRef<StrataNode[]>([]);
+  const selectedIdRef = useRef<string | null | undefined>(selectedChunkId);
+  selectedIdRef.current = selectedChunkId;
 
   // References for Three.js engine objects
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -86,6 +100,37 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
           if (isDirtyRef.current || stillMoving) {
             rendererRef.current.render(sceneRef.current, cameraRef.current);
             isDirtyRef.current = false;
+
+            // Project highlighted & selected 3D nodes into crisp 2D screen label pins (0 FPS idle cost)
+            const container = containerRef.current;
+            const targets = labelTargetsRef.current;
+            if (container && targets.length > 0) {
+              const w = container.clientWidth || 800;
+              const h = container.clientHeight || 600;
+              const projVec = new THREE.Vector3();
+              const nextLabels: ProjectedLabel[] = [];
+              for (let i = 0; i < targets.length && nextLabels.length < 10; i++) {
+                const node = targets[i];
+                projVec.set(node.x, node.y + 1.8, node.z);
+                projVec.project(cameraRef.current);
+                if (projVec.z >= -1 && projVec.z <= 1) {
+                  const sx = (projVec.x * 0.5 + 0.5) * w;
+                  const sy = (-projVec.y * 0.5 + 0.5) * h;
+                  if (sx >= 16 && sx <= w - 16 && sy >= 16 && sy <= h - 16) {
+                    nextLabels.push({
+                      id: node.id,
+                      identifier: node.identifier,
+                      x: Math.round(sx),
+                      y: Math.round(sy),
+                      isSelected: selectedIdRef.current === node.id,
+                    });
+                  }
+                }
+              }
+              setProjectedLabels(nextLabels);
+            } else {
+              setProjectedLabels((prev) => (prev.length === 0 ? prev : []));
+            }
           }
 
           // If orbit controls are still damping, keep scheduling frames until completely settled
@@ -460,6 +505,11 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
       }
     }
 
+    // Update label projection targets for highlighted/selected nodes
+    labelTargetsRef.current = graphData.nodes.filter(
+      (n) => selectedChunkId === n.id || Boolean(highlightedChunkIds?.has(n.id))
+    );
+
     markDirty();
   }, [hasWebGL, graphData.nodes, graphData.edges, selectedChunkId, highlightedChunkIds, markDirty]);
 
@@ -534,6 +584,40 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     controlsRef.current.update();
     markDirty();
   }, [markDirty]);
+
+  // Helper to frame camera onto highlighted/selected cited nodes
+  const hasFocusableNodes = useMemo(
+    () =>
+      graphData.nodes.some(
+        (n) => selectedChunkId === n.id || Boolean(highlightedChunkIds?.has(n.id))
+      ),
+    [graphData.nodes, selectedChunkId, highlightedChunkIds]
+  );
+
+  const handleFocusCited = useCallback(() => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    const targets = graphData.nodes.filter(
+      (n) => selectedChunkId === n.id || Boolean(highlightedChunkIds?.has(n.id))
+    );
+    if (targets.length === 0) return;
+
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    for (const n of targets) {
+      cx += n.x;
+      cy += n.y;
+      cz += n.z;
+    }
+    cx /= targets.length;
+    cy /= targets.length;
+    cz /= targets.length;
+
+    controlsRef.current.target.set(cx, cy, cz);
+    cameraRef.current.position.set(cx + 65, cy + 55, cz + 85);
+    controlsRef.current.update();
+    markDirty();
+  }, [graphData.nodes, selectedChunkId, highlightedChunkIds, markDirty]);
 
   // JSDOM / CI / Headless fallback when WebGL context cannot be created
   if (!hasWebGL) {
@@ -620,6 +704,17 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
 
       {/* Floating View Controls HUD */}
       <div className="absolute top-3 right-3 flex items-center gap-2 z-10 pointer-events-auto">
+        {hasFocusableNodes && (
+          <button
+            type="button"
+            data-testid="strata-focus-cited-btn"
+            onClick={handleFocusCited}
+            className="px-2.5 py-1 text-xs font-mono font-semibold rounded border border-[#68f12b]/60 bg-[#0a2212]/90 text-[#68f12b] hover:bg-[#68f12b] hover:text-[#0a1f10] transition-colors cursor-pointer shadow-sm"
+            title="Frame camera on highlighted/selected nodes"
+          >
+            Focus Cited
+          </button>
+        )}
         <button
           onClick={handleResetCamera}
           className="px-2.5 py-1 text-xs font-mono font-medium rounded border border-[#134721] bg-[#0a2212]/90 text-[#f4f3eb] hover:border-[#68f12b] hover:text-[#68f12b] transition-colors cursor-pointer shadow-sm"
@@ -628,6 +723,32 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
           Reset View
         </button>
       </div>
+
+      {/* Projected Floating 2D Label Pins for Highlighted & Selected 3D Nodes */}
+      {projectedLabels.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+          {projectedLabels.map((lbl) => (
+            <button
+              key={lbl.id}
+              type="button"
+              data-testid={`strata-floating-label-${lbl.id}`}
+              onClick={() => onSelectNode?.(lbl.id)}
+              style={{
+                left: `${lbl.x}px`,
+                top: `${lbl.y}px`,
+                transform: 'translate(-50%, -100%)',
+              }}
+              className={`absolute pointer-events-auto px-1.5 py-0.5 rounded text-[10px] font-mono whitespace-nowrap shadow-md transition-colors cursor-pointer ${
+                lbl.isSelected
+                  ? 'bg-white text-[#0a1f10] font-bold border border-[#68f12b]'
+                  : 'bg-[#0a1f10]/90 text-[#68f12b] border border-[#68f12b]/60 hover:bg-[#68f12b] hover:text-[#0a1f10]'
+              }`}
+            >
+              {lbl.identifier}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Architectural Tier Legend */}
       <div className="absolute bottom-3 left-3 flex flex-col gap-1 p-2.5 rounded bg-[#07160c]/85 border border-[#134721] backdrop-blur-sm z-10 pointer-events-none text-xs font-mono">

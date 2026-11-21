@@ -81,13 +81,14 @@ export interface StrataLayoutOptions {
  * - Tier 0: Foundation / Primitives (Cyan / Azure)
  * - Tier 1: Adapters / Transport (Electric Violet)
  * - Tier 2: Core Logic (Warm Amber)
- * - Tier 3: Entrypoints / Interfaces (Electric Acid Lime #68f12b)
+ * - Tier 3: Entrypoints / Interfaces (Emerald)
+ * Note: Electric Acid Lime (#68f12b) is reserved exclusively for active AI citations.
  */
 export const STRATA_TIER_COLORS: Record<number, string> = {
   0: '#38bdf8', // Foundation & Primitives
   1: '#a855f7', // Adapters & Storage
   2: '#f59e0b', // Core Logic
-  3: '#68f12b', // Entrypoints & Interfaces (Electric Acid Lime)
+  3: '#34d399', // Entrypoints & Interfaces
 };
 
 export const DEFAULT_STRATA_TIERS: StrataTierInfo[] = [

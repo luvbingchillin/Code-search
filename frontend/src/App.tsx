@@ -219,14 +219,16 @@ export const App: React.FC = () => {
     [agent]
   );
 
+  // Scope 3D Strata highlights to the most recent assistant message with citations
+  // so earlier queries don't permanently bleed lime across the entire architecture.
   const citedChunkIds = React.useMemo(() => {
-    const ids: string[] = [];
-    for (const msg of agent.messages) {
-      if (msg.citedChunks) {
-        ids.push(...msg.citedChunks);
+    for (let i = agent.messages.length - 1; i >= 0; i--) {
+      const msg = agent.messages[i];
+      if (msg.role === 'assistant' && msg.citedChunks && msg.citedChunks.length > 0) {
+        return [...msg.citedChunks];
       }
     }
-    return ids;
+    return [];
   }, [agent.messages]);
 
   // Keyboard shortcut listener for developer efficiency (Cmd+K, Ctrl+B, etc.)

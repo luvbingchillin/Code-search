@@ -15,6 +15,7 @@ from app.schemas.strata import (
 logger = logging.getLogger(__name__)
 
 # Canonical Tier Metadata Definitions conforming to architecture specification
+# Note: Electric Acid Lime (#68f12b) is reserved exclusively for active AI citations.
 TIER_DEFINITIONS = [
     {
         "tier": 0,
@@ -26,21 +27,31 @@ TIER_DEFINITIONS = [
         "tier": 1,
         "name": "Adapters / Transport",
         "description": "I/O adapters, network transport, database layers, vector stores, and external service clients (services, vector store, db)",
-        "color": "#fbbf24",
+        "color": "#a855f7",
     },
     {
         "tier": 2,
         "name": "Core Logic",
         "description": "Domain logic, AST parsers, processing pipelines, algorithms, and session management (parser, processing)",
-        "color": "#68f12b",
+        "color": "#f59e0b",
     },
     {
         "tier": 3,
         "name": "Entrypoints",
         "description": "Public API routes, routers, CLI commands, and application bootstrap entrypoints (api, main, cli)",
-        "color": "#f43f5e",
+        "color": "#34d399",
     },
 ]
+
+# Ubiquitous Python stdlib / container method names that cause false-positive
+# cross-file spiderweb edges when matched purely by unqualified base name.
+_AMBIGUOUS_METHOD_NAMES: Set[str] = {
+    "get", "set", "items", "keys", "values", "pop", "copy", "update", "clear",
+    "close", "append", "extend", "insert", "remove", "sort", "reverse", "count",
+    "index", "find", "replace", "strip", "lstrip", "rstrip", "split", "rsplit",
+    "join", "format", "lower", "upper", "startswith", "endswith", "encode",
+    "decode", "read", "write", "seek", "tell", "flush", "add", "discard",
+}
 
 
 def classify_chunk_tier(chunk: AstCodeChunk) -> int:
@@ -188,12 +199,22 @@ def build_strata_graph(chunks: List[AstCodeChunk], repo_id: str) -> StrataGraphR
 
             call_clean = call_str.rstrip("()")
             call_base = call_clean.split(".")[-1]
+            is_self_call = call_clean.startswith("self.")
+            caller_class = caller.identifier.split(".")[0] if "." in caller.identifier else None
 
             candidates: List[AstCodeChunk] = []
             if call_clean in by_exact_ident:
                 candidates = by_exact_ident[call_clean]
+            elif is_self_call and caller_class and f"{caller_class}.{call_base}" in by_exact_ident:
+                candidates = by_exact_ident[f"{caller_class}.{call_base}"]
             elif call_base in by_base_ident:
-                candidates = by_base_ident[call_base]
+                raw_cands = by_base_ident[call_base]
+                # Guard against ambiguous container/stdlib method names (e.g. dict.get, resp.close)
+                if call_base in _AMBIGUOUS_METHOD_NAMES:
+                    same_file_only = [cand for cand in raw_cands if cand.filePath == caller.filePath]
+                    candidates = same_file_only if same_file_only else []
+                else:
+                    candidates = raw_cands
 
             if not candidates:
                 continue

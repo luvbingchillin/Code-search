@@ -48,6 +48,10 @@ def trigger_indexing(
         manifest=manifest_text,
     )
 
+    # Invalidate cached 3D strata graph for this repository
+    from app.api.v1.endpoints.repos import invalidate_strata_cache
+    invalidate_strata_cache(repo_id)
+
     return IndexResponse(
         indexed_files=len(files),
         extracted_chunks=chunks_count,

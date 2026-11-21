@@ -23,6 +23,20 @@ from app.services.strata import build_strata_graph
 
 router = APIRouter()
 
+# In-memory cache for computed 3D strata graphs, keyed by (store_identity, store_count, repo_id)
+_strata_graph_cache: dict[tuple[int, int, str], StrataGraphResponse] = {}
+
+
+def invalidate_strata_cache(repo_id: Optional[str] = None) -> None:
+    """Clear cached strata graphs (all or for a specific repository)."""
+    if repo_id is None:
+        _strata_graph_cache.clear()
+        return
+    clean_id = repo_id.strip().lower()
+    keys_to_drop = [k for k in _strata_graph_cache if k[2].lower() == clean_id]
+    for k in keys_to_drop:
+        _strata_graph_cache.pop(k, None)
+
 
 def _chunk_belongs_to_repo(f_path: str, repo_full_name: Optional[str], repo: RepositoryItem) -> bool:
     """Determine if a chunk belongs to the given repository using repoFullName or path fallback."""
@@ -240,6 +254,14 @@ def get_repository_strata_graph(
         )
 
     vs = retrieval_service.vector_store
+    try:
+        store_count = vs.count() if vs is not None else 0
+    except Exception:
+        store_count = 0
+    cache_key = (id(vs), store_count, repo.id.lower())
+    if cache_key in _strata_graph_cache:
+        return _strata_graph_cache[cache_key]
+
     all_chunks: List[AstCodeChunk] = []
 
     # 1. Attempt retrieval from vector store (LanceDB or SQLite)
@@ -304,4 +326,6 @@ def get_repository_strata_graph(
             seen_ids.add(c.id)
             unique_chunks.append(c)
 
-    return build_strata_graph(unique_chunks, repo_id=repo.id)
+    graph_response = build_strata_graph(unique_chunks, repo_id=repo.id)
+    _strata_graph_cache[cache_key] = graph_response
+    return graph_response
