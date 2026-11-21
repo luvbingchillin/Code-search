@@ -2,12 +2,15 @@
 
 import json
 import os
+import re
 import sqlite3
 from typing import List, Optional
 import numpy as np
 
 from app.models.chunk import AstCodeChunk
 from app.vector_store.base import BaseVectorStore
+
+_SAFE_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]*$")
 
 
 class SQLiteVectorStore(BaseVectorStore):
@@ -165,13 +168,23 @@ class SQLiteVectorStore(BaseVectorStore):
         return results
 
     def search_exact(self, identifier: str) -> List[AstCodeChunk]:
-        """Retrieve AST chunks matching exact entity name."""
+        """Retrieve AST chunks matching exact entity name or qualified method suffix (e.g. Class.method)."""
         self._ensure_initialized()
 
-        cursor = self.conn.execute(
-            f"SELECT * FROM {self.table_name} WHERE identifier = ?",
-            (identifier,),
-        )
+        if _SAFE_IDENT_RE.match(identifier):
+            cursor = self.conn.execute(
+                f"""
+                SELECT * FROM {self.table_name}
+                WHERE identifier = ? OR identifier LIKE ?
+                ORDER BY CASE WHEN identifier = ? THEN 0 ELSE 1 END, filePath, startLine
+                """,
+                (identifier, f"%.{identifier}", identifier),
+            )
+        else:
+            cursor = self.conn.execute(
+                f"SELECT * FROM {self.table_name} WHERE identifier = ?",
+                (identifier,),
+            )
         rows = cursor.fetchall()
         return [self._row_to_chunk(r, relevance_score=1.0) for r in rows]
 

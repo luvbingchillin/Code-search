@@ -55,6 +55,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
+  const [navHistory, setNavHistory] = useState<string[]>([]);
 
   // Strata 3D graph state
   const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() => {
@@ -187,9 +188,14 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
     }
   };
 
-  const handleSelectCall = (callIdentifier: string) => {
+  const handleSelectCall = async (callIdentifier: string): Promise<boolean | void> => {
+    const prevId = selectedChunk?.id;
     if (onSelectCall) {
-      onSelectCall(callIdentifier);
+      const res = await onSelectCall(callIdentifier);
+      if (res !== false && prevId) {
+        setNavHistory((prev) => (prev[prev.length - 1] === prevId ? prev : [...prev.slice(-19), prevId]));
+      }
+      return res;
     } else {
       const cleanName = callIdentifier.replace(/^self\./, '');
       const match = chunks.find(
@@ -201,9 +207,84 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
           (callIdentifier.startsWith('self.') && c.identifier.endsWith(cleanName))
       );
       if (match) {
+        if (prevId && prevId !== match.id) {
+          setNavHistory((prev) => (prev[prev.length - 1] === prevId ? prev : [...prev.slice(-19), prevId]));
+        }
         onSelectChunk(match.id);
+        return true;
+      }
+      return false;
+    }
+  };
+
+  // Compute upstream callers for the selected chunk from the repository strata call graph
+  const selectedChunkCallers = useMemo(() => {
+    if (!selectedChunk || !strataGraphData) return [];
+    const nodeById = new Map(strataGraphData.nodes.map((n) => [n.id, n]));
+    const targetIds = new Set<string>([selectedChunk.id]);
+    for (const n of strataGraphData.nodes) {
+      if (n.identifier === selectedChunk.identifier && n.filePath === selectedChunk.filePath) {
+        targetIds.add(n.id);
       }
     }
+    const seen = new Set<string>();
+    const callers: Array<{ id: string; identifier: string; filePath?: string }> = [];
+    for (const edge of strataGraphData.edges) {
+      if (targetIds.has(edge.target) && !targetIds.has(edge.source) && !seen.has(edge.source)) {
+        seen.add(edge.source);
+        const srcNode = nodeById.get(edge.source);
+        if (srcNode) {
+          callers.push({
+            id: srcNode.id,
+            identifier: srcNode.identifier,
+            filePath: srcNode.filePath,
+          });
+        }
+      }
+    }
+    return callers;
+  }, [selectedChunk, strataGraphData]);
+
+  const handleSelectCaller = async (callerId: string, identifier: string) => {
+    const prevId = selectedChunk?.id;
+    if (prevId && prevId !== callerId) {
+      setNavHistory((prev) => (prev[prev.length - 1] === prevId ? prev : [...prev.slice(-19), prevId]));
+    }
+    const local = chunks.find((c) => c.id === callerId || c.identifier === identifier);
+    if (local) {
+      onSelectChunk(local.id);
+      return;
+    }
+    if (onAddChunk) {
+      try {
+        const fetched = await apiClient.getChunkById(callerId);
+        if (fetched) {
+          onAddChunk(fetched);
+          return;
+        }
+      } catch {
+        // fallback to lookupEntity
+      }
+      try {
+        const resp = await apiClient.lookupEntity(identifier);
+        if (resp?.chunks && resp.chunks.length > 0) {
+          onAddChunk(resp.chunks[0]);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    onSelectChunk(callerId);
+  };
+
+  const handleNavBack = () => {
+    setNavHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const targetId = prev[prev.length - 1];
+      onSelectChunk(targetId);
+      return prev.slice(0, -1);
+    });
   };
 
   const handleSelectTreeSymbol = async (symbol: FileSymbolNode) => {
@@ -434,6 +515,10 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                 isOpen={isInspectorOpen}
                 onClose={() => setIsInspectorOpen(false)}
                 onSelectCall={handleSelectCall}
+                callers={selectedChunkCallers}
+                onSelectCaller={handleSelectCaller}
+                canGoBack={navHistory.length > 0}
+                onGoBack={handleNavBack}
               />
             </>
           )}

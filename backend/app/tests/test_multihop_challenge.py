@@ -207,12 +207,11 @@ def test_multihop_call_resolution_gap_analysis(seeded_multihop_app: "FastAPI"):
             "Verbatim call 'self.transform_batch' returned unexpected match without receiver resolution"
         )
 
-        # Step 3: Try looking up unqualified 'transform_batch'
+        # Step 3: Unqualified 'transform_batch' now resolves to DataProcessingService.transform_batch
         unqual_resp = client.get("/api/v1/entity/transform_batch")
         assert unqual_resp.status_code == 200
-        assert unqual_resp.json()["count"] == 0, (
-            "Unqualified 'transform_batch' returned unexpected match"
-        )
+        assert unqual_resp.json()["count"] == 1
+        assert unqual_resp.json()["chunks"][0]["identifier"] == "DataProcessingService.transform_batch"
 
         # Step 4: Qualified lookup succeeds
         qual_resp = client.get("/api/v1/entity/DataProcessingService.transform_batch")

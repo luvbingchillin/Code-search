@@ -136,16 +136,25 @@ export const App: React.FC = () => {
   const handleSelectCall = React.useCallback(
     async (callIdentifier: string): Promise<boolean> => {
       const cleanName = callIdentifier.replace(/^self\./, '');
+      const currentChunk = agent.activeChunks.find((c) => c.id === agent.selectedChunkId);
+      const currentClassPrefix = currentChunk?.identifier.includes('.')
+        ? currentChunk.identifier.split('.')[0]
+        : null;
 
-      // Step 1: Check if callee is already present in agent.activeChunks
-      const localMatch = agent.activeChunks.find(
+      // Step 1: Check if callee is already present in agent.activeChunks (prefer same class/file)
+      const localCandidates = agent.activeChunks.filter(
         (c) =>
           c.identifier === callIdentifier ||
           c.identifier === cleanName ||
           c.identifier.endsWith(`.${cleanName}`) ||
           cleanName.endsWith(`.${c.identifier}`) ||
-          (callIdentifier.startsWith('self.') && c.identifier.endsWith(cleanName))
+          (callIdentifier.startsWith('self.') && c.identifier.endsWith(`.${cleanName}`))
       );
+
+      const localMatch =
+        localCandidates.find((c) => currentClassPrefix && c.identifier === `${currentClassPrefix}.${cleanName}`) ||
+        localCandidates.find((c) => currentChunk && c.filePath === currentChunk.filePath) ||
+        localCandidates[0];
 
       if (localMatch) {
         agent.setSelectedChunkId(localMatch.id);
@@ -156,13 +165,17 @@ export const App: React.FC = () => {
       try {
         const resp = await apiClient.lookupEntity(cleanName);
         if (resp && resp.chunks && resp.chunks.length > 0) {
+          const preferred =
+            resp.chunks.find((c) => currentClassPrefix && c.identifier === `${currentClassPrefix}.${cleanName}`) ||
+            resp.chunks.find((c) => currentChunk && c.filePath === currentChunk.filePath) ||
+            resp.chunks[0];
           const newChunks = resp.chunks.filter(
             (rc) => !agent.activeChunks.some((c) => c.id === rc.id)
           );
           if (agent.setActiveChunks && newChunks.length > 0) {
             agent.setActiveChunks([...agent.activeChunks, ...newChunks]);
           }
-          agent.setSelectedChunkId(resp.chunks[0].id);
+          agent.setSelectedChunkId(preferred.id);
           return true;
         }
       } catch (err) {

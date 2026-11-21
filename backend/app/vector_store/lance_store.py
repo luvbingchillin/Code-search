@@ -2,6 +2,7 @@
 
 import gc
 import os
+import re
 from typing import List, Optional
 import lancedb
 import numpy as np
@@ -9,6 +10,8 @@ import pyarrow as pa
 
 from app.models.chunk import AstCodeChunk
 from app.vector_store.base import BaseVectorStore
+
+_SAFE_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]*$")
 
 
 class LanceDBVectorStore(BaseVectorStore):
@@ -152,8 +155,11 @@ class LanceDBVectorStore(BaseVectorStore):
         if top_k <= 0 or len(self._table) == 0:
             return []
 
-        q_vec = query_vector.tolist() if isinstance(query_vector, np.ndarray) else list(query_vector)
+        q_arr = np.asarray(query_vector, dtype=np.float32)
+        q_vec = q_arr.tolist()
         query = self._table.search(q_vec)
+        if np.isfinite(q_arr).all() and float(np.linalg.norm(q_arr)) > 0.0:
+            query = query.metric("cosine")
 
         if ast_node_type:
             safe_type = ast_node_type.replace("'", "''")
@@ -164,7 +170,7 @@ class LanceDBVectorStore(BaseVectorStore):
 
         for r in results:
             dist = float(r.get("_distance", 0.0))
-            # Monotonic distance to relevance score mapping: 1 / (1 + d) in [0.0, 1.0]
+            # Monotonic cosine distance [0, 2] to relevance score mapping: 1 / (1 + d) in [0.0, 1.0]
             relevance = float(np.clip(1.0 / (1.0 + max(0.0, dist)), 0.0, 1.0))
             data = dict(r)
             data.pop("vector", None)
@@ -182,13 +188,18 @@ class LanceDBVectorStore(BaseVectorStore):
         return output
 
     def search_exact(self, identifier: str) -> List[AstCodeChunk]:
-        """Retrieve AST chunks matching exact entity name."""
+        """Retrieve AST chunks matching exact entity name or qualified method suffix (e.g. Class.method)."""
         self._ensure_initialized()
         if len(self._table) == 0:
             return []
 
         safe_id = identifier.replace("'", "''")
-        results = self._table.search().where(f"identifier = '{safe_id}'").to_list()
+        if _SAFE_IDENT_RE.match(identifier):
+            where_clause = f"identifier = '{safe_id}' OR identifier LIKE '%.{safe_id}'"
+        else:
+            where_clause = f"identifier = '{safe_id}'"
+
+        results = self._table.search().where(where_clause).to_list()
         output: List[AstCodeChunk] = []
 
         for r in results:
@@ -205,6 +216,8 @@ class LanceDBVectorStore(BaseVectorStore):
 
             output.append(AstCodeChunk(**data))
 
+        # Rank exact matches ahead of qualified suffix matches
+        output.sort(key=lambda c: (0 if c.identifier == identifier else 1, c.filePath, c.startLine))
         return output
 
     def get_by_id(self, chunk_id: str) -> Optional[AstCodeChunk]:

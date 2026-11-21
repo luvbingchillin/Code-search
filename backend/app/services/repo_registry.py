@@ -7,7 +7,56 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
+from app.models.chunk import AstCodeChunk
 from app.schemas.ast_chunk import RepositoryItem, RepositoryManifestResponse
+
+
+def generate_structural_manifest(repo_name: str, chunks: List[AstCodeChunk]) -> str:
+    """Auto-generate a concise architectural manifest from extracted AST chunks.
+
+    Summarizes file count, primary classes/functions with their 1-line docstrings,
+    and key entrypoints so /overview works on any user-indexed repository.
+    """
+    if not chunks:
+        return f"{repo_name} codebase with 0 indexed Python symbols."
+
+    unique_files = sorted({c.filePath for c in chunks if c.filePath})
+    classes = [c for c in chunks if c.astNodeType == "ClassDef"]
+    top_funcs = [
+        c for c in chunks
+        if c.astNodeType in ("FunctionDef", "AsyncFunctionDef") and "." not in c.identifier
+    ]
+
+    # Rank classes by docstring presence and code size
+    ranked_classes = sorted(
+        classes,
+        key=lambda c: (0 if c.docstring else 1, -(c.endLine - c.startLine)),
+    )[:6]
+
+    ranked_funcs = sorted(
+        top_funcs,
+        key=lambda c: (0 if c.docstring else 1, -(c.endLine - c.startLine)),
+    )[:4]
+
+    lines = [
+        f"{repo_name} is a Python codebase spanning {len(unique_files)} files and {len(chunks)} indexed definitions.",
+        "Core Components:",
+    ]
+
+    for cls in ranked_classes:
+        doc_line = (cls.docstring.splitlines()[0].strip() if cls.docstring else f"Class in {cls.fileName}")
+        lines.append(f"- {cls.identifier}: {doc_line}")
+
+    if len(ranked_classes) < 4:
+        for fn in ranked_funcs[: 6 - len(ranked_classes)]:
+            doc_line = (fn.docstring.splitlines()[0].strip() if fn.docstring else f"Function in {fn.fileName}")
+            lines.append(f"- {fn.identifier}: {doc_line}")
+
+    if unique_files:
+        sample_modules = ", ".join(unique_files[:6])
+        lines.append(f"Key Modules: {sample_modules}")
+
+    return "\n".join(lines)
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +163,7 @@ class RepoRegistry:
         chunks_count: int,
         name: Optional[str] = None,
         description: Optional[str] = None,
+        manifest: Optional[str] = None,
     ) -> RepositoryItem:
         """Add or update an indexed repository entry in the registry."""
         self._ensure_registry_file()
@@ -132,7 +182,7 @@ class RepoRegistry:
         for r in repos:
             if r.path.replace("\\", "/").rstrip("/").lower() == norm_path.lower() or r.id == repo_id:
                 found = True
-                manifest_val = r.manifest or SEED_MANIFESTS.get(r.id) or description
+                manifest_val = manifest or r.manifest or SEED_MANIFESTS.get(r.id) or description
                 target_item = RepositoryItem(
                     id=r.id,
                     name=r.name,
@@ -140,7 +190,7 @@ class RepoRegistry:
                     chunks_count=chunks_count,
                     files_count=files_count,
                     status="indexed",
-                    description=description or r.description or f"Indexed codebase ({chunks_count} AST chunks)",
+                    description=description or r.description or f"Indexed codebase ({chunks_count} definitions)",
                     manifest=manifest_val,
                     last_indexed=now,
                 )
@@ -149,7 +199,12 @@ class RepoRegistry:
                 updated_repos.append(r)
 
         if not found:
-            manifest_val = SEED_MANIFESTS.get(repo_id) or description or f"{repo_name} codebase with {files_count} Python files and {chunks_count} indexed AST symbols."
+            manifest_val = (
+                manifest
+                or SEED_MANIFESTS.get(repo_id)
+                or description
+                or f"{repo_name} codebase with {files_count} Python files and {chunks_count} indexed definitions."
+            )
             target_item = RepositoryItem(
                 id=repo_id,
                 name=repo_name,
@@ -157,7 +212,7 @@ class RepoRegistry:
                 chunks_count=chunks_count,
                 files_count=files_count,
                 status="indexed",
-                description=description or f"Indexed codebase ({chunks_count} AST chunks)",
+                description=description or f"Indexed codebase ({chunks_count} definitions)",
                 manifest=manifest_val,
                 last_indexed=now,
             )

@@ -1,5 +1,6 @@
 """Repository registry and metadata endpoints."""
 
+import json
 from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -21,6 +22,25 @@ from app.services.retrieval import RetrievalService
 from app.services.strata import build_strata_graph
 
 router = APIRouter()
+
+
+def _chunk_belongs_to_repo(f_path: str, repo_full_name: Optional[str], repo: RepositoryItem) -> bool:
+    """Determine if a chunk belongs to the given repository using repoFullName or path fallback."""
+    r_tag = (repo_full_name or "").strip().lower()
+    if r_tag and r_tag != "local":
+        return r_tag == repo.id.lower() or r_tag == repo.name.lower()
+
+    path_lower = (f_path or "").replace("\\", "/").lower()
+    if repo.id == "sample_codebase":
+        return "sample_codebase" in path_lower or "sample_service" in path_lower
+    if repo.id == "requests":
+        return "sample_codebase" not in path_lower and "sample_service" not in path_lower
+
+    repo_path_lower = (repo.path or "").replace("\\", "/").strip().lower().rstrip("/")
+    repo_basename = repo_path_lower.split("/")[-1] if repo_path_lower else ""
+    return (repo_path_lower and repo_path_lower in path_lower) or (
+        repo_basename and repo_basename in path_lower
+    )
 
 
 @router.get("/repos", response_model=RepositoriesResponse, summary="List Indexed & Available Repositories")
@@ -111,20 +131,29 @@ def get_repository_tree(
                 all_chunks.append(dict(r))
         except Exception:
             pass
-    elif hasattr(vs, "_conn") and vs._conn is not None:
+    elif hasattr(vs, "conn") and vs.conn is not None:
         try:
-            cursor = vs._conn.cursor()
-            cursor.execute("SELECT id, file_path, file_name, ast_node_type, identifier, start_line, end_line, parameters FROM chunks")
+            table_name = getattr(vs, "table_name", "ast_chunks")
+            cursor = vs.conn.cursor()
+            cursor.execute(
+                f"SELECT id, filePath, fileName, astNodeType, identifier, startLine, endLine, parameters, repoFullName FROM {table_name}"
+            )
             for row in cursor.fetchall():
+                raw_params = row["parameters"] if "parameters" in row.keys() else None
+                try:
+                    parsed_params = json.loads(raw_params) if isinstance(raw_params, str) and raw_params else []
+                except Exception:
+                    parsed_params = [p.strip() for p in str(raw_params).split(",") if p.strip()]
                 all_chunks.append({
-                    "id": row[0],
-                    "filePath": row[1],
-                    "fileName": row[2],
-                    "astNodeType": row[3],
-                    "identifier": row[4],
-                    "startLine": row[5],
-                    "endLine": row[6],
-                    "parameters": row[7].split(",") if row[7] else [],
+                    "id": row["id"],
+                    "filePath": row["filePath"],
+                    "fileName": row["fileName"],
+                    "astNodeType": row["astNodeType"],
+                    "identifier": row["identifier"],
+                    "startLine": row["startLine"],
+                    "endLine": row["endLine"],
+                    "parameters": parsed_params,
+                    "repoFullName": row["repoFullName"] if "repoFullName" in row.keys() else "local",
                 })
         except Exception:
             pass
@@ -142,10 +171,8 @@ def get_repository_tree(
     files_map = {}
     for c in unique_chunks:
         f_path = c.get("filePath") or c.get("file_path") or "unknown.py"
-        # If repo is sample_codebase, scope to sample_codebase
-        if repo.id == "sample_codebase" and "sample_codebase" not in f_path.lower():
-            continue
-        elif repo.id == "requests" and "sample_codebase" in f_path.lower():
+        r_tag = c.get("repoFullName") or c.get("repo_full_name") or "local"
+        if not _chunk_belongs_to_repo(str(f_path), str(r_tag), repo):
             continue
 
         f_name = c.get("fileName") or c.get("file_name") or f_path.split("/")[-1].split("\\")[-1]
@@ -222,11 +249,8 @@ def get_repository_strata_graph(
                 records = vs._table.search().limit(5000).to_list()
                 for r in records:
                     f_path = str(r.get("filePath") or r.get("file_path") or "")
-                    if repo.id == "sample_codebase" and "sample_codebase" not in f_path.lower():
-                        continue
-                    elif repo.id == "requests" and "sample_codebase" in f_path.lower():
-                        continue
-                    elif repo.id not in ("sample_codebase", "requests") and repo.path.lower() not in f_path.lower():
+                    r_tag = str(r.get("repoFullName") or r.get("repo_full_name") or "local")
+                    if not _chunk_belongs_to_repo(f_path, r_tag, repo):
                         continue
 
                     data = dict(r)
@@ -246,11 +270,8 @@ def get_repository_strata_graph(
                 cursor.execute(f"SELECT * FROM {getattr(vs, 'table_name', 'ast_chunks')}")
                 for row in cursor.fetchall():
                     f_path = str(row["filePath"])
-                    if repo.id == "sample_codebase" and "sample_codebase" not in f_path.lower():
-                        continue
-                    elif repo.id == "requests" and "sample_codebase" in f_path.lower():
-                        continue
-                    elif repo.id not in ("sample_codebase", "requests") and repo.path.lower() not in f_path.lower():
+                    r_tag = str(row["repoFullName"]) if "repoFullName" in row.keys() else "local"
+                    if not _chunk_belongs_to_repo(f_path, r_tag, repo):
                         continue
 
                     all_chunks.append(vs._row_to_chunk(row))

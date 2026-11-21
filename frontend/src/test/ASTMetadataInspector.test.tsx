@@ -473,5 +473,32 @@ describe('App Call Graph Multi-Hop Navigation & Entity Lookup Suite', () => {
       expect(screen.getByTestId(`chunk-tab-${externalChunk.id}`)).toHaveAttribute('aria-selected', 'true');
     });
   });
+
+  it('renders upstream Called By badges and Back navigation button in ASTMetadataInspector', async () => {
+    const user = userEvent.setup();
+    const handleSelectCaller = vi.fn();
+    const handleGoBack = vi.fn();
+
+    render(
+      <ASTMetadataInspector
+        chunk={mockAstChunks[0]}
+        isOpen={true}
+        onClose={vi.fn()}
+        callers={[{ id: 'api.py:request:10', identifier: 'request', filePath: 'api.py' }]}
+        onSelectCaller={handleSelectCaller}
+        canGoBack={true}
+        onGoBack={handleGoBack}
+      />
+    );
+
+    expect(screen.getByTestId('ast-callers-section')).toBeInTheDocument();
+    const callerBadge = screen.getByTestId('caller-badge-request');
+    await user.click(callerBadge);
+    expect(handleSelectCaller).toHaveBeenCalledWith('api.py:request:10', 'request');
+
+    const backBtn = screen.getByTestId('ast-nav-back-btn');
+    await user.click(backBtn);
+    expect(handleGoBack).toHaveBeenCalledTimes(1);
+  });
 });
 

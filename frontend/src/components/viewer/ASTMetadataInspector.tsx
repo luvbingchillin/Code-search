@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, FileText, Code2, GitBranch, Terminal, Info } from 'lucide-react';
+import { Layers, FileText, Code2, GitBranch, Terminal, Info, ArrowLeft, ArrowDownLeft } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 export const PYTHON_BUILTINS = new Set([
@@ -61,11 +61,21 @@ const formatKind = (type: string) => {
   }
 };
 
+export interface CallerReference {
+  id: string;
+  identifier: string;
+  filePath?: string;
+}
+
 interface ASTMetadataInspectorProps {
   chunk: AstCodeChunk | null;
   isOpen: boolean;
   onClose: () => void;
   onSelectCall?: (callIdentifier: string) => Promise<boolean | void> | boolean | void;
+  callers?: CallerReference[];
+  onSelectCaller?: (callerId: string, identifier: string) => void;
+  canGoBack?: boolean;
+  onGoBack?: () => void;
 }
 
 export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
@@ -73,6 +83,10 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
   isOpen,
   onClose,
   onSelectCall,
+  callers = [],
+  onSelectCaller,
+  canGoBack = false,
+  onGoBack,
 }) => {
   const [callNotice, setCallNotice] = useState<string | null>(null);
 
@@ -97,9 +111,21 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
       className="border-t border-slate-700 bg-slate-900 p-3.5 max-h-56 overflow-y-auto text-xs font-mono space-y-2.5 shadow-lg"
     >
       <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-        <div className="flex items-center space-x-1.5 text-slate-100 font-semibold">
+        <div className="flex items-center space-x-2 text-slate-100 font-semibold">
           <Layers className="w-3.5 h-3.5 text-sky-400" />
           <span>Symbol Navigation & Contract</span>
+          {canGoBack && onGoBack && (
+            <button
+              type="button"
+              data-testid="ast-nav-back-btn"
+              onClick={onGoBack}
+              className="ml-2 inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-white border border-slate-700 text-[11px] font-mono cursor-pointer transition-colors"
+              title="Return to previous symbol"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              <span>Back</span>
+            </button>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -230,6 +256,29 @@ export const ASTMetadataInspector: React.FC<ASTMetadataInspectorProps> = ({
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {callers.length > 0 && (
+        <div className="pt-1" data-testid="ast-callers-section">
+          <div className="text-slate-400 flex items-center space-x-1 mb-1">
+            <ArrowDownLeft className="w-3 h-3 text-sky-400" />
+            <span>Called By ({callers.length}):</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {callers.map((caller, i) => (
+              <button
+                key={`${caller.id}-${i}`}
+                type="button"
+                onClick={() => onSelectCaller?.(caller.id, caller.identifier)}
+                data-testid={`caller-badge-${caller.identifier}`}
+                title={caller.filePath ? `${caller.identifier} (${caller.filePath})` : caller.identifier}
+                className="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-300 hover:text-sky-100 border border-sky-700/60 hover:border-sky-500 text-[11px] font-mono cursor-pointer transition-colors inline-flex items-center"
+              >
+                ↙ {caller.identifier}
+              </button>
+            ))}
           </div>
         </div>
       )}
