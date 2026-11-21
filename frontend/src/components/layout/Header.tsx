@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Sparkles, Terminal, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode, Zap } from 'lucide-react';
+import { Cpu, Sparkles, AlertCircle, Loader2, PanelLeftClose, PanelRightClose, FolderCode, Zap } from 'lucide-react';
 import { AgentStatus, UseWebLLMReturn, UseNemoIRReturn, RepositoryItem } from '../../types';
 import { apiClient as defaultApiClient, HealthResponse } from '../../services/apiClient';
 import { TURBO_MODEL, PRECISION_MODEL } from '../../hooks/useWebLLM';
@@ -34,10 +34,21 @@ export const Header: React.FC<HeaderProps> = ({
   const [health, setHealth] = React.useState<HealthResponse | null>(null);
   const [isBackendHealthy, setIsBackendHealthy] = React.useState<boolean>(false);
 
+  const checkHealth = React.useCallback(async () => {
+    try {
+      const resp = await client.getHealth();
+      const healthy = Boolean(resp && (resp.status === 'healthy' || resp.status === 'ok'));
+      setHealth(resp);
+      setIsBackendHealthy(healthy);
+    } catch {
+      setHealth(null);
+      setIsBackendHealthy(false);
+    }
+  }, [client]);
+
   React.useEffect(() => {
     let isMounted = true;
-
-    const checkHealth = async () => {
+    const run = async () => {
       try {
         const resp = await client.getHealth();
         if (!isMounted) return;
@@ -50,9 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
         setIsBackendHealthy(false);
       }
     };
-
-    checkHealth();
-
+    run();
     return () => {
       isMounted = false;
     };
@@ -101,16 +110,28 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between select-none">
-      <div className="flex items-center space-x-3">
-        {/* Precision Dark Slate IDE Brand Icon */}
+    <header className="h-14 bg-slate-900 border-b border-slate-800 px-3 sm:px-4 flex items-center justify-between gap-2 select-none overflow-hidden">
+      <div className="flex items-center space-x-2.5 min-w-0 shrink-0">
+        {/* Bespoke CodeSeek AI Bracket-Node Brand Mark */}
         <div className="w-8 h-8 rounded-lg bg-slate-950 border border-sky-500/40 flex items-center justify-center shadow-xs shrink-0">
-          <Terminal className="w-4 h-4 text-sky-400" />
+          <svg viewBox="0 0 100 100" className="w-4 h-4" aria-hidden="true">
+            <path
+              d="M30 38 L18 50 L30 62 M70 38 L82 50 L70 62 M58 28 L42 72"
+              stroke="#38bdf8"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <circle cx="80" cy="20" r="9" fill="#38bdf8" />
+          </svg>
         </div>
         <div className="min-w-0">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-100 tracking-tight text-base font-sans whitespace-nowrap">CodeSeek AI</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-sky-300 border border-slate-700 font-mono font-medium whitespace-nowrap">
+            <span className="font-bold text-slate-100 tracking-tight text-sm sm:text-base font-sans whitespace-nowrap">
+              CodeSeek AI
+            </span>
+            <span className="hidden xl:inline-block text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-sky-300 border border-slate-700 font-mono font-medium whitespace-nowrap">
               Edge AI v1.0
             </span>
           </div>
@@ -120,14 +141,14 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center space-x-2.5">
+      <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
         {/* Connect / Switch Repository Trigger Button */}
         {onOpenConnectRepo && (
           <button
             type="button"
             data-testid="connect-repo-btn"
             onClick={onOpenConnectRepo}
-            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer active:scale-95 emil-press"
+            className="flex items-center space-x-1.5 px-2.5 min-h-[28px] py-1 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs text-slate-200 transition-colors shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 active:scale-95 emil-press whitespace-nowrap shrink-0"
             title={
               activeRepo
                 ? `Active Repository: ${activeRepo.name} (${activeRepo.chunksCount ?? 0} code definitions). Click to switch or add.`
@@ -135,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
             }
           >
             <FolderCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-            <span className="font-medium max-w-[130px] truncate">
+            <span className="font-medium max-w-[105px] sm:max-w-[130px] truncate">
               {activeRepo ? activeRepo.name : 'Repositories'}
             </span>
             {activeRepo && (
@@ -146,18 +167,20 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Live Backend Health & LanceDB Status Indicator */}
-        <div
+        {/* Live Backend Health & LanceDB Status Indicator (clickable to retry) */}
+        <button
+          type="button"
           data-testid="backend-health-pill"
-          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border text-xs shadow-xs font-mono select-none ${
+          onClick={checkHealth}
+          className={`hidden md:flex items-center space-x-1.5 px-2.5 min-h-[28px] py-1 rounded-md border text-[11px] shadow-xs font-mono select-none whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
             isBackendHealthy
               ? 'bg-emerald-950/50 text-emerald-300 border-emerald-600/70'
               : 'bg-amber-950/50 text-amber-300 border-amber-600/70'
           }`}
           title={
             isBackendHealthy
-              ? `Backend API connected at localhost:8000 (${health?.total_chunks ?? 0} indexed chunks in LanceDB)`
-              : 'Backend API offline - operating in local simulator mode'
+              ? `Backend API connected at localhost:8000 (${health?.total_chunks ?? 0} indexed chunks in LanceDB). Click to refresh.`
+              : 'Backend API offline - operating in local simulator mode. Click to retry connection.'
           }
         >
           <span
@@ -171,10 +194,10 @@ export const Header: React.FC<HeaderProps> = ({
               ? `API:8000 (LanceDB: ${health?.total_chunks ?? 0})`
               : 'API: Offline (Simulator)'}
           </span>
-        </div>
+        </button>
 
         {/* Unified Local AI Engine Control Cluster (Status + Active Model + Tier Toggle) */}
-        <div className="flex items-center space-x-1 p-0.5 rounded-lg bg-slate-950/90 border border-slate-700/80 shadow-xs">
+        <div className="flex items-center space-x-1 p-0.5 rounded-lg bg-slate-950/90 border border-slate-700/80 shadow-xs shrink-0">
           {/* Interactive WebLLM Engine Badge with Dynamic Progress & Controls */}
           <button
             type="button"
@@ -187,22 +210,22 @@ export const Header: React.FC<HeaderProps> = ({
               }
             }}
             disabled={webLLM.status === 'loading'}
-            className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-md border text-xs transition-colors cursor-pointer disabled:cursor-wait hover:brightness-110 active:scale-95 emil-press ${getWebLLMStatusColor()}`}
+            className={`flex items-center space-x-1.5 px-2 min-h-[26px] py-0.5 rounded-md border text-[11px] transition-colors cursor-pointer disabled:cursor-wait hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 active:scale-95 emil-press whitespace-nowrap ${getWebLLMStatusColor()}`}
             title={
               isWebGPUUnsupported
                 ? 'WebGPU is unavailable in this browser (deterministic AST analysis remains active).'
                 : webLLM.status === 'unloaded'
-                ? 'WebLLM is currently offline (using deterministic AST analysis). Click to load Qwen2.5-Coder for real-time edge AI inference on WebGPU.'
+                ? 'WebLLM is currently offline (using deterministic AST analysis). Click to load Qwen2.5-Coder (~390MB–980MB) for real-time edge AI inference on WebGPU.'
                 : webLLM.status === 'ready'
                 ? 'WebLLM ready (Qwen2.5-Coder running on WebGPU). Click to unload.'
                 : webLLM.progressText || (webLLM.error ? `Error: ${webLLM.error}` : 'Local WebLLM Model Status')
             }
           >
             {getWebLLMIcon()}
-            <span className="text-slate-300 font-medium">WebLLM:</span>
+            <span className="hidden sm:inline text-slate-300 font-medium">WebLLM:</span>
             <span className="font-mono font-semibold">{getWebLLMLabel()}</span>
             {webLLM.status === 'unloaded' && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[10px] font-mono border border-sky-700/50">
+              <span className="hidden sm:inline-block ml-0.5 px-1.5 py-0.2 rounded bg-sky-950/70 text-sky-300 text-[11px] font-mono border border-sky-700/50">
                 Click to Load
               </span>
             )}
@@ -212,14 +235,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="hidden lg:flex items-center space-x-1">
             <div
               data-testid="model-indicator-badge"
-              className="flex items-center space-x-1.5 px-2 py-0.5 rounded-md text-xs text-slate-300"
+              className="hidden 2xl:flex items-center space-x-1.5 px-2 py-0.5 rounded-md text-xs text-slate-300"
               title={
                 webLLM.status === 'ready'
                   ? `Edge Model: ${webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'} running locally on WebGPU`
                   : 'Target Local Model on WebGPU (Standby - Click WebLLM to load)'
               }
             >
-              <span className="font-mono font-medium truncate max-w-[130px] text-[11px] text-slate-400">
+              <span className="font-mono font-medium truncate max-w-[160px] text-[11px] text-slate-400">
                 {webLLM.currentModel ?? 'Qwen2.5-Coder (1.5B)'}
               </span>
               <span className="sr-only">{webLLM.status === 'ready' ? 'Active' : 'Standby'}</span>
@@ -234,11 +257,11 @@ export const Header: React.FC<HeaderProps> = ({
                 const targetModel = isCurrentTurbo ? PRECISION_MODEL : TURBO_MODEL;
                 webLLM.loadModel(targetModel);
               }}
-              className="flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-[11px] text-slate-200 transition-colors cursor-pointer disabled:cursor-wait active:scale-95 emil-press"
+              className="flex items-center space-x-1 px-2 min-h-[26px] py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-[11px] text-slate-200 transition-colors cursor-pointer disabled:cursor-wait focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 active:scale-95 emil-press whitespace-nowrap"
               title={
                 webLLM.currentModel?.includes('0.5B')
-                  ? 'Active: Turbo 0.5B (Fastest inference ~3s). Click to switch to Precision 1.5B.'
-                  : 'Active: Precision 1.5B (Deep technical reasoning). Click to switch to Turbo 0.5B.'
+                  ? 'Active: Turbo 0.5B (~390MB). Click to load Precision 1.5B (~980MB download).'
+                  : 'Active: Precision 1.5B (~980MB). Click to load Turbo 0.5B (~390MB download).'
               }
             >
               {webLLM.currentModel?.includes('0.5B') ? (
@@ -256,15 +279,15 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Layout Pane Visibility Controls (Toggle Chat / Toggle Code Viewer) */}
+        {/* Layout Pane Visibility Controls (Desktop md+ only; mobile uses tab bar) */}
         {(onToggleChatMinimized || onToggleCodeMinimized) && (
-          <div className="flex items-center space-x-1 pl-2 border-l border-slate-800">
+          <div className="hidden md:flex items-center space-x-1 pl-2 border-l border-slate-800 shrink-0">
             {onToggleChatMinimized && (
               <button
                 type="button"
                 data-testid="toggle-chat-pane-btn"
                 onClick={onToggleChatMinimized}
-                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   !isChatMinimized
                     ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'
@@ -281,7 +304,7 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 data-testid="toggle-code-pane-btn"
                 onClick={onToggleCodeMinimized}
-                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer ${
+                className={`p-1.5 min-w-[32px] min-h-[32px] rounded transition-colors text-xs flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   !isCodeMinimized
                     ? 'bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent'

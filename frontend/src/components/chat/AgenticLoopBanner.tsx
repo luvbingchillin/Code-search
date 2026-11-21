@@ -116,14 +116,14 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
   return (
     <div
       data-testid="agentic-loop-banner"
-      className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-y-1.5 text-xs select-none shrink-0"
+      className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs select-none shrink-0"
     >
       {/* Left: State Badge & Step Description */}
       <div
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className="flex items-center space-x-2.5 min-w-0"
+        className="flex items-center space-x-2 min-w-0 flex-1"
       >
         <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shrink-0 shadow-xs ${getStateColor(status.state)}`}>
           {getStateIcon(status.state)}
@@ -132,7 +132,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
 
         <span
           data-testid="agentic-step-description"
-          className="text-slate-200 font-mono text-xs truncate max-w-[200px] sm:max-w-[320px] leading-tight"
+          className="text-slate-200 font-mono text-xs truncate min-w-0 leading-tight"
           title={status.error || status.currentStepMessage}
         >
           {status.error ? (
@@ -143,43 +143,45 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         </span>
       </div>
 
-      {/* Right: Stepper, Timer, Cancel */}
-      <div className="flex items-center space-x-3 shrink-0 ml-auto">
-        {/* Horizontal 4-step Mini Stepper */}
-        <div data-testid="agentic-stepper" className="hidden lg:flex items-center space-x-2">
-          {STEPS.map((step, idx) => {
-            const stepStatus = getStepStatus(step.name);
-            return (
-              <div key={step.id} className="flex items-center space-x-1 text-[11px]">
-                <span
-                  className={`w-4 h-4 rounded-full flex items-center justify-center font-mono font-bold text-[11px] ${
-                    stepStatus === 'completed'
-                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/70'
-                      : stepStatus === 'current'
-                      ? 'bg-sky-600 text-white shadow-xs shadow-sky-500/50 emil-beacon ring-2 ring-sky-400/60'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
-                  }`}
-                >
-                  {stepStatus === 'completed' ? '✓' : idx + 1}
-                </span>
-                <span
-                  className={`font-medium ${
-                    stepStatus === 'completed'
-                      ? 'text-emerald-300 font-medium'
-                      : stepStatus === 'current'
-                      ? 'text-sky-300 font-semibold'
-                      : 'text-slate-400'
-                  }`}
-                >
-                  {step.label}
-                </span>
-                {idx < STEPS.length - 1 && (
-                  <span className="text-slate-400 select-none">→</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Right: Stepper (active only), Timer, Traces, Clear, Minimize */}
+      <div className="flex items-center space-x-2 shrink-0 ml-auto">
+        {/* Horizontal 4-step Mini Stepper (shown during active/completed runs, hidden in Idle) */}
+        {status.state !== 'Idle' && (
+          <div data-testid="agentic-stepper" className="hidden xl:flex items-center space-x-2">
+            {STEPS.map((step, idx) => {
+              const stepStatus = getStepStatus(step.name);
+              return (
+                <div key={step.id} className="flex items-center space-x-1 text-[11px]">
+                  <span
+                    className={`w-4 h-4 rounded-full flex items-center justify-center font-mono font-bold text-[11px] ${
+                      stepStatus === 'completed'
+                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/70'
+                        : stepStatus === 'current'
+                        ? 'bg-sky-600 text-white shadow-xs shadow-sky-500/50 emil-beacon ring-2 ring-sky-400/60'
+                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    }`}
+                  >
+                    {stepStatus === 'completed' ? '✓' : idx + 1}
+                  </span>
+                  <span
+                    className={`font-medium ${
+                      stepStatus === 'completed'
+                        ? 'text-emerald-300 font-medium'
+                        : stepStatus === 'current'
+                        ? 'text-sky-300 font-semibold'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                  {idx < STEPS.length - 1 && (
+                    <span className="text-slate-400 select-none">→</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Elapsed Timer */}
         {status.elapsedMs > 0 && (
@@ -210,7 +212,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="banner-toggle-traces-btn"
             onClick={onToggleTraces}
-            className="flex items-center space-x-1 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-0.5 rounded transition-colors cursor-pointer emil-press"
+            className="flex items-center space-x-1 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 min-h-[28px] py-1 rounded transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
             title={isTracesExpanded ? 'Hide execution traces' : 'Show execution traces'}
             aria-label="Toggle execution traces"
           >
@@ -227,8 +229,9 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         {/* Cancel Action */}
         {isBusy && onCancel && (
           <button
+            type="button"
             onClick={onCancel}
-            className="flex items-center space-x-1 text-[11px] font-semibold text-rose-300 hover:text-white transition-colors px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 cursor-pointer shadow-xs emil-press"
+            className="flex items-center space-x-1 text-[11px] font-semibold text-rose-300 hover:text-white transition-colors px-2 min-h-[28px] py-1 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 cursor-pointer shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 emil-press"
             title="Cancel current query"
           >
             <XSquare className="w-3.5 h-3.5 text-rose-400" />
@@ -242,21 +245,21 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
             type="button"
             data-testid="clear-chat-btn"
             onClick={onClearChat}
-            className="p-1.5 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
-            title="New chat session (Clear conversation)"
-            aria-label="New chat session"
+            className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
+            title="Clear conversation"
+            aria-label="Clear conversation"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         )}
 
-        {/* Minimize Chat Pane Action */}
+        {/* Minimize Chat Pane Action (Desktop md+ only) */}
         {onMinimize && (
           <button
             type="button"
             data-testid="minimize-chat-btn"
             onClick={onMinimize}
-            className="p-1.5 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 emil-press"
+            className="hidden md:flex p-1.5 min-w-[28px] min-h-[28px] items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
             title="Minimize chat pane (Ctrl+B)"
             aria-label="Minimize chat pane"
           >

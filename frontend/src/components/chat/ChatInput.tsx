@@ -226,7 +226,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           placeholder={placeholderText}
           rows={1}
           aria-label="Ask a question about the codebase"
-          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 resize-none leading-relaxed transition-colors"
+          className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3.5 py-2 pr-14 text-sm text-slate-100 placeholder-slate-400 placeholder:text-xs sm:placeholder:text-sm placeholder:truncate focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 resize-none leading-relaxed transition-colors"
           disabled={isBusy}
         />
         {!input && !isBusy && (
@@ -245,7 +245,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           data-testid="chat-stop-btn"
           onClick={onCancel}
-          className="h-9 px-3.5 rounded-lg bg-rose-600 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
+          className="h-11 md:h-9 px-3.5 rounded-lg bg-rose-600 hover:bg-rose-500 focus-visible:ring-2 focus-visible:ring-rose-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
         >
           <Square className="w-3.5 h-3.5 fill-current" />
           <span>Stop</span>
@@ -254,8 +254,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           type="button"
           data-testid="chat-send-btn"
+          disabled={!input.trim()}
           onClick={() => handleSubmit()}
-          className="h-9 px-3.5 rounded-lg bg-sky-700 hover:bg-sky-600 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
+          className="h-11 md:h-9 px-3.5 rounded-lg bg-sky-700 hover:bg-sky-600 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-sky-400 text-white font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs focus:outline-none cursor-pointer emil-press active:scale-95"
         >
           <Send className="w-3.5 h-3.5" />
           <span>Search</span>

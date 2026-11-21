@@ -131,11 +131,12 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
       {/* Mobile Tab Switcher (< 768px) */}
       <div className="md:hidden flex bg-slate-900 border-b border-slate-800 text-xs font-mono shrink-0 select-none">
         <button
+          type="button"
           onClick={() => {
             setMobileTab('chat');
             if (isChatMinimized) handleToggleChatMinimized();
           }}
-          className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
+          className={`flex-1 min-h-[44px] py-2.5 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'chat' && !isChatMinimized
               ? 'border-sky-400 text-white bg-slate-950/80'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -145,11 +146,12 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
           <span>Conversation</span>
         </button>
         <button
+          type="button"
           onClick={() => {
             setMobileTab('code');
             if (isCodeMinimized) handleToggleCodeMinimized();
           }}
-          className={`flex-1 py-2 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
+          className={`flex-1 min-h-[44px] py-2.5 flex items-center justify-center space-x-1.5 border-b-2 font-medium transition-colors ${
             mobileTab === 'code' && !isCodeMinimized
               ? 'border-sky-400 text-white bg-slate-950/80'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -197,7 +199,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               ? `${leftWidthPercent}%`
               : '100%',
           }}
-          className={`h-full flex flex-col bg-[#0b101d] overflow-hidden border-r border-slate-800 shrink-0 transition-all ${
+          className={`h-full max-md:!w-full flex-col bg-[#0b101d] overflow-hidden border-r border-slate-800 shrink-0 transition-all ${
             isChatMinimized || (!isDesktop && mobileTab !== 'chat') ? 'hidden' : 'flex'
           }`}
         >
@@ -277,7 +279,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               ? `${100 - leftWidthPercent}%`
               : '100%',
           }}
-          className={`h-full flex-1 flex flex-col bg-[#070a12] overflow-hidden transition-all ${
+          className={`h-full max-md:!w-full flex-1 flex-col bg-[#070a12] overflow-hidden transition-all ${
             isCodeMinimized || (!isDesktop && mobileTab !== 'code') ? 'hidden' : 'flex'
           }`}
         >

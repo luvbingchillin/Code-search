@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, FileCode, Layers, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree, ChevronUp, ChevronDown, FileText } from 'lucide-react';
+import { Copy, Check, FileCode, FileCode2, Boxes, Info, Search, Maximize2, Minimize2, X, PanelRightClose, FolderTree, ChevronUp, ChevronDown, FileText } from 'lucide-react';
 import { AstCodeChunk } from '../../types';
 
 export type ViewMode = 'code' | 'strata';
@@ -84,19 +84,19 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   return (
     <div
       data-testid="code-viewer-header"
-      className="h-10 px-3 flex items-center justify-between text-xs select-none transition-colors duration-200 bg-slate-900 border-b border-slate-800"
+      className="h-10 px-3 flex items-center justify-between gap-2 text-xs select-none transition-colors duration-200 bg-slate-900 border-b border-slate-800"
     >
-      <div className="flex items-center space-x-2 overflow-hidden">
+      <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
         {viewMode === 'strata' ? (
-          <div className="flex items-center space-x-1.5 font-mono text-xs">
-            <span className="text-sm">🌐</span>
+          <div className="flex items-center space-x-1.5 font-mono text-xs min-w-0">
+            <Boxes className="w-4 h-4 text-sky-400 shrink-0" />
             <div
               data-testid="chunk-file-path"
-              className="font-sans font-semibold text-sky-400 tracking-tight flex items-center space-x-1"
+              className="font-sans font-semibold text-sky-400 tracking-tight flex items-center space-x-1 whitespace-nowrap truncate"
             >
-              <span>3D Strata Architecture Map</span>
+              <span>3D Strata</span>
               {chunk && (
-                <span className="text-slate-400 font-mono font-normal text-[11px] hidden md:inline truncate max-w-[200px]">
+                <span className="text-slate-400 font-mono font-normal text-[11px] hidden lg:inline truncate max-w-[180px]">
                   ({chunk.identifier})
                 </span>
               )}
@@ -107,7 +107,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             <FileCode className="w-4 h-4 text-sky-400 shrink-0" />
             <div
               data-testid="chunk-file-path"
-              className="font-mono text-slate-200 truncate max-w-[340px] font-medium flex items-center space-x-1"
+              className="font-mono text-slate-200 truncate min-w-0 font-medium flex items-center space-x-1"
               title={chunk ? `${chunk.filePath} > ${chunk.identifier}` : 'No file selected'}
             >
               {chunk ? (
@@ -154,55 +154,58 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-1.5 shrink-0">
-        {/* View Mode Toggle: [ 📄 Code View | 🌐 3D Strata Map ] */}
+        {/* View Mode Toggle: [ Code View | 3D Strata Map ] */}
         {onToggleViewMode && (
           <div
             data-testid="view-mode-toggle"
             role="group"
             aria-label="View mode selector"
-            className="inline-flex items-center p-0.5 rounded border border-slate-700 bg-slate-950 shadow-xs mr-1"
+            className="inline-flex items-center p-0.5 rounded border border-slate-700 bg-slate-950 shadow-xs"
           >
             <button
               type="button"
               data-testid="view-mode-code-btn"
               aria-pressed={viewMode === 'code'}
               onClick={() => onToggleViewMode('code')}
-              className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-2 min-h-[26px] py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                 viewMode === 'code'
                   ? 'bg-sky-500 text-slate-950 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
               }`}
-              title="Switch to 📄 Code View"
+              title="Switch to Code View"
+              aria-label="Switch to Code View"
             >
-              <span>📄</span>
-              <span className="hidden sm:inline">Code View</span>
+              <FileCode2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xl:inline">Code View</span>
             </button>
             <button
               type="button"
               data-testid="view-mode-strata-btn"
               aria-pressed={viewMode === 'strata'}
               onClick={() => onToggleViewMode('strata')}
-              className={`px-2 py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-2 min-h-[26px] py-0.5 rounded text-[11px] font-mono flex items-center gap-1 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                 viewMode === 'strata'
                   ? 'bg-sky-500 text-slate-950 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
               }`}
-              title="Switch to 🌐 3D Strata Map"
+              title="Switch to 3D Strata Map"
+              aria-label="Switch to 3D Strata Map"
             >
-              <span>🌐</span>
-              <span className="hidden sm:inline">3D Strata Map</span>
+              <Boxes className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xl:inline">3D Strata Map</span>
             </button>
           </div>
         )}
-        {/* In-Pane Search Bar */}
-        {onSearchChange && (
+        {/* In-Pane Search Bar (Code View only) */}
+        {onSearchChange && viewMode === 'code' && (
           <div className="relative flex items-center">
             {isSearchActive ? (
-              <div className="flex items-center bg-slate-950 border border-slate-700 rounded px-2 py-0.5 space-x-1 shadow-xs">
-                <Search className="w-3 h-3 text-slate-400" />
+              <div className="flex items-center bg-slate-950 border border-slate-700 rounded px-2 min-h-[28px] py-0.5 space-x-1 shadow-xs">
+                <Search className="w-3 h-3 text-slate-400 shrink-0" />
                 <input
                   type="text"
                   data-testid="code-search-input"
+                  aria-label="Find in code"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   onKeyDown={(e) => {
@@ -220,13 +223,13 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                   }}
                   placeholder="Find in code..."
                   autoFocus
-                  className="bg-transparent text-slate-100 text-xs focus:outline-none w-28 sm:w-36 font-mono placeholder-slate-500"
+                  className="bg-transparent text-slate-100 text-xs focus:outline-none w-28 sm:w-36 font-mono placeholder-slate-400"
                 />
                 {searchTerm.trim().length > 0 && (
                   <div className="flex items-center space-x-1">
                     <span
                       data-testid="search-match-count"
-                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-800 text-amber-300 border border-slate-700 whitespace-nowrap"
+                      className="px-1.5 py-0.5 rounded text-[11px] font-mono font-medium bg-slate-800 text-amber-300 border border-slate-700 whitespace-nowrap"
                     >
                       {matchCount > 0
                         ? `${Math.min(currentMatchIndex + 1, matchCount)}/${matchCount} ${matchCount === 1 ? 'match' : 'matches'}`
@@ -238,7 +241,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                           type="button"
                           data-testid="search-prev-match-btn"
                           onClick={onPrevMatch}
-                          className="p-0.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                          className="p-1 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
                           title="Previous match (Shift+Enter)"
                           aria-label="Previous match"
                         >
@@ -248,7 +251,7 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                           type="button"
                           data-testid="search-next-match-btn"
                           onClick={onNextMatch}
-                          className="p-0.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                          className="p-1 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
                           title="Next match (Enter)"
                           aria-label="Next match"
                         >
@@ -259,12 +262,14 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                   </div>
                 )}
                 <button
+                  type="button"
                   data-testid="clear-code-search-btn"
+                  aria-label="Close search"
                   onClick={() => {
                     onSearchChange('');
                     setIsSearchActive(false);
                   }}
-                  className="text-slate-400 hover:text-white cursor-pointer"
+                  className="p-1 min-w-[24px] min-h-[24px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
                   title="Close search"
                 >
                   <X className="w-3 h-3" />
@@ -272,9 +277,10 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               </div>
             ) : (
               <button
+                type="button"
                 data-testid="open-code-search-btn"
                 onClick={() => setIsSearchActive(true)}
-                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 title="Search in code"
                 aria-label="Search in code"
               >
@@ -290,17 +296,19 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             data-testid="toggle-full-file-btn"
             aria-pressed={isFullFileMode}
             onClick={onToggleFullFile}
-            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
+            className={`px-2 min-h-[28px] py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
               isFullFileMode
                 ? 'bg-sky-950 text-sky-300 border-sky-500/60 font-semibold'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title={isFullFileMode ? 'Switch back to isolated symbol view' : 'View full source file with surrounding context'}
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">{isFullFileMode ? 'Symbol Only' : 'Full File'}</span>
+            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden lg:inline whitespace-nowrap">{isFullFileMode ? 'Symbol Only' : 'Full File'}</span>
           </button>
         )}
+
+        <div className="hidden sm:block w-px h-4 bg-slate-800 mx-0.5" aria-hidden="true" />
 
         {onToggleExplorer && (
           <button
@@ -308,84 +316,94 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             data-testid="toggle-explorer-btn"
             aria-expanded={isExplorerOpen}
             onClick={onToggleExplorer}
-            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
+            className={`px-2 min-h-[28px] py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
               isExplorerOpen
                 ? 'bg-sky-950 text-sky-300 border-sky-600/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title="Toggle Repository Explorer Tree"
+            aria-label="Toggle Repository Explorer Tree"
           >
-            <FolderTree className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Explorer</span>
+            <FolderTree className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden xl:inline">Explorer</span>
           </button>
         )}
 
-        {onToggleInspector && (
+        {onToggleInspector && viewMode === 'code' && (
           <button
             type="button"
             data-testid="toggle-ast-inspector-btn"
             aria-expanded={isInspectorOpen}
             onClick={onToggleInspector}
-            className={`px-2 py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs emil-press ${
+            className={`px-2 min-h-[28px] py-1 rounded transition-all flex items-center space-x-1 text-xs border cursor-pointer shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
               isInspectorOpen
                 ? 'bg-slate-800 text-sky-300 border-sky-500/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
             title="Inspect symbol details, parameters & call graph"
+            aria-label="Inspect symbol details"
           >
-            <Info className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Symbol Info</span>
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden xl:inline">Symbol Info</span>
           </button>
         )}
 
-        <button
-          data-testid="copy-code-btn"
-          onClick={handleCopy}
-          disabled={!chunk}
-          className={`flex items-center space-x-1 px-2.5 py-1 rounded text-slate-200 hover:text-white border transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer emil-press ${
-            copied
-              ? 'bg-emerald-950/80 border-emerald-500/80 text-emerald-300 emil-spring-pop ring-1 ring-emerald-500/50'
-              : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
-          }`}
-          title="Copy code to clipboard"
-        >
-          {copied ? (
-            <span className="flex items-center space-x-1">
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-medium text-xs">Copied!</span>
-            </span>
-          ) : (
-            <span className="flex items-center space-x-1">
-              <Copy className="w-3.5 h-3.5" />
-              <span className="text-xs">Copy</span>
-            </span>
-          )}
-        </button>
-
-        {onMinimize && (
+        {viewMode === 'code' && (
           <button
             type="button"
-            data-testid="minimize-code-btn"
-            onClick={onMinimize}
-            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer emil-press"
-            title="Minimize code viewer pane"
-            aria-label="Minimize code viewer pane"
+            data-testid="copy-code-btn"
+            onClick={handleCopy}
+            disabled={!chunk}
+            className={`flex items-center space-x-1 px-2 min-h-[28px] py-1 rounded text-slate-200 hover:text-white border transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press ${
+              copied
+                ? 'bg-emerald-950/80 border-emerald-500/80 text-emerald-300 emil-spring-pop ring-1 ring-emerald-500/50'
+                : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+            }`}
+            title="Copy code to clipboard"
+            aria-label="Copy code to clipboard"
           >
-            <PanelRightClose className="w-3.5 h-3.5" />
+            {copied ? (
+              <span className="flex items-center space-x-1">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="hidden xl:inline text-emerald-400 font-medium text-xs">Copied!</span>
+              </span>
+            ) : (
+              <span className="flex items-center space-x-1">
+                <Copy className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xl:inline text-xs">Copy</span>
+              </span>
+            )}
           </button>
         )}
 
-        {onToggleMaximize && (
-          <button
-            type="button"
-            data-testid="toggle-maximize-code-btn"
-            onClick={onToggleMaximize}
-            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer emil-press"
-            title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
-            aria-label={isMaximized ? "Restore split layout" : "Maximize code viewer"}
-          >
-            {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-          </button>
+        {(onMinimize || onToggleMaximize) && (
+          <div className="hidden md:flex items-center space-x-1 pl-1 border-l border-slate-800">
+            {onMinimize && (
+              <button
+                type="button"
+                data-testid="minimize-code-btn"
+                onClick={onMinimize}
+                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
+                title="Minimize code viewer pane"
+                aria-label="Minimize code viewer pane"
+              >
+                <PanelRightClose className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {onToggleMaximize && (
+              <button
+                type="button"
+                data-testid="toggle-maximize-code-btn"
+                onClick={onToggleMaximize}
+                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 emil-press"
+                title={isMaximized ? "Restore split layout" : "Maximize code viewer"}
+                aria-label={isMaximized ? "Restore split layout" : "Maximize code viewer"}
+              >
+                {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
