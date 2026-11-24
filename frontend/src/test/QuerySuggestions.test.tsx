@@ -48,7 +48,7 @@ describe('QuerySuggestions Acceptance Suite', () => {
 
     const chips = screen.getAllByTestId('query-suggestion-chip');
     expect(chips).toHaveLength(REPO_SUGGESTIONS.sample_codebase.length);
-    expect(screen.getByText('Show Calculator class and methods')).toBeInTheDocument();
+    expect(screen.getByText('Show DataProcessingService class and methods')).toBeInTheDocument();
     expect(screen.getByText('Find calculate_statistics and async generator')).toBeInTheDocument();
     expect(screen.getByText('Explain DataProcessingService transform_batch')).toBeInTheDocument();
     expect(screen.getByText('Find fetch_remote_resource with retry decorator')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('QuerySuggestions Acceptance Suite', () => {
     const handleSelect = vi.fn();
     render(<QuerySuggestions onSelectSuggestion={handleSelect} activeRepoId="Sample_Codebase" />);
 
-    expect(screen.getByText('Show Calculator class and methods')).toBeInTheDocument();
+    expect(screen.getByText('Show DataProcessingService class and methods')).toBeInTheDocument();
   });
 
   it('falls back to default suggestions for unknown activeRepoId', () => {

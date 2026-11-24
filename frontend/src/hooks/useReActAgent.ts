@@ -21,6 +21,7 @@ export interface UseReActAgentOptions {
   initialChunks?: AstCodeChunk[];
   activeRepoPath?: string;
   activeRepo?: RepositoryItem | null;
+  onConnectRepo?: (repoId: string) => void | Promise<void>;
 }
 
 const isTestEnv =
@@ -171,6 +172,15 @@ export function useReActAgent(
       : undefined;
   const activeRepoRef = useRef<RepositoryItem | null | undefined>(activeRepo);
   activeRepoRef.current = activeRepo;
+
+  const onConnectRepo =
+    options && 'onConnectRepo' in options
+      ? (options as UseReActAgentOptions).onConnectRepo
+      : undefined;
+  const onConnectRepoRef = useRef<((repoId: string) => void | Promise<void>) | undefined>(
+    onConnectRepo
+  );
+  onConnectRepoRef.current = onConnectRepo;
 
   const rawActiveRepoPath =
     options && 'activeRepoPath' in options
@@ -456,7 +466,19 @@ Connect a repository using the **Repositories** menu in the header to start sear
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        const targetRepo = lower.includes('sample') ? 'sample_codebase' : 'psf/requests';
+        const isSample = lower.includes('sample');
+        const targetRepo = isSample ? 'sample_codebase' : 'psf/requests';
+        const targetRepoId = isSample ? 'sample_codebase' : 'requests';
+
+        if (onConnectRepoRef.current) {
+          try {
+            await onConnectRepoRef.current(targetRepoId);
+            return;
+          } catch {
+            // Fall through to instructional message if backend is offline
+          }
+        }
+
         const connectContent = `### 📦 Connect Repository: **${targetRepo}**
 
 Click **Repositories** in the top navigation header or open the repository modal to connect **${targetRepo}**.
@@ -531,6 +553,47 @@ Once connected, its code symbols and files will load into the code viewer and yo
 
       // Strip /ask prefix if user explicitly invoked /ask command
       const effectiveQuery = isAsk ? trimmed.replace(/^\/ask\s*/i, '').trim() || trimmed : trimmed;
+
+      // Guard: Block queries while WebLLM is actively loading and notify the user
+      if (webLLMRef.current && webLLMRef.current.status === 'loading') {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        const pct = Math.min(100, Math.max(0, Math.round(webLLMRef.current.progress || 0)));
+        const modelName = webLLMRef.current.currentModel || 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC';
+        const progressDetail = webLLMRef.current.progressText || `Initializing ${modelName}...`;
+        const loadingContent = `### ⏳ WebLLM Model Still Loading (${pct}%)
+
+**${modelName}** is currently initializing on WebGPU (\`${progressDetail}\`).
+
+Queries are blocked until model loading finishes so your answer is synthesized by the live local SLM. Please wait for **WebLLM: Ready** in the top header and submit your query again.`;
+
+        const asstMsg: ChatMessage = {
+          id: `asst-${Date.now()}`,
+          role: 'assistant',
+          content: loadingContent,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          reActState: 'Idle',
+          citedChunks: [],
+          metrics: {
+            latencyMs: 5,
+            tokensGenerated: 0,
+            astNodesSearched: 0,
+          },
+        };
+        const finalMsgs = [...messagesRef.current, asstMsg];
+        messagesRef.current = finalMsgs;
+        setMessages(finalMsgs);
+        const waitingStatus: AgentStatus = {
+          ...statusRef.current,
+          state: 'Idle',
+          currentStepMessage: `WebLLM loading (${pct}%) — please wait for model initialization before querying`,
+        };
+        statusRef.current = waitingStatus;
+        setAgentStatus(waitingStatus);
+        return;
+      }
 
       // Intent Handling 3: Repository Connection Gating
       // If no repository is active, do not execute un-scoped vector searches.
@@ -618,7 +681,7 @@ Please select or connect a Python repository before querying code definitions.
           activeRepoRef.current?.name?.toLowerCase().includes('sample') ||
           activeRepoPathRef.current?.toLowerCase().includes('sample')
         ) {
-          effectiveSearchTerm = 'Calculator add subtract FastAPI route';
+          effectiveSearchTerm = 'DataProcessingService BaseEntity calculate_statistics fetch_remote_resource';
         } else {
           effectiveSearchTerm = 'ClassDef class client service app main core controller manager model';
         }
@@ -859,6 +922,12 @@ Please select or connect a Python repository before querying code definitions.
           }
         } else {
           // Search live LanceDB backend via NemoIR before summarizing
+          executionThoughts.push(
+            isOverview
+              ? `Classified intent as repository architectural overview for "${activeRepoRef.current?.name || 'active codebase'}".`
+              : `Analyzed query intent: "${effectiveQuery}".`
+          );
+
           let liveChunks: AstCodeChunk[] | undefined;
           if (nemoIRRef.current) {
             const searchOptions = activeRepoPathRef.current
@@ -868,6 +937,27 @@ Please select or connect a Python repository before querying code definitions.
               ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
               : nemoIRRef.current.searchAstChunks(effectiveSearchTerm));
             liveChunks = res ?? [];
+            if (liveChunks.length > 0) {
+              executionThoughts.push(
+                `Retrieved ${liveChunks.length} matching definitions: ${liveChunks.slice(0, 4).map((c) => c.identifier).join(', ')}.`
+              );
+            }
+
+            if (typeof nemoIRRef.current.executeWorkflow === 'function') {
+              try {
+                const wfResult = (await nemoIRRef.current.executeWorkflow({ query: effectiveQuery })) as {
+                  workflow?: string;
+                  stages?: string[];
+                } | null;
+                if (wfResult && Array.isArray(wfResult.stages) && wfResult.stages.length > 0) {
+                  executionThoughts.push(
+                    `NemoIR workflow (${wfResult.workflow || 'codeRetrieval.nemo'}) verified stages: ${wfResult.stages.join(' → ')}.`
+                  );
+                }
+              } catch {
+                // Graceful continuation
+              }
+            }
           } else if (!isTestEnv) {
             throw new Error(
               'Local backend (localhost:8000) is required for AST search. Start Uvicorn with: uvicorn app.main:app --app-dir backend --port 8000'

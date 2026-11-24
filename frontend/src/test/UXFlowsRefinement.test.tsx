@@ -496,4 +496,47 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       expect(toggleBtn).toHaveTextContent('Hide stream');
     });
   });
+
+  describe('12. Block Queries While WebLLM is Loading & Notify User', () => {
+    it('blocks query submission when webLLM.status is loading and emits a notification message with loading progress', async () => {
+      const mockSearch = vi.fn().mockResolvedValue([sampleChunk]);
+      const loadingWebLLM = {
+        status: 'loading' as const,
+        progress: 42,
+        progressText: 'Fetching param shard 3/8',
+        currentModel: 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC',
+        error: null,
+        isWebGPUSupported: true,
+        engine: null,
+        loadModel: vi.fn(),
+        initEngine: vi.fn(),
+        generate: vi.fn(),
+        generateStream: vi.fn(),
+        interrupt: vi.fn(),
+        unload: vi.fn(),
+      };
+
+      const { result } = renderHook(() =>
+        useReActAgent({
+          activeRepo: sampleRepo,
+          webLLM: loadingWebLLM,
+          nemoIR: { searchAstChunks: mockSearch } as any,
+        })
+      );
+
+      await act(async () => {
+        await result.current.submitQuery('Where is Session.send defined?');
+      });
+
+      // Vector search and generation must NOT be called while WebLLM is loading
+      expect(mockSearch).not.toHaveBeenCalled();
+      expect(loadingWebLLM.generate).not.toHaveBeenCalled();
+
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('assistant');
+      expect(lastMsg.content).toContain('WebLLM Model Still Loading (42%)');
+      expect(lastMsg.content).toContain('Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC');
+      expect(result.current.agentStatus.state).toBe('Idle');
+    });
+  });
 });

@@ -37,6 +37,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
     return true;
   });
   const [mobileTab, setMobileTab] = useState<'chat' | 'code'>('chat');
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const isDraggingRef = useRef<boolean>(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,6 +61,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     isDraggingRef.current = true;
+    setIsDragging(true);
     if (typeof e.currentTarget.setPointerCapture === 'function') {
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -79,6 +81,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
+    setIsDragging(false);
     if (typeof e.currentTarget.releasePointerCapture === 'function') {
       try {
         e.currentTarget.releasePointerCapture(e.pointerId);
@@ -92,6 +95,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
     (e: React.MouseEvent) => {
       e.preventDefault();
       isDraggingRef.current = true;
+      setIsDragging(true);
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!isDraggingRef.current) return;
@@ -100,6 +104,7 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
 
       const handleMouseUp = () => {
         isDraggingRef.current = false;
+        setIsDragging(false);
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };
@@ -199,7 +204,9 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               ? `${leftWidthPercent}%`
               : '100%',
           }}
-          className={`h-full max-md:!w-full flex-col bg-[#0b101d] overflow-hidden border-r border-slate-800 shrink-0 transition-all ${
+          className={`h-full max-md:!w-full flex-col bg-[#0b101d] overflow-hidden border-r border-slate-800 shrink-0 ${
+            isDragging ? '' : 'transition-all'
+          } ${
             isChatMinimized || (!isDesktop && mobileTab !== 'chat') ? 'hidden' : 'flex'
           }`}
         >
@@ -279,7 +286,9 @@ export const SplitPaneLayout: React.FC<SplitPaneLayoutProps> = ({
               ? `${100 - leftWidthPercent}%`
               : '100%',
           }}
-          className={`h-full max-md:!w-full flex-1 flex-col bg-[#070a12] overflow-hidden transition-all ${
+          className={`h-full max-md:!w-full flex-1 flex-col bg-[#070a12] overflow-hidden ${
+            isDragging ? '' : 'transition-all'
+          } ${
             isCodeMinimized || (!isDesktop && mobileTab !== 'code') ? 'hidden' : 'flex'
           }`}
         >

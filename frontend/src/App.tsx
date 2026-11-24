@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWebLLM } from './hooks/useWebLLM';
+import { useWebLLM, PRECISION_MODEL } from './hooks/useWebLLM';
 import { useNemoIR } from './hooks/useNemoIR';
 import { useReActAgent } from './hooks/useReActAgent';
 import { Header } from './components/layout/Header';
@@ -10,22 +10,39 @@ import { ConnectRepoModal } from './components/repo/ConnectRepoModal';
 import { RepositoryItem } from './types';
 import { apiClient } from './services/apiClient';
 
-export const App: React.FC = () => {
+export const LAST_REPO_STORAGE_KEY = 'codeseek_last_repo_id';
+
+const isTestEnv =
+  (typeof process !== 'undefined' &&
+    (process.env?.NODE_ENV === 'test' || Boolean(process.env?.VITEST))) ||
+  (typeof window !== 'undefined' && Boolean((window as any).__VITEST_ENVIRONMENT__));
+
+export interface AppProps {
+  autoConnectLastRepo?: boolean;
+  autoInitWebLLM?: boolean;
+}
+
+export const App: React.FC<AppProps> = ({
+  autoConnectLastRepo = !isTestEnv,
+  autoInitWebLLM = !isTestEnv,
+}) => {
   const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const [healthRefreshTrigger, setHealthRefreshTrigger] = React.useState<number>(0);
   const [isBackendOffline, setIsBackendOffline] = React.useState<boolean>(false);
   const [copiedBackendCmd, setCopiedBackendCmd] = React.useState<boolean>(false);
-  const webLLM = useWebLLM();
+  const webLLM = useWebLLM({ initialModel: PRECISION_MODEL, autoInit: autoInitWebLLM });
 
   const handleBackendHealthChange = React.useCallback((healthy: boolean) => {
     setIsBackendOffline(!healthy);
   }, []);
   const nemoIR = useNemoIR();
+  const connectRepoByIdRef = React.useRef<((repoId: string) => Promise<void>) | undefined>(undefined);
   const agent = useReActAgent({
     webLLM,
     nemoIR,
     activeRepoPath: activeRepo?.path,
     activeRepo,
+    onConnectRepo: (repoId: string) => connectRepoByIdRef.current?.(repoId),
   });
 
   const [isChatMinimized, setIsChatMinimized] = React.useState<boolean>(false);
@@ -43,6 +60,13 @@ export const App: React.FC = () => {
   const handleSelectRepo = React.useCallback(
     async (repo: RepositoryItem) => {
       setActiveRepo(repo);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(LAST_REPO_STORAGE_KEY, repo.id);
+        }
+      } catch {
+        // Ignore storage restrictions
+      }
       setHealthRefreshTrigger((prev) => prev + 1);
       try {
         const chunks = await apiClient.getRepoChunks(repo.id, 3);
@@ -78,6 +102,43 @@ export const App: React.FC = () => {
     },
     [agent, nemoIR]
   );
+
+  // Allow connecting a repository by ID (used by suggestion chips & auto-restore on mount)
+  const handleConnectRepoById = React.useCallback(
+    async (repoId: string) => {
+      const repos = await apiClient.getRepositories();
+      const target =
+        repos.find(
+          (r) =>
+            r.id.toLowerCase() === repoId.toLowerCase() ||
+            r.name.toLowerCase() === repoId.toLowerCase()
+        ) || repos[0];
+      if (target) {
+        await handleSelectRepo(target);
+      }
+    },
+    [handleSelectRepo]
+  );
+  connectRepoByIdRef.current = handleConnectRepoById;
+
+  // Auto-connect to the last connected repository stored in localStorage (or default to first indexed repo in browser)
+  const hasAutoConnectedRef = React.useRef<boolean>(false);
+  React.useEffect(() => {
+    if (!autoConnectLastRepo || hasAutoConnectedRef.current) return;
+    let savedRepoId: string | null = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        savedRepoId = window.localStorage.getItem(LAST_REPO_STORAGE_KEY);
+      }
+    } catch {
+      // Ignore storage restrictions
+    }
+
+    hasAutoConnectedRef.current = true;
+    handleConnectRepoById(savedRepoId || 'requests').catch(() => {
+      // Backend may be offline on initial load; user can connect manually once started
+    });
+  }, [autoConnectLastRepo, handleConnectRepoById]);
 
   const handleSelectChunk = React.useCallback(
     async (chunkId: string) => {
@@ -347,6 +408,9 @@ export const App: React.FC = () => {
             activeRepoName={activeRepo?.name}
             activeRepoManifest={activeRepo?.manifest}
             onClearChat={agent.clearMessages}
+            isWebLLMLoading={webLLM.status === 'loading'}
+            webLLMProgress={webLLM.progress}
+            webLLMProgressText={webLLM.progressText}
           />
         }
         rightPane={

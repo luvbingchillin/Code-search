@@ -138,10 +138,11 @@ export class AgentSimulator {
     );
     const hasSampleChunks = matchedChunks.some(
       (c) =>
-        c.filePath.includes('calculator.py') ||
+        c.filePath.includes('sample_service.py') ||
         c.filePath.includes('sample_codebase') ||
-        c.filePath.includes('main.py') ||
-        c.identifier === 'Calculator'
+        c.identifier.includes('DataProcessingService') ||
+        c.identifier.includes('BaseEntity') ||
+        c.identifier === 'calculate_statistics'
     );
 
     let response = '';
@@ -152,28 +153,28 @@ export class AgentSimulator {
           `**\`psf/requests\`** is the premier Python HTTP client library (*"HTTP for Humans"*). It provides an elegant, synchronous interface for issuing HTTP requests, managing persistent sessions, handling authentication, and negotiating response payloads without low-level socket plumbing.\n\n` +
           `---\n\n` +
           `### 🏛️ Core Architecture & Pipeline\n` +
-          `1. **Session & Connection Lifecycle (\`sessions.py\`)\n` +
+          `1. **Session & Connection Lifecycle (\`sessions.py\`)**\n` +
           `   - **\`Session\`**: Central orchestrator providing cookie persistence across multiple requests, connection pooling (via urllib3), auth persistence, and transport adapter mounting.\n` +
-          `2. **Request Encapsulation (\`models.py\`)\n` +
+          `2. **Request Encapsulation (\`models.py\`)**\n` +
           `   - **\`Request\` & \`PreparedRequest\`**: Configures HTTP method, headers, parameters, and compiles wire-ready network payloads.\n` +
-          `3. **Response Handling (\`models.py\`)\n` +
+          `3. **Response Handling (\`models.py\`)**\n` +
           `   - **\`Response\`**: Container for server responses, encapsulating HTTP status codes, headers, cookie jars, and lazy content decoders (\`.content\`, \`.text\`, \`.json()\`).\n` +
-          `4. **Transport Adapters (\`adapters.py\`)\n` +
+          `4. **Transport Adapters (\`adapters.py\`)**\n` +
           `   - **\`HTTPAdapter\`**: Transport abstraction layer mounting urllib3 connection pool managers, socket retries, and TLS/SSL verification.\n\n` +
           `---\n\n` +
           `### 🔑 Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}`;
       } else if (hasSampleChunks) {
         response =
           `### ⚡ Architectural Overview: **sample_codebase**\n\n` +
-          `**\`sample_codebase\`** is a lightweight Python FastAPI microservice demonstrating modular REST architecture, mathematical computation utilities, and decorator-based logging.\n\n` +
+          `**\`sample_codebase\`** (\`sample_service.py\`) is a modular Python data processing and asynchronous service module demonstrating entity inheritance, batch stream transformations, statistical utilities, and decorator-based telemetry.\n\n` +
           `---\n\n` +
           `### 🏛️ Core Architecture & Modules\n` +
-          `1. **API Router & Application Service (\`main.py\`)\n` +
-          `   - Configures the FastAPI ASGI application, registers endpoint routes (\`/health\`, \`/calculate\`), and handles parameter validation.\n` +
-          `2. **Computational Engine (\`calculator.py\`)\n` +
-          `   - **\`Calculator\`**: Object-oriented math engine implementing fundamental arithmetic routines (\`add\`, \`subtract\`, \`multiply\`, \`divide\`) with zero-division error handling.\n` +
-          `3. **Cross-Cutting Utilities (\`utils.py\`)\n` +
-          `   - Execution timing decorators, structured logging, and input sanitation helpers.\n\n` +
+          `1. **Batch & Stream Processing Engine (\`DataProcessingService\`)**\n` +
+          `   - Coordinates synchronous record normalization (\`transform_batch\`), asynchronous generator stream pipelines (\`process_stream\`), and inner configuration validation (\`ProcessingConfig\`).\n` +
+          `2. **Domain Entity Foundation (\`BaseEntity\`)**\n` +
+          `   - Base class providing unique identity encapsulation (\`entity_id\`), validated property setters (\`name\`), and lifecycle deactivation (\`deactivate\`).\n` +
+          `3. **Statistical & Async Network Utilities (\`calculate_statistics\`, \`fetch_remote_resource\`)**\n` +
+          `   - Computes mean/variance/standard deviation and executes retry-bounded async endpoint fetching wrapped with \`@log_execution\` and \`@validate_positive\` decorators.\n\n` +
           `---\n\n` +
           `### 🔑 Key Code Definitions<!-- Key AST Definitions -->\n${citedSummary}`;
       } else {

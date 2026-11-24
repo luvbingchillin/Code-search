@@ -17,7 +17,7 @@ export const REPO_SUGGESTIONS: Record<string, string[]> = {
     'Show HTTPAdapter send and build_response',
   ],
   sample_codebase: [
-    'Show Calculator class and methods',
+    'Show DataProcessingService class and methods',
     'Find calculate_statistics and async generator',
     'Explain DataProcessingService transform_batch',
     'Find fetch_remote_resource with retry decorator',

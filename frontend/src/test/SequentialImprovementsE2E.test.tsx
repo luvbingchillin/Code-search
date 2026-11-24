@@ -380,7 +380,7 @@ describe('Sequential Improvements Consolidated E2E Integration Suite', () => {
       // Suggestions should now be sample_codebase specific
       await waitFor(() => {
         const sampleChips = screen.getAllByTestId('query-suggestion-chip');
-        expect(sampleChips[0].textContent).toBe('Show Calculator class and methods');
+        expect(sampleChips[0].textContent).toBe('Show DataProcessingService class and methods');
       });
     });
   });
