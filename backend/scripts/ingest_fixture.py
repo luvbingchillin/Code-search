@@ -4,9 +4,12 @@ Extracts AST chunks using Tree-sitter, computes embeddings via MockEmbeddingMode
 and persists them into backend/data/lancedb in table 'ast_chunks'.
 """
 
+import argparse
 import gc
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Ensure backend package is in sys.path
@@ -14,8 +17,9 @@ backend_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(backend_dir))
 
 import lancedb
-from app.core.embedding import MockEmbeddingModel
+from app.core.embedding import BaseEmbeddingModel, MockEmbeddingModel, SentenceTransformerEmbedder
 from app.services.ingestion import VectorIngestionService
+from app.services.repo_registry import SEED_REPOSITORIES
 from app.vector_store.lance_store import LanceDBVectorStore
 
 
@@ -88,8 +92,78 @@ def ingest_fixture(
     return count
 
 
+def seed_all_repositories(
+    project_root: Path,
+    use_real_embedder: bool = True,
+    dimension: int = 384,
+) -> None:
+    """Seed both root data/lancedb and backend/data/lancedb with requests and sample_codebase."""
+    embedder: BaseEmbeddingModel
+    if use_real_embedder:
+        print("[Seed] Loading SentenceTransformerEmbedder('all-MiniLM-L6-v2')...")
+        embedder = SentenceTransformerEmbedder(model_name="all-MiniLM-L6-v2", dimension=dimension)
+    else:
+        print("[Seed] Using MockEmbeddingModel(384)...")
+        embedder = MockEmbeddingModel(dimension=dimension)
+
+    requests_dir = project_root / "fixtures" / "requests"
+    sample_dir = project_root / "backend" / "sample_codebase"
+
+    # 1. Seed root data/lancedb (used by live FastAPI application) with both requests (284) and sample_codebase (24) = 308 chunks
+    root_db_dir = project_root / "data" / "lancedb"
+    root_db_dir.mkdir(parents=True, exist_ok=True)
+    print(f"\n[Seed] Rebuilding live application LanceDB at: {root_db_dir}")
+    db = lancedb.connect(str(root_db_dir))
+    tables_obj = db.list_tables()
+    table_names = tables_obj.tables if hasattr(tables_obj, "tables") else list(tables_obj)
+    if "ast_chunks" in table_names:
+        db.drop_table("ast_chunks")
+        gc.collect()
+
+    store = LanceDBVectorStore(db_path=str(root_db_dir), table_name="ast_chunks", dimension=dimension)
+    store.initialize()
+    service = VectorIngestionService(embedder=embedder, vector_store=store, batch_size=64)
+
+    req_count = service.ingest_directory(
+        root_dir=str(requests_dir),
+        repo_root=str(requests_dir),
+        repo_id="requests",
+    )
+    sample_count = service.ingest_directory(
+        root_dir=str(sample_dir),
+        repo_root=str(sample_dir),
+        repo_id="sample_codebase",
+    )
+    print(f"[Seed] {root_db_dir}: requests={req_count}, sample_codebase={sample_count}, total={store.count()}")
+    store.close()
+
+    # 2. Ensure backend/data/lancedb (used by M1 benchmark & adversarial fixture tests) has clean 284 requests chunks
+    backend_db_dir = project_root / "backend" / "data" / "lancedb"
+    ingest_fixture(requests_dir, backend_db_dir, dimension=dimension)
+
+    # Reset data/repos_registry.json to clean seed state without pytest temp folders
+    now = datetime.now(timezone.utc).isoformat()
+    clean_registry = [{**repo, "last_indexed": now} for repo in SEED_REPOSITORIES]
+    for reg_path in [
+        project_root / "data" / "repos_registry.json",
+        project_root / "backend" / "data" / "repos_registry.json",
+    ]:
+        reg_path.parent.mkdir(parents=True, exist_ok=True)
+        reg_path.write_text(json.dumps(clean_registry, indent=2), encoding="utf-8")
+        print(f"[Seed] Cleaned registry: {reg_path}")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Seed LanceDB with AST code chunks.")
+    parser.add_argument("--all-seeds", action="store_true", help="Seed both requests and sample_codebase into root and backend LanceDB")
+    parser.add_argument("--real-embedder", action="store_true", help="Use SentenceTransformerEmbedder('all-MiniLM-L6-v2')")
+    args = parser.parse_args()
+
     project_root = Path(__file__).resolve().parent.parent.parent
+    if args.all_seeds:
+        seed_all_repositories(project_root, use_real_embedder=args.real_embedder)
+        return
+
     fixture_dir = project_root / "fixtures" / "requests"
     db_path = project_root / "backend" / "data" / "lancedb"
 

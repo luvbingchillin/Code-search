@@ -129,10 +129,16 @@ def memory_sqlite_store():
 
 
 @pytest.fixture
-def test_app(mock_embedder, memory_sqlite_store):
+def test_app(mock_embedder, memory_sqlite_store, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Fixture providing a configured test FastAPI application with in-memory store."""
     from app.config import Settings
     from app.main import create_app
+    from app.services.repo_registry import RepoRegistry
+    from app.api.v1.endpoints import index as index_ep, repos as repos_ep
+
+    isolated_registry = RepoRegistry(registry_file=tmp_path / "test_repos_registry.json")
+    monkeypatch.setattr(index_ep, "repo_registry", isolated_registry)
+    monkeypatch.setattr(repos_ep, "repo_registry", isolated_registry)
 
     test_settings = Settings(
         vector_db_type="sqlite",

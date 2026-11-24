@@ -125,8 +125,16 @@ class RetrievalService:
             ast_node_type=ast_node_type,
         )
 
+        # Deduplicate semantic candidates by chunk ID while preserving order
+        deduped_candidates: List[AstCodeChunk] = []
+        seen_ids: Set[str] = set()
+        for cand in candidates:
+            if cand.id not in seen_ids:
+                seen_ids.add(cand.id)
+                deduped_candidates.append(cand)
+        candidates = deduped_candidates
+
         # Merge exact-symbol hits for explicit code identifiers mentioned in query
-        seen_ids = {c.id for c in candidates}
         for sym in _SYMBOL_CANDIDATE_RE.findall(query)[:4]:
             try:
                 exact_hits = self.vector_store.search_exact(sym)

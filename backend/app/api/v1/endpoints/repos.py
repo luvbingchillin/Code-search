@@ -213,6 +213,42 @@ def get_repository_tree(
             )
         )
 
+    # Fallback to scanning repository files directly from disk if vector store had no matching chunks
+    if not files_map:
+        project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+        candidates = [
+            Path(repo.path),
+            project_root / repo.path,
+            Path("backend") / repo.path,
+            Path("..") / repo.path,
+        ]
+        repo_dir = next((cand for cand in candidates if cand.exists() and cand.is_dir()), None)
+        if repo_dir is not None:
+            scanner = CodebaseScanner()
+            scanned_chunks = scanner.scan_directory(str(repo_dir), repo_root=str(repo_dir))
+            for sc in scanned_chunks:
+                if sc.id in seen_ids:
+                    continue
+                seen_ids.add(sc.id)
+                f_path = sc.filePath or "unknown.py"
+                f_name = sc.fileName or f_path.split("/")[-1].split("\\")[-1]
+                if f_path not in files_map:
+                    files_map[f_path] = {
+                        "filePath": f_path,
+                        "fileName": f_name,
+                        "symbols": [],
+                    }
+                files_map[f_path]["symbols"].append(
+                    FileSymbolNode(
+                        id=sc.id,
+                        identifier=sc.identifier,
+                        astNodeType=sc.astNodeType,
+                        startLine=sc.startLine,
+                        endLine=sc.endLine,
+                        parameters=list(sc.parameters or []),
+                    )
+                )
+
     tree_nodes = []
     for f_path, data in sorted(files_map.items()):
         data["symbols"].sort(key=lambda s: s.start_line)

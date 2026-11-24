@@ -18,7 +18,25 @@ def trigger_indexing(
     ingestion_service: VectorIngestionService = Depends(get_ingestion_service),
 ) -> IndexResponse:
     """Scan the given filesystem directory for Python files, extract AST chunks, and persist them into the vector database."""
-    src_path = Path(request.source_dir).resolve()
+    project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+    raw_dir = request.source_dir.strip()
+    candidates = [
+        Path(raw_dir),
+        project_root / raw_dir,
+        Path("backend") / raw_dir,
+        Path("..") / raw_dir,
+    ]
+    if raw_dir.replace("\\", "/").lower().startswith("backend/"):
+        stripped = raw_dir.replace("\\", "/")[len("backend/") :]
+        candidates.append(Path(stripped))
+        candidates.append(project_root / "backend" / stripped)
+
+    src_path = Path(raw_dir).resolve()
+    for cand in candidates:
+        if cand.exists():
+            src_path = cand.resolve()
+            break
+
     if not src_path.exists():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -49,8 +49,21 @@ def lance_app_client(tmp_path: Path, sample_chunks: List[AstCodeChunk]):
 
 
 @pytest.fixture
-def sqlite_app_client(memory_sqlite_store: SQLiteVectorStore, mock_embedder: MockEmbeddingModel, sample_chunks: List[AstCodeChunk]):
+def sqlite_app_client(
+    memory_sqlite_store: SQLiteVectorStore,
+    mock_embedder: MockEmbeddingModel,
+    sample_chunks: List[AstCodeChunk],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
     """Provides a TestClient backed by SQLite vector store pre-seeded with chunks."""
+    from app.services.repo_registry import RepoRegistry
+    from app.api.v1.endpoints import index as index_ep, repos as repos_ep
+
+    isolated_registry = RepoRegistry(registry_file=tmp_path / "adv_repos_registry.json")
+    monkeypatch.setattr(index_ep, "repo_registry", isolated_registry)
+    monkeypatch.setattr(repos_ep, "repo_registry", isolated_registry)
+
     ingest = VectorIngestionService(embedder=mock_embedder, vector_store=memory_sqlite_store)
     ingest.ingest_chunks(sample_chunks)
 

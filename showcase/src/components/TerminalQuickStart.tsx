@@ -22,13 +22,14 @@ npm run dev
     backend: `# 1. Navigate to the Python indexing backend
 cd Code-search/backend
 
-# 2. Set up a Python environment
+# 2. Set up a Python environment & install requirements
 python -m venv venv
 source venv/bin/activate  # On Windows: .\\venv\\Scripts\\activate
+pip install -r requirements.txt
 
-# 3. Install requirements & index a codebase
-pip install -e .
-python scripts/ingest_repo.py --target sample_codebase/`,
+# 3. Seed LanceDB & launch the FastAPI retrieval server on port 8000
+python scripts/ingest_fixture.py --all-seeds --real-embedder
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload`,
     benchmark: `# 1. Navigate to the evaluation folder
 cd Code-search/benchmark
 

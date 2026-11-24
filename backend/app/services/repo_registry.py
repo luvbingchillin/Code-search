@@ -73,12 +73,12 @@ REQUESTS_MANIFEST = (
 )
 
 SAMPLE_CODEBASE_MANIFEST = (
-    "sample_codebase is a demonstration service showcasing FastAPI routes, mathematical operations, and utility classes.\n"
+    "sample_codebase is a demonstration service showcasing batch data processing, statistical utilities, async I/O retries, and decorator patterns.\n"
     "Core Components:\n"
-    "- Calculator: Core calculation class supporting arithmetic operations, memory storage, and error handling.\n"
-    "- FastAPI Routes: API endpoints exposing calculation services and health checks.\n"
-    "- Utility Functions: Helper validation and formatting routines.\n"
-    "Pipeline: Client request -> FastAPI route validation -> Calculator business logic execution -> JSON response."
+    "- DataProcessingService: High-throughput batch transformation and async stream processing service inheriting from BaseEntity.\n"
+    "- BaseEntity: Foundational domain entity managing unique identifiers, active state, and property validation.\n"
+    "- calculate_statistics & fetch_remote_resource: Statistical aggregation routine and async retry-decorated HTTP resource fetcher.\n"
+    "Pipeline: Input stream/records -> DataProcessingService.process_stream() -> validate_positive & transform_batch() -> sink callback."
 )
 
 SEED_MANIFESTS = {
@@ -101,10 +101,10 @@ SEED_REPOSITORIES = [
         "id": "sample_codebase",
         "name": "sample_codebase",
         "path": "backend/sample_codebase",
-        "chunks_count": 14,
-        "files_count": 3,
+        "chunks_count": 24,
+        "files_count": 1,
         "status": "indexed",
-        "description": "FastAPI service sample with math functions, classes, and decorators",
+        "description": "Python data processing service sample with async streams, classes, and decorators",
         "manifest": SAMPLE_CODEBASE_MANIFEST,
     },
 ]
@@ -139,6 +139,10 @@ class RepoRegistry:
                 data = json.load(f)
             results = []
             for item in data:
+                item_path = str(item.get("path") or "")
+                # Ignore ephemeral pytest temporary directories that no longer exist on disk
+                if "pytest-of-" in item_path.replace("\\", "/") and not Path(item_path).exists():
+                    continue
                 if not item.get("manifest") and item.get("id") in SEED_MANIFESTS:
                     item["manifest"] = SEED_MANIFESTS[item["id"]]
                 results.append(RepositoryItem(**item))
@@ -251,7 +255,7 @@ class RepoRegistry:
         if repo.id == "requests":
             components = ["Session", "Request", "PreparedRequest", "Response", "HTTPAdapter"]
         elif repo.id == "sample_codebase":
-            components = ["Calculator", "FastAPI Routes", "Utility Functions"]
+            components = ["DataProcessingService", "BaseEntity", "calculate_statistics", "fetch_remote_resource"]
         else:
             for line in manifest_text.splitlines():
                 line_str = line.strip()
