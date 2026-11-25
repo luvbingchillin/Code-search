@@ -242,4 +242,22 @@ describe('Accessibility, Layout & Interaction Hardening Suite', () => {
     expect(offlineBox).toBeInTheDocument();
     expect(offlineBox).toHaveTextContent(/Local Backend Server Offline/i);
   });
+
+  it('AgenticLoopBanner uses single-row nowrap container-query layout to prevent split-pane text collision', () => {
+    const status: AgentStatus = {
+      state: 'Synthesizing',
+      currentStepMessage: 'Synthesizing answer...',
+      elapsedMs: 1200,
+      activeChunkCount: 3,
+    };
+
+    render(<AgenticLoopBanner status={status} chunkCount={3} />);
+
+    const banner = screen.getByTestId('agentic-loop-banner');
+    expect(banner.className).toContain('flex-nowrap');
+    expect(banner.className).toContain('overflow-hidden');
+
+    const stepper = screen.getByTestId('agentic-stepper');
+    expect(stepper.className).toContain('@[760px]:flex');
+  });
 });

@@ -30,6 +30,7 @@ export const App: React.FC<AppProps> = ({
   const [healthRefreshTrigger, setHealthRefreshTrigger] = React.useState<number>(0);
   const [isBackendOffline, setIsBackendOffline] = React.useState<boolean>(false);
   const [copiedBackendCmd, setCopiedBackendCmd] = React.useState<boolean>(false);
+  const [strataFocusRequest, setStrataFocusRequest] = React.useState<{ chunkId: string; nonce: number } | null>(null);
   const webLLM = useWebLLM({ initialModel: PRECISION_MODEL, autoInit: autoInitWebLLM });
 
   const handleBackendHealthChange = React.useCallback((healthy: boolean) => {
@@ -140,12 +141,20 @@ export const App: React.FC<AppProps> = ({
     });
   }, [autoConnectLastRepo, handleConnectRepoById]);
 
+  const triggerStrataFocus = React.useCallback((chunkId: string) => {
+    setStrataFocusRequest((prev) => ({
+      chunkId,
+      nonce: (prev?.nonce ?? 0) + 1,
+    }));
+  }, []);
+
   const handleSelectChunk = React.useCallback(
     async (chunkId: string) => {
       // 1. Direct match in activeChunks
       const directMatch = agent.activeChunks.find((c) => c.id === chunkId);
       if (directMatch) {
         agent.setSelectedChunkId(chunkId);
+        triggerStrataFocus(chunkId);
         return;
       }
 
@@ -157,6 +166,7 @@ export const App: React.FC<AppProps> = ({
             agent.setActiveChunks([...agent.activeChunks, chunk]);
           }
           agent.setSelectedChunkId(chunk.id);
+          triggerStrataFocus(chunk.id);
           return;
         }
       } catch {
@@ -170,6 +180,7 @@ export const App: React.FC<AppProps> = ({
               agent.setActiveChunks([...agent.activeChunks, newChunk]);
             }
             agent.setSelectedChunkId(newChunk.id);
+            triggerStrataFocus(newChunk.id);
             return;
           }
         } catch {
@@ -179,8 +190,9 @@ export const App: React.FC<AppProps> = ({
 
       // Fallback
       agent.setSelectedChunkId(chunkId);
+      triggerStrataFocus(chunkId);
     },
-    [agent]
+    [agent, triggerStrataFocus]
   );
 
   const toggleChatMinimized = React.useCallback(() => {
@@ -429,6 +441,7 @@ export const App: React.FC<AppProps> = ({
             activeRepoId={activeRepo?.id}
             onAddChunk={handleAddChunk}
             citedChunks={citedChunkIds}
+            focusRequest={strataFocusRequest}
           />
         }
       />

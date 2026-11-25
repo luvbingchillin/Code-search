@@ -118,19 +118,21 @@ describe('Phase 4 Everyday Developer Ergonomics Suite', () => {
     expect(screen.getByText('Explain PaymentGateway')).toBeInTheDocument();
   });
 
-  it('renders live streaming assistant bubble in MessageList during synthesis', () => {
+  it('renders animated loading/thinking bubble in MessageList without leaking raw token text during synthesis', () => {
     render(
       <MessageList
         messages={[]}
         chunks={[]}
         onSelectChunk={vi.fn()}
         isSynthesizing={true}
+        agentState="Synthesizing"
         streamingTokens="Session.send dispatches the PreparedRequest via HTTPAdapter."
       />
     );
 
-    const bubble = screen.getByTestId('streaming-assistant-bubble');
+    const bubble = screen.getByTestId('agent-loading-bubble');
     expect(bubble).toBeInTheDocument();
-    expect(bubble).toHaveTextContent('Session.send dispatches the PreparedRequest via HTTPAdapter.');
+    expect(bubble).toHaveTextContent('Synthesizing response...');
+    expect(bubble).not.toHaveTextContent('PreparedRequest via HTTPAdapter');
   });
 });

@@ -77,7 +77,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
   const clampedPct = Math.min(100, Math.max(0, Math.round(webLLMProgress)));
 
   return (
-    <div className="h-full flex flex-col justify-between overflow-hidden">
+    <div className="@container h-full flex flex-col justify-between overflow-hidden">
       {/* Top ReAct Agentic Loop Stepper & Status Banner */}
       <AgenticLoopBanner
         status={status}
@@ -108,6 +108,7 @@ export const ChatPane: React.FC<ChatPaneProps> = ({
         onSelectChunk={onSelectChunk}
         streamingTokens={streamingTokens}
         isSynthesizing={status.state === 'Synthesizing'}
+        agentState={status.state}
       />
 
       {/* WebLLM Loading Progress & Query Gate Banner */}

@@ -116,14 +116,14 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
   return (
     <div
       data-testid="agentic-loop-banner"
-      className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs select-none shrink-0"
+      className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex flex-nowrap items-center justify-between gap-2 text-xs select-none shrink-0 overflow-hidden"
     >
       {/* Left: State Badge & Step Description */}
       <div
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className="flex items-center space-x-2 min-w-0 flex-1"
+        className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden"
       >
         <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold shrink-0 shadow-xs ${getStateColor(status.state)}`}>
           {getStateIcon(status.state)}
@@ -132,7 +132,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
 
         <span
           data-testid="agentic-step-description"
-          className="text-slate-200 font-mono text-xs truncate min-w-0 leading-tight"
+          className="hidden @[380px]:inline text-slate-200 font-mono text-xs truncate min-w-0 leading-tight"
           title={status.error || status.currentStepMessage}
         >
           {status.error ? (
@@ -143,11 +143,11 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         </span>
       </div>
 
-      {/* Right: Stepper (active only), Timer, Traces, Clear, Minimize */}
+      {/* Right: Stepper (only when container width >= 760px), Timer, Traces, Clear, Minimize */}
       <div className="flex items-center space-x-2 shrink-0 ml-auto">
-        {/* Horizontal 4-step Mini Stepper (shown during active/completed runs, hidden in Idle) */}
+        {/* Horizontal 4-step Mini Stepper (hidden below 760px pane width so it never collides with left status text) */}
         {status.state !== 'Idle' && (
-          <div data-testid="agentic-stepper" className="hidden xl:flex items-center space-x-2">
+          <div data-testid="agentic-stepper" className="hidden @[760px]:flex items-center space-x-2">
             {STEPS.map((step, idx) => {
               const stepStatus = getStepStatus(step.name);
               return (
@@ -198,7 +198,7 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         {chunkCount !== undefined && chunkCount > 0 && (
           <div
             data-testid="banner-chunk-count"
-            className="flex items-center space-x-1 text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-700/60 shrink-0"
+            className="hidden @[480px]:flex items-center space-x-1 text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-700/60 shrink-0"
             title={`${chunkCount} code definitions retrieved`}
           >
             <Layers className="w-3 h-3 text-sky-400" />

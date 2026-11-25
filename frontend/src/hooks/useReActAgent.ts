@@ -754,7 +754,7 @@ Please select or connect a Python repository before querying code definitions.
           const foundStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Searching AST',
-            currentStepMessage: `Found ${matchedChunks.length} relevant code definitions (${matchedChunks.map((c) => c.identifier).join(', ')})`,
+            currentStepMessage: `Found ${matchedChunks.length} matching definitions`,
             activeChunkCount: matchedChunks.length,
           };
           statusRef.current = foundStatus;
@@ -827,11 +827,11 @@ Please select or connect a Python repository before querying code definitions.
           if (matchedChunks.length === 0) {
             finalResponseText = `### 🔍 No Matching Code Definitions Found for "${effectiveQuery}"<!-- No Matching AST Nodes Found -->\n\nNo Python functions, classes, or methods in the active repository matched your search query.\n\n- Try searching for broader terms or exact symbol names (e.g., \`send\`, \`Request\`, \`Calculator\`).\n- Open the **Explorer** sidebar to browse indexed files and definitions.\n- Type \`/status\` to verify the active repository and indexed chunk count.`;
           } else {
-            // 3. Synthesizing phase via WebLLM with runtime 4,096 token budgeting
+            // 3. Synthesizing phase via WebLLM
             const synthStatus: AgentStatus = {
               ...statusRef.current,
               state: 'Synthesizing',
-              currentStepMessage: 'Synthesizing response with referenced code context via WebLLM (4,096 token cap)...',
+              currentStepMessage: 'Synthesizing answer...',
             };
             statusRef.current = synthStatus;
             setAgentStatus(synthStatus);

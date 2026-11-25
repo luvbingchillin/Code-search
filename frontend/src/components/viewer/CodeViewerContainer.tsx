@@ -30,6 +30,7 @@ export interface CodeViewerContainerProps {
   viewMode?: ViewMode;
   onToggleViewMode?: (mode: ViewMode) => void;
   citedChunks?: string[];
+  focusRequest?: { chunkId: string; nonce: number } | null;
 }
 
 export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
@@ -49,6 +50,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   viewMode: propViewMode,
   onToggleViewMode,
   citedChunks,
+  focusRequest,
 }) => {
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>('code');
   const activeViewMode = propViewMode ?? internalViewMode;
@@ -182,6 +184,41 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
     targetIds.forEach((id) => set.add(id));
     return set;
   }, [citedChunks, chunks, strataGraphData]);
+
+  // Resolve a cited or selected chunk ID to its corresponding StrataNode in the current graph
+  const resolvedFocusTargetId = useMemo(() => {
+    const rawTarget = focusRequest?.chunkId ?? inspectedNodeId ?? selectedChunk?.id;
+    if (!rawTarget || !strataGraphData?.nodes?.length) return null;
+
+    const matchingChunk = chunks.find((c) => c.id === rawTarget);
+    const targetIdent = matchingChunk?.identifier ?? (rawTarget.includes(':') ? rawTarget.split(':')[1] : rawTarget);
+    const targetFile = matchingChunk?.filePath;
+
+    const match =
+      strataGraphData.nodes.find((n) => n.id === rawTarget) ||
+      (targetFile && strataGraphData.nodes.find((n) => n.identifier === targetIdent && n.filePath === targetFile)) ||
+      strataGraphData.nodes.find((n) => n.identifier === targetIdent);
+
+    return match?.id ?? null;
+  }, [focusRequest, inspectedNodeId, selectedChunk?.id, chunks, strataGraphData]);
+
+  // Sync Strata inspector when a new chat citation focus request arrives
+  useEffect(() => {
+    if (!focusRequest || !strataGraphData?.nodes?.length) return;
+    const rawTarget = focusRequest.chunkId;
+    const matchingChunk = chunks.find((c) => c.id === rawTarget);
+    const targetIdent = matchingChunk?.identifier ?? (rawTarget.includes(':') ? rawTarget.split(':')[1] : rawTarget);
+    const targetFile = matchingChunk?.filePath;
+
+    const match =
+      strataGraphData.nodes.find((n) => n.id === rawTarget) ||
+      (targetFile && strataGraphData.nodes.find((n) => n.identifier === targetIdent && n.filePath === targetFile)) ||
+      strataGraphData.nodes.find((n) => n.identifier === targetIdent);
+
+    if (match) {
+      setInspectedNodeId(match.id);
+    }
+  }, [focusRequest, chunks, strataGraphData]);
 
   // Click on a node in Strata map: inspect details and sync selection
   const handleSelectStrataNode = (chunkId: string) => {
@@ -483,6 +520,8 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                     highlightedChunkIds={highlightedChunkIds}
                     selectedChunkId={inspectedNodeId ?? selectedChunkId}
                     onSelectNode={handleSelectStrataNode}
+                    focusTargetId={resolvedFocusTargetId}
+                    focusNonce={focusRequest?.nonce}
                   />
                 </Suspense>
               )}

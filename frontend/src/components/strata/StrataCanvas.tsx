@@ -8,6 +8,8 @@ export interface StrataCanvasProps {
   highlightedChunkIds?: Set<string>;
   selectedChunkId?: string | null;
   onSelectNode?: (chunkId: string) => void;
+  focusTargetId?: string | null;
+  focusNonce?: number;
   className?: string;
   showTierPlanes?: boolean;
 }
@@ -51,6 +53,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
   highlightedChunkIds,
   selectedChunkId,
   onSelectNode,
+  focusTargetId,
+  focusNonce,
   className = '',
   showTierPlanes = true,
 }) => {
@@ -79,6 +83,14 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
   // Demand-driven dirty-flag render loop state
   const isDirtyRef = useRef<boolean>(true);
   const rafIdRef = useRef<number | null>(null);
+  const cameraTransitionRef = useRef<{
+    startTime: number;
+    durationMs: number;
+    startTarget: THREE.Vector3;
+    endTarget: THREE.Vector3;
+    startPos: THREE.Vector3;
+    endPos: THREE.Vector3;
+  } | null>(null);
 
   /**
    * Schedules a render frame if marked dirty.
@@ -91,13 +103,29 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
         rafIdRef.current = null;
 
         if (rendererRef.current && sceneRef.current && cameraRef.current) {
+          let isTransitioning = false;
+          const transition = cameraTransitionRef.current;
+          if (transition && controlsRef.current) {
+            const elapsed = performance.now() - transition.startTime;
+            const rawT = transition.durationMs <= 0 ? 1 : Math.min(1, elapsed / transition.durationMs);
+            const easedT = 1 - Math.pow(1 - rawT, 3);
+            controlsRef.current.target.lerpVectors(transition.startTarget, transition.endTarget, easedT);
+            cameraRef.current.position.lerpVectors(transition.startPos, transition.endPos, easedT);
+            isDirtyRef.current = true;
+            if (rawT >= 1) {
+              cameraTransitionRef.current = null;
+            } else {
+              isTransitioning = true;
+            }
+          }
+
           // Update orbit controls (damping check)
           let stillMoving = false;
           if (controlsRef.current) {
             stillMoving = controlsRef.current.update();
           }
 
-          if (isDirtyRef.current || stillMoving) {
+          if (isDirtyRef.current || stillMoving || isTransitioning) {
             rendererRef.current.render(sceneRef.current, cameraRef.current);
             isDirtyRef.current = false;
 
@@ -133,8 +161,8 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
             }
           }
 
-          // If orbit controls are still damping, keep scheduling frames until completely settled
-          if (stillMoving) {
+          // Keep scheduling frames until camera glide & damping settle cleanly back to 0 FPS idle
+          if (stillMoving || isTransitioning) {
             markDirty();
           }
         }
@@ -207,6 +235,10 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
     controls.maxDistance = 800;
     controls.minDistance = 15;
     controls.target.set(0, 45, 0); // Focus on mid-strata
+    const cancelCameraTransition = () => {
+      cameraTransitionRef.current = null;
+    };
+    controls.addEventListener('start', cancelCameraTransition);
     controls.addEventListener('change', markDirty);
     controlsRef.current = controls;
 
@@ -270,6 +302,7 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
+      controls.removeEventListener('start', cancelCameraTransition);
       controls.removeEventListener('change', markDirty);
       controls.dispose();
       renderer.dispose();
@@ -512,6 +545,39 @@ export const StrataCanvas: React.FC<StrataCanvasProps> = ({
 
     markDirty();
   }, [hasWebGL, graphData.nodes, graphData.edges, selectedChunkId, highlightedChunkIds, markDirty]);
+
+  // Smoothly focus 3D camera onto a specific cited source node when clicked in chat or explorer
+  useEffect(() => {
+    if (!hasWebGL || !focusTargetId || !cameraRef.current || !controlsRef.current) return;
+    const targetNode = graphData.nodes.find((n) => n.id === focusTargetId);
+    if (!targetNode) return;
+
+    const endTarget = new THREE.Vector3(targetNode.x, targetNode.y, targetNode.z);
+    const endPos = new THREE.Vector3(targetNode.x + 42, targetNode.y + 34, targetNode.z + 56);
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion) {
+      cameraTransitionRef.current = null;
+      controlsRef.current.target.copy(endTarget);
+      cameraRef.current.position.copy(endPos);
+      controlsRef.current.update();
+      markDirty();
+      return;
+    }
+
+    cameraTransitionRef.current = {
+      startTime: performance.now(),
+      durationMs: 400,
+      startTarget: controlsRef.current.target.clone(),
+      endTarget,
+      startPos: cameraRef.current.position.clone(),
+      endPos,
+    };
+    markDirty();
+  }, [hasWebGL, focusTargetId, focusNonce, graphData.nodes, markDirty]);
 
   // 5. Raycasting for Interaction (Click Selection & Hover Tooltips)
   const raycaster = useMemo(() => new THREE.Raycaster(), []);

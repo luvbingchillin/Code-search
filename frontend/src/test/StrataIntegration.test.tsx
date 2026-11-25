@@ -496,5 +496,43 @@ describe('3D Layered Strata Code Dependency Model Integration Suite', () => {
 
       expect(screen.queryByTestId('strata-node-inspector')).not.toBeInTheDocument();
     });
+
+    it('syncs inspected Strata node when focusRequest updates from cited source click (even after viewing another node)', async () => {
+      const user = userEvent.setup();
+
+      const { rerender } = render(
+        <CodeViewerContainer
+          chunks={mockAstChunks}
+          selectedChunkId="requests:Session"
+          onSelectChunk={() => {}}
+          activeRepoId="requests"
+          viewMode="strata"
+          focusRequest={{ chunkId: 'requests:Session', nonce: 1 }}
+        />
+      );
+
+      const inspector = await screen.findByTestId('strata-node-inspector');
+      expect(inspector).toHaveTextContent('Session');
+
+      // User manually inspects another node in Strata
+      await user.click(screen.getByTestId('strata-node-requests:HTTPAdapter'));
+      expect(screen.getByTestId('strata-node-inspector')).toHaveTextContent('HTTPAdapter');
+
+      // Clicking a cited source in chat triggers a new focusRequest and focuses that specific node
+      rerender(
+        <CodeViewerContainer
+          chunks={mockAstChunks}
+          selectedChunkId="requests:Request"
+          onSelectChunk={() => {}}
+          activeRepoId="requests"
+          viewMode="strata"
+          focusRequest={{ chunkId: 'requests:Request', nonce: 2 }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('strata-node-inspector')).toHaveTextContent('Request');
+      });
+    });
   });
 });

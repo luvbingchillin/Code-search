@@ -109,7 +109,7 @@ export class AgentSimulator {
 
     onStateChange(
       'Searching AST',
-      `Found ${matchedChunks.length} relevant code definitions (${matchedChunks.map((c) => c.identifier).join(', ')})`,
+      `Found ${matchedChunks.length} matching definitions`,
       matchedChunks
     );
     await this.delay(60);
@@ -215,7 +215,7 @@ export class AgentSimulator {
     }
 
     // 3. Synthesizing
-    onStateChange('Synthesizing', 'Synthesizing structured code summary (deterministic AST mode)...');
+    onStateChange('Synthesizing', 'Formatting code summary...');
     if (onTokenStream) {
       const words = response.split(' ');
       let currentAcc = '';

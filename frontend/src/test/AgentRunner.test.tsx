@@ -519,12 +519,12 @@ describe('NemoIR AgentRunner Acceptance Suite (AC2)', () => {
         />
       );
 
-      // Streaming tokens appear immediately in the live chat bubble without auto-expanding the trace drawer
-      expect(screen.getByTestId('streaming-assistant-bubble')).toHaveTextContent(
-        'def solve_dependencies(): pass'
+      // Chat feed shows calm animated loading indicator without dumping partial letter-by-letter tokens
+      expect(screen.getByTestId('agent-loading-bubble')).toHaveTextContent(
+        'Synthesizing response...'
       );
 
-      // Expanding the Traces drawer on demand exposes AgentRunner's streaming output pane
+      // Expanding the Traces drawer on demand exposes AgentRunner's live word-by-word token stream
       await user.click(screen.getByTestId('banner-toggle-traces-btn'));
       expect(screen.getByTestId('agent-streaming-output')).toBeInTheDocument();
       expect(screen.getByTestId('agent-streaming-tokens')).toHaveTextContent(

@@ -5,7 +5,7 @@ import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-json';
-import { AstCodeChunk, ChatMessage } from '../../types';
+import { AstCodeChunk, ChatMessage, ReActState } from '../../types';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -13,6 +13,7 @@ interface MessageListProps {
   onSelectChunk: (chunkId: string) => void;
   streamingTokens?: string;
   isSynthesizing?: boolean;
+  agentState?: ReActState;
 }
 
 interface CodeBlockProps {
@@ -227,16 +228,28 @@ export const MessageList: React.FC<MessageListProps> = ({
   messages,
   chunks,
   onSelectChunk,
-  streamingTokens,
   isSynthesizing = false,
+  agentState,
 }) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const isAgentWorking =
+    isSynthesizing ||
+    agentState === 'Thinking' ||
+    agentState === 'Searching AST' ||
+    agentState === 'Synthesizing';
+
+  const loadingStageLabel =
+    agentState === 'Thinking'
+      ? 'Thinking...'
+      : agentState === 'Searching AST'
+      ? 'Searching AST definitions...'
+      : 'Synthesizing response...';
 
   useEffect(() => {
     if (typeof bottomRef.current?.scrollIntoView === 'function') {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, streamingTokens]);
+  }, [messages, isAgentWorking, agentState]);
 
   const getChunkById = (id: string): AstCodeChunk | undefined => {
     return chunks.find((c) => c.id === id);
@@ -376,23 +389,32 @@ export const MessageList: React.FC<MessageListProps> = ({
           </div>
         );
       })}
-      {/* Live Streaming Assistant Bubble during active synthesis */}
-      {isSynthesizing && Boolean(streamingTokens && streamingTokens.trim()) && (
+      {/* Animated Loading / Thinking Indicator Bubble (word-by-word tokens remain in Traces stream) */}
+      {isAgentWorking && (
         <div
-          data-testid="streaming-assistant-bubble"
+          data-testid="agent-loading-bubble"
           aria-live="off"
           className="flex items-start space-x-3"
         >
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs shadow-xs bg-slate-900 border border-sky-500/50 text-sky-400">
             <Bot className="w-4 h-4 animate-pulse" />
           </div>
-          <div className="max-w-[85%] rounded-xl px-3.5 py-2.5 bg-slate-900/90 border border-sky-500/40 text-slate-100 rounded-tl-none shadow-sm">
-            <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
+          <div className="max-w-[85%] min-w-[210px] rounded-xl px-3.5 py-2.5 bg-slate-900/90 border border-sky-500/40 text-slate-100 rounded-tl-none shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
               <span className="font-semibold text-sky-400">CodeSeek Agent</span>
-              <span className="text-sky-300/80 font-mono text-[10px]">Streaming...</span>
+              <span className="text-sky-300/90 font-mono text-[11px]">{loadingStageLabel}</span>
             </div>
-            <MarkdownMessageContent content={streamingTokens || ''} isUser={false} />
-            <span className="inline-block w-1.5 h-3.5 bg-sky-400 animate-pulse ml-1 align-middle" />
+            <div className="flex items-center space-x-2 py-0.5">
+              <div className="flex items-center space-x-1.5" aria-hidden="true">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 emil-dot" />
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 emil-dot emil-dot-2" />
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 emil-dot emil-dot-3" />
+              </div>
+              <div className="flex-1 space-y-1.5 pl-1" aria-hidden="true">
+                <div className="h-2 w-3/4 rounded bg-slate-800 animate-pulse" />
+                <div className="h-2 w-1/2 rounded bg-slate-800/70 animate-pulse" />
+              </div>
+            </div>
           </div>
         </div>
       )}
