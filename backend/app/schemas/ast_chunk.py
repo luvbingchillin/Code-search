@@ -20,6 +20,7 @@ class SearchRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=100, description="Maximum number of results to return (>= 1)")
     ast_node_type: Optional[AstNodeType] = Field(default=None, description="Optional AST node type filter")
     file_path: Optional[str] = Field(default=None, description="Optional relative file path filter")
+    repo_id: Optional[str] = Field(default=None, description="Optional repository identifier filter")
 
 
 class SearchResponse(BaseModel):
@@ -67,6 +68,24 @@ class IndexResponse(BaseModel):
     indexed_files: int = Field(..., description="Count of scanned Python files")
     extracted_chunks: int = Field(..., description="Count of parsed and embedded AST code chunks")
     elapsed_seconds: float = Field(..., description="Total ingestion execution time in seconds")
+    repo_id: Optional[str] = Field(default=None, description="Normalized repository identifier")
+    repo_path: Optional[str] = Field(default=None, description="Indexed repository path")
+
+
+class UploadedSourceFile(BaseModel):
+    """Single source file payload uploaded from the browser folder picker."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    path: str = Field(..., min_length=1, description="Relative path inside the selected folder")
+    content: str = Field(..., description="UTF-8 source content of the Python file")
+
+
+class UploadIndexRequest(BaseModel):
+    """Request payload for indexing Python source files uploaded from the browser."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    repo_name: str = Field(..., min_length=1, description="Display name of the uploaded repository")
+    files: List[UploadedSourceFile] = Field(..., min_length=1, description="Python source files to index")
 
 
 class RepositoryItem(BaseModel):

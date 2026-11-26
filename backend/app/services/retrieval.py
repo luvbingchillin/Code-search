@@ -106,6 +106,7 @@ class RetrievalService:
         top_k: int = 5,
         ast_node_type: Optional[AstNodeType] = None,
         file_path: Optional[str] = None,
+        repo_id: Optional[str] = None,
     ) -> SearchResponse:
         """Embed search query and perform hybrid dense + lexical top-K retrieval."""
         start_time = time.perf_counter()
@@ -118,11 +119,12 @@ class RetrievalService:
         # Generate query embedding vector
         query_vector = self.embedder.embed_query(query)
 
-        # Retrieve semantic candidates from vector store
+        # Retrieve semantic candidates from vector store (pre-filtered by repo_id when supplied)
         candidates: List[AstCodeChunk] = self.vector_store.search_semantic(
             query_vector=query_vector,
             top_k=fetch_k,
             ast_node_type=ast_node_type,
+            repo_id=repo_id,
         )
 
         # Deduplicate semantic candidates by chunk ID while preserving order
@@ -137,7 +139,7 @@ class RetrievalService:
         # Merge exact-symbol hits for explicit code identifiers mentioned in query
         for sym in _SYMBOL_CANDIDATE_RE.findall(query)[:4]:
             try:
-                exact_hits = self.vector_store.search_exact(sym)
+                exact_hits = self.vector_store.search_exact(sym, repo_id=repo_id)
             except Exception:
                 exact_hits = []
             for hit in exact_hits:
@@ -150,7 +152,7 @@ class RetrievalService:
                 candidates.append(hit)
                 seen_ids.add(hit.id)
 
-        # Optional file_path or repository filter
+        # Optional file_path filter (within scoped candidates)
         if file_path:
             candidates = [c for c in candidates if _matches_file_or_repo(c, file_path)]
 
@@ -174,10 +176,14 @@ class RetrievalService:
             latency_ms=round(elapsed_ms, 2),
         )
 
-    def search_exact(self, identifier: str) -> EntityLookupResponse:
+    def search_exact(
+        self,
+        identifier: str,
+        repo_id: Optional[str] = None,
+    ) -> EntityLookupResponse:
         """Perform exact-match entity lookup for multi-hop dependency resolution."""
         clean_id = identifier.strip()
-        chunks = self.vector_store.search_exact(clean_id)
+        chunks = self.vector_store.search_exact(clean_id, repo_id=repo_id)
         return EntityLookupResponse(
             identifier=identifier,
             count=len(chunks),

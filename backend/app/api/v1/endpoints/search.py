@@ -22,6 +22,7 @@ def search_chunks_post(
         top_k=request.top_k,
         ast_node_type=request.ast_node_type,
         file_path=request.file_path,
+        repo_id=request.repo_id,
     )
 
 
@@ -31,6 +32,7 @@ def search_chunks_get(
     top_k: int = Query(default=5, ge=1, le=100, description="Max results to return (>= 1)"),
     ast_node_type: Optional[AstNodeType] = Query(default=None, description="Filter by node type"),
     file_path: Optional[str] = Query(default=None, description="Filter by file path"),
+    repo_id: Optional[str] = Query(default=None, description="Filter by repository ID"),
     retrieval_service: RetrievalService = Depends(get_retrieval_service),
 ) -> SearchResponse:
     """Retrieve top-K most semantically similar AST code chunks via GET query parameters."""
@@ -39,4 +41,5 @@ def search_chunks_get(
         top_k=top_k,
         ast_node_type=ast_node_type,
         file_path=file_path,
+        repo_id=repo_id,
     )

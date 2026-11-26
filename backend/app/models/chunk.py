@@ -31,6 +31,7 @@ class AstCodeChunk(BaseModel):
     summary: Optional[str] = Field(default=None, description="Concise summary (e.g. first line of docstring)")
     imports: Optional[List[str]] = Field(default_factory=list, description="Imports found in scope/file")
     calls: Optional[List[str]] = Field(default_factory=list, description="Function/method calls made inside body")
+    bases: Optional[List[str]] = Field(default_factory=list, description="Superclass base names for ClassDef nodes")
 
     @model_validator(mode="after")
     def validate_line_range(self) -> "AstCodeChunk":

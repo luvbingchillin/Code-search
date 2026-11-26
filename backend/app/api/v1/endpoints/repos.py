@@ -1,6 +1,5 @@
 """Repository registry and metadata endpoints."""
 
-import json
 from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -36,25 +35,6 @@ def invalidate_strata_cache(repo_id: Optional[str] = None) -> None:
     keys_to_drop = [k for k in _strata_graph_cache if k[2].lower() == clean_id]
     for k in keys_to_drop:
         _strata_graph_cache.pop(k, None)
-
-
-def _chunk_belongs_to_repo(f_path: str, repo_full_name: Optional[str], repo: RepositoryItem) -> bool:
-    """Determine if a chunk belongs to the given repository using repoFullName or path fallback."""
-    r_tag = (repo_full_name or "").strip().lower()
-    if r_tag and r_tag != "local":
-        return r_tag == repo.id.lower() or r_tag == repo.name.lower()
-
-    path_lower = (f_path or "").replace("\\", "/").lower()
-    if repo.id == "sample_codebase":
-        return "sample_codebase" in path_lower or "sample_service" in path_lower
-    if repo.id == "requests":
-        return "sample_codebase" not in path_lower and "sample_service" not in path_lower
-
-    repo_path_lower = (repo.path or "").replace("\\", "/").strip().lower().rstrip("/")
-    repo_basename = repo_path_lower.split("/")[-1] if repo_path_lower else ""
-    return (repo_path_lower and repo_path_lower in path_lower) or (
-        repo_basename and repo_basename in path_lower
-    )
 
 
 @router.get("/repos", response_model=RepositoriesResponse, summary="List Indexed & Available Repositories")
@@ -105,19 +85,12 @@ def get_repository_chunks(
             detail=f"Repository '{repo_id}' not found in registry",
         )
 
-    # Search semantic chunks with repo path filter or fallback general search
+    # Search semantic chunks strictly scoped to repository
     resp = retrieval_service.search_semantic(
         query="def ",
         top_k=limit,
-        file_path=repo.path,
+        repo_id=repo.id,
     )
-
-    if not resp.chunks:
-        # Fallback without file_path if prefix was relative
-        resp = retrieval_service.search_semantic(
-            query="def ",
-            top_k=limit,
-        )
 
     return resp.chunks
 
@@ -136,60 +109,21 @@ def get_repository_tree(
         )
 
     vs = retrieval_service.vector_store
-    all_chunks = []
-
-    if hasattr(vs, "_table") and vs._table is not None:
-        try:
-            records = vs._table.search().limit(2000).to_list()
-            for r in records:
-                all_chunks.append(dict(r))
-        except Exception:
-            pass
-    elif hasattr(vs, "conn") and vs.conn is not None:
-        try:
-            table_name = getattr(vs, "table_name", "ast_chunks")
-            cursor = vs.conn.cursor()
-            cursor.execute(
-                f"SELECT id, filePath, fileName, astNodeType, identifier, startLine, endLine, parameters, repoFullName FROM {table_name}"
-            )
-            for row in cursor.fetchall():
-                raw_params = row["parameters"] if "parameters" in row.keys() else None
-                try:
-                    parsed_params = json.loads(raw_params) if isinstance(raw_params, str) and raw_params else []
-                except Exception:
-                    parsed_params = [p.strip() for p in str(raw_params).split(",") if p.strip()]
-                all_chunks.append({
-                    "id": row["id"],
-                    "filePath": row["filePath"],
-                    "fileName": row["fileName"],
-                    "astNodeType": row["astNodeType"],
-                    "identifier": row["identifier"],
-                    "startLine": row["startLine"],
-                    "endLine": row["endLine"],
-                    "parameters": parsed_params,
-                    "repoFullName": row["repoFullName"] if "repoFullName" in row.keys() else "local",
-                })
-        except Exception:
-            pass
+    repo_chunks: List[AstCodeChunk] = vs.list_by_repo(repo.id, limit=5000) if vs is not None else []
 
     # Deduplicate chunks by id
     seen_ids = set()
-    unique_chunks = []
-    for c in all_chunks:
-        cid = c.get("id")
-        if cid and cid not in seen_ids:
-            seen_ids.add(cid)
+    unique_chunks: List[AstCodeChunk] = []
+    for c in repo_chunks:
+        if c.id and c.id not in seen_ids:
+            seen_ids.add(c.id)
             unique_chunks.append(c)
 
     # Group by filePath
     files_map = {}
     for c in unique_chunks:
-        f_path = c.get("filePath") or c.get("file_path") or "unknown.py"
-        r_tag = c.get("repoFullName") or c.get("repo_full_name") or "local"
-        if not _chunk_belongs_to_repo(str(f_path), str(r_tag), repo):
-            continue
-
-        f_name = c.get("fileName") or c.get("file_name") or f_path.split("/")[-1].split("\\")[-1]
+        f_path = c.filePath or "unknown.py"
+        f_name = c.fileName or f_path.split("/")[-1].split("\\")[-1]
 
         if f_path not in files_map:
             files_map[f_path] = {
@@ -198,18 +132,14 @@ def get_repository_tree(
                 "symbols": [],
             }
 
-        param_list = c.get("parameters") or []
-        if isinstance(param_list, str):
-            param_list = [p.strip() for p in param_list.split(",") if p.strip()]
-
         files_map[f_path]["symbols"].append(
             FileSymbolNode(
-                id=str(c.get("id")),
-                identifier=str(c.get("identifier")),
-                astNodeType=str(c.get("astNodeType") or c.get("ast_node_type") or "FunctionDef"),
-                startLine=int(c.get("startLine") or c.get("start_line") or 0),
-                endLine=int(c.get("endLine") or c.get("end_line") or 0),
-                parameters=list(param_list) if hasattr(param_list, "__iter__") else [],
+                id=c.id,
+                identifier=c.identifier,
+                astNodeType=c.astNodeType,
+                startLine=c.startLine,
+                endLine=c.endLine,
+                parameters=list(c.parameters or []),
             )
         )
 
@@ -298,56 +228,18 @@ def get_repository_strata_graph(
     if cache_key in _strata_graph_cache:
         return _strata_graph_cache[cache_key]
 
-    all_chunks: List[AstCodeChunk] = []
-
-    # 1. Attempt retrieval from vector store (LanceDB or SQLite)
-    if vs is not None:
-        if hasattr(vs, "_table") and vs._table is not None:
-            try:
-                records = vs._table.search().limit(5000).to_list()
-                for r in records:
-                    f_path = str(r.get("filePath") or r.get("file_path") or "")
-                    r_tag = str(r.get("repoFullName") or r.get("repo_full_name") or "local")
-                    if not _chunk_belongs_to_repo(f_path, r_tag, repo):
-                        continue
-
-                    data = dict(r)
-                    data.pop("vector", None)
-                    data.pop("_distance", None)
-                    for k in ("parameters", "decorators", "imports", "calls"):
-                        if data.get(k) is not None:
-                            data[k] = list(data[k])
-                        else:
-                            data[k] = []
-                    all_chunks.append(AstCodeChunk(**data))
-            except Exception:
-                pass
-        elif hasattr(vs, "conn") and vs.conn is not None:
-            try:
-                cursor = vs.conn.cursor()
-                cursor.execute(f"SELECT * FROM {getattr(vs, 'table_name', 'ast_chunks')}")
-                for row in cursor.fetchall():
-                    f_path = str(row["filePath"])
-                    r_tag = str(row["repoFullName"]) if "repoFullName" in row.keys() else "local"
-                    if not _chunk_belongs_to_repo(f_path, r_tag, repo):
-                        continue
-
-                    all_chunks.append(vs._row_to_chunk(row))
-            except Exception:
-                pass
+    all_chunks: List[AstCodeChunk] = vs.list_by_repo(repo.id, limit=5000) if vs is not None else []
 
     # 2. Fallback to scanning repository files directly from disk if vector store has no chunks
     if not all_chunks:
+        project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
         candidates = [
             Path(repo.path),
+            project_root / repo.path,
             Path("backend") / repo.path,
             Path("..") / repo.path,
         ]
-        repo_dir = None
-        for cand in candidates:
-            if cand.exists():
-                repo_dir = cand
-                break
+        repo_dir = next((cand for cand in candidates if cand.exists()), None)
 
         if repo_dir is not None:
             scanner = CodebaseScanner()
@@ -383,8 +275,10 @@ def get_repository_file_content(
             detail=f"Repository '{repo_id}' not found in registry",
         )
 
+    project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
     candidates = [
         Path(repo.path),
+        project_root / repo.path,
         Path("backend") / repo.path,
         Path("..") / repo.path,
     ]
@@ -416,11 +310,18 @@ def get_repository_file_content(
 
     # Strict path traversal protection: target must reside inside repo_dir
     try:
-        target_file.relative_to(repo_dir)
+        rel_inside = target_file.relative_to(repo_dir)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Access denied: file path escapes repository root",
+        )
+
+    # Security hardening: restrict file viewer to Python source files and block hidden dotfiles (.env, .git, etc.)
+    if target_file.suffix.lower() not in (".py", ".pyi") or any(part.startswith(".") for part in rel_inside.parts):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Access denied: only visible Python source files (.py / .pyi) can be viewed",
         )
 
     if not target_file.exists() or not target_file.is_file():

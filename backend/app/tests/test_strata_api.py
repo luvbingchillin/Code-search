@@ -492,3 +492,76 @@ class TestStrataGraphBuilder:
 
         graph = build_strata_graph([c_caller, c_other_get, c_other_close], repo_id="test_repo")
         assert graph.total_edges == 0
+
+    def test_class_method_tier_cohesion_prevents_splitting_class_across_tiers(self):
+        """Methods belonging to a ClassDef in the same file inherit the owning class's tier."""
+        c_class = AstCodeChunk(
+            id="sessions.py:Session:10",
+            filePath="sessions.py",
+            fileName="sessions.py",
+            astNodeType="ClassDef",
+            identifier="Session",
+            startLine=10,
+            endLine=100,
+            code="class Session:\n    pass",
+            calls=[],
+        )
+        # 'send' normally triggers Tier 1 keyword matching, but belongs to Session (Tier 2)
+        c_method = AstCodeChunk(
+            id="sessions.py:Session.send:40",
+            filePath="sessions.py",
+            fileName="sessions.py",
+            astNodeType="FunctionDef",
+            identifier="Session.send",
+            startLine=40,
+            endLine=75,
+            code="def send(self, request):\n    pass",
+            calls=[],
+        )
+
+        graph = build_strata_graph([c_class, c_method], repo_id="cohesion_repo")
+        tiers_by_id = {n.id: n.tier for n in graph.nodes}
+        assert tiers_by_id[c_class.id] == 2
+        assert tiers_by_id[c_method.id] == 2
+
+    def test_topology_refines_unanchored_fallback_sinks_and_roots(self):
+        """Unanchored fallback nodes refine via fan-in/fan-out topology when path signals are neutral."""
+        c_entry = AstCodeChunk(
+            id="alpha.py:orchestrate:1",
+            filePath="alpha.py",
+            fileName="alpha.py",
+            astNodeType="FunctionDef",
+            identifier="orchestrate",
+            startLine=1,
+            endLine=15,
+            code="def orchestrate():\n    leaf_a()\n    leaf_b()",
+            calls=["leaf_a", "leaf_b"],
+        )
+        c_leaf_a = AstCodeChunk(
+            id="beta.py:leaf_a:1",
+            filePath="beta.py",
+            fileName="beta.py",
+            astNodeType="FunctionDef",
+            identifier="leaf_a",
+            startLine=1,
+            endLine=5,
+            code="def leaf_a():\n    pass",
+            calls=[],
+        )
+        c_leaf_b = AstCodeChunk(
+            id="gamma.py:leaf_b:1",
+            filePath="gamma.py",
+            fileName="gamma.py",
+            astNodeType="FunctionDef",
+            identifier="leaf_b",
+            startLine=1,
+            endLine=5,
+            code="def leaf_b():\n    pass",
+            calls=[],
+        )
+
+        graph = build_strata_graph([c_entry, c_leaf_a, c_leaf_b], repo_id="topo_repo")
+        tiers_by_id = {n.id: n.tier for n in graph.nodes}
+        assert tiers_by_id[c_entry.id] == 3
+        assert tiers_by_id[c_leaf_a.id] == 0
+        assert tiers_by_id[c_leaf_b.id] == 0

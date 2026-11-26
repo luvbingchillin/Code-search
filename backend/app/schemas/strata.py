@@ -15,6 +15,7 @@ class StrataNode(BaseModel):
     tier: int = Field(..., ge=0, le=3, description="Architectural strata tier index (0 to 3)")
     startLine: int = Field(..., ge=1, description="1-indexed starting line number")
     endLine: int = Field(..., ge=1, description="1-indexed ending line number")
+    bases: List[str] = Field(default_factory=list, description="Superclass base names for ClassDef nodes")
 
     @property
     def file_path(self) -> str:
@@ -41,6 +42,7 @@ class StrataEdge(BaseModel):
     source: str = Field(..., description="Caller AST chunk ID")
     target: str = Field(..., description="Callee AST chunk ID")
     callName: str = Field(..., description="Invoked function or method name")
+    edgeType: str = Field(default="call", description="Edge relationship kind: 'call' or 'inherits'")
 
     @property
     def call_name(self) -> str:

@@ -1,6 +1,7 @@
 """Exact-match entity lookup endpoint for multi-hop dependency resolution."""
 
-from fastapi import APIRouter, Depends, Path
+from typing import Optional
+from fastapi import APIRouter, Depends, Path, Query
 
 from app.api.dependencies import get_retrieval_service
 from app.schemas.ast_chunk import EntityLookupResponse
@@ -12,7 +13,8 @@ router = APIRouter()
 @router.get("/entity/{name:path}", response_model=EntityLookupResponse, summary="Exact Entity Name Lookup")
 def lookup_entity(
     name: str = Path(..., min_length=1, description="Function name, class name, or qualified method name"),
+    repo_id: Optional[str] = Query(default=None, description="Optional repository identifier to scope entity lookup"),
     retrieval_service: RetrievalService = Depends(get_retrieval_service),
 ) -> EntityLookupResponse:
     """Perform exact-match search by entity identifier to support multi-hop dependency resolution."""
-    return retrieval_service.search_exact(identifier=name)
+    return retrieval_service.search_exact(identifier=name, repo_id=repo_id)

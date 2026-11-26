@@ -38,6 +38,7 @@ class BaseVectorStore(ABC):
         query_vector: np.ndarray,
         top_k: int = 5,
         ast_node_type: Optional[str] = None,
+        repo_id: Optional[str] = None,
     ) -> List[AstCodeChunk]:
         """Search top-K most similar AST chunks by vector similarity.
 
@@ -45,6 +46,7 @@ class BaseVectorStore(ABC):
             query_vector: 1D numpy array of shape (dimension,).
             top_k: Maximum number of results to return.
             ast_node_type: Optional filter by AST node type (e.g. 'FunctionDef', 'ClassDef').
+            repo_id: Optional repository identifier to scope search before ranking.
 
         Returns:
             List of AstCodeChunk objects ordered by descending relevanceScore in [0.0, 1.0].
@@ -52,11 +54,16 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    def search_exact(self, identifier: str) -> List[AstCodeChunk]:
+    def search_exact(
+        self,
+        identifier: str,
+        repo_id: Optional[str] = None,
+    ) -> List[AstCodeChunk]:
         """Retrieve AST chunks matching exact entity name.
 
         Args:
             identifier: Exact identifier (e.g. function name or ClassName.method_name).
+            repo_id: Optional repository identifier to restrict matches to one repo.
 
         Returns:
             List of matching AstCodeChunk objects with relevanceScore set to 1.0.
@@ -76,9 +83,17 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    def count(self) -> int:
-        """Total number of stored chunks in the vector store."""
+    def count(self, repo_id: Optional[str] = None) -> int:
+        """Total number of stored chunks in the vector store (optionally scoped to repo_id)."""
         pass
+
+    def delete_by_repo(self, repo_id: str) -> int:
+        """Delete all stored chunks belonging to the given repository ID."""
+        return 0
+
+    def list_by_repo(self, repo_id: str, limit: int = 5000) -> List[AstCodeChunk]:
+        """List stored chunks belonging to the given repository ID."""
+        return []
 
     @abstractmethod
     def close(self) -> None:

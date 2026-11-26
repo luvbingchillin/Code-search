@@ -49,8 +49,13 @@ class Settings(BaseSettings):
 
     # CORS settings
     cors_origins: List[str] = Field(
-        default=["*"],
-        description="Allowed CORS origins for frontend access",
+        default=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:4173",
+            "http://127.0.0.1:4173",
+        ],
+        description="Allowed local frontend CORS origins (prevents cross-origin localhost data exfiltration)",
     )
 
     # Ingestion settings

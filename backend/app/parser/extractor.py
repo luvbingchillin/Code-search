@@ -294,8 +294,13 @@ class PythonAstExtractor:
                     raw_doc = expr.text.decode("utf-8")
                     docstring = self._clean_docstring(raw_doc)
 
-        # Extract calls within body
-        calls = self._extract_calls(body_node) if body_node else []
+        # Extract base classes for ClassDef nodes
+        bases: List[str] = []
+        if is_class:
+            bases = self._extract_bases(def_node)
+
+        # Extract calls within body (for ClassDef, stop at nested defs so methods aren't duplicated onto class)
+        calls = self._extract_calls(body_node, skip_nested_defs=is_class) if body_node else []
 
         # Generate summary (first non-empty line of docstring or fallback)
         summary: Optional[str] = None
@@ -328,6 +333,7 @@ class PythonAstExtractor:
             summary=summary,
             imports=file_imports,
             calls=calls,
+            bases=bases,
         )
         chunks.append(chunk)
 
@@ -372,11 +378,31 @@ class PythonAstExtractor:
 
         return inspect.cleandoc(cleaned)
 
-    def _extract_calls(self, body_node: tree_sitter.Node) -> List[str]:
+    def _extract_bases(self, class_node: tree_sitter.Node) -> List[str]:
+        """Extract direct superclass expressions from a ClassDef node."""
+        arg_list = class_node.child_by_field_name("superclasses")
+        if not arg_list:
+            return []
+        bases: List[str] = []
+        for child in arg_list.named_children:
+            if child.type in ("keyword_argument", "dictionary_splat", "list_splat", "comment"):
+                continue
+            text = child.text.decode("utf-8", errors="replace").strip()
+            if text:
+                bases.append(text)
+        return list(dict.fromkeys(bases))
+
+    def _extract_calls(self, body_node: tree_sitter.Node, skip_nested_defs: bool = False) -> List[str]:
         """Recursively extract function and method calls made inside a body node."""
         calls: List[str] = []
 
         def _walk(n: tree_sitter.Node) -> None:
+            if skip_nested_defs and n is not body_node and n.type in (
+                "function_definition",
+                "class_definition",
+                "decorated_definition",
+            ):
+                return
             if n.type == "call":
                 fn_node = n.child_by_field_name("function")
                 if fn_node:
@@ -402,5 +428,12 @@ class PythonAstExtractor:
             elif n.type == "import_from_statement":
                 mod = n.child_by_field_name("module_name")
                 if mod:
-                    imports.append(mod.text.decode("utf-8").strip())
+                    mod_text = mod.text.decode("utf-8").strip()
+                    if mod_text == ".":
+                        for c in n.children_by_field_name("name"):
+                            imported = c.text.decode("utf-8").strip()
+                            if imported:
+                                imports.append(f".{imported}")
+                    else:
+                        imports.append(mod_text)
         return list(dict.fromkeys(imports))

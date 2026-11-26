@@ -64,19 +64,50 @@ class SQLiteVectorStore(BaseVectorStore):
                     summary TEXT,
                     imports TEXT,
                     calls TEXT,
+                    bases TEXT,
                     vector BLOB NOT NULL
                 );
             """)
+            # Migrate existing tables lacking 'bases' column
+            existing_cols = {
+                row["name"]
+                for row in self.conn.execute(f"PRAGMA table_info({self.table_name})").fetchall()
+            }
+            if "bases" not in existing_cols:
+                self.conn.execute(f"ALTER TABLE {self.table_name} ADD COLUMN bases TEXT")
+
             self.conn.execute(
                 f"CREATE INDEX IF NOT EXISTS idx_{self.table_name}_identifier ON {self.table_name} (identifier);"
             )
             self.conn.execute(
                 f"CREATE INDEX IF NOT EXISTS idx_{self.table_name}_astNodeType ON {self.table_name} (astNodeType);"
             )
+            self.conn.execute(
+                f"CREATE INDEX IF NOT EXISTS idx_{self.table_name}_repoFullName ON {self.table_name} (repoFullName);"
+            )
 
     def _ensure_initialized(self) -> None:
         if self.conn is None:
             self.initialize()
+
+    def _build_repo_sql(self, repo_id: Optional[str]) -> tuple[Optional[str], List[object]]:
+        if not repo_id or not repo_id.strip():
+            return None, []
+        clean = repo_id.strip()
+
+        if clean.lower() in ("requests", "psf/requests"):
+            explicit_row = self.conn.execute(
+                f"SELECT 1 FROM {self.table_name} WHERE LOWER(repoFullName) IN ('requests', 'psf/requests') LIMIT 1"
+            ).fetchone()
+            if explicit_row is not None:
+                return "LOWER(repoFullName) IN ('requests', 'psf/requests')", []
+            return (
+                "(LOWER(repoFullName) IN ('requests', 'psf/requests') OR "
+                "(LOWER(repoFullName) = 'local' AND LOWER(filePath) NOT LIKE '%sample_codebase%' AND LOWER(filePath) NOT LIKE '%sample_service%'))",
+                [],
+            )
+
+        return "LOWER(repoFullName) = LOWER(?)", [clean]
 
     def add_chunks(self, chunks: List[AstCodeChunk], embeddings: np.ndarray) -> None:
         """Store AST chunks with their embedding vectors as BLOBs."""
@@ -106,6 +137,7 @@ class SQLiteVectorStore(BaseVectorStore):
                 chunk.summary,
                 json.dumps(chunk.imports or []),
                 json.dumps(chunk.calls or []),
+                json.dumps(chunk.bases or []),
                 vec_bytes,
             ))
 
@@ -113,26 +145,59 @@ class SQLiteVectorStore(BaseVectorStore):
             INSERT OR REPLACE INTO {self.table_name} (
                 id, filePath, fileName, astNodeType, identifier, startLine, endLine, code,
                 relevanceScore, docstring, parameters, decorators, language, repoFullName,
-                summary, imports, calls, vector
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                summary, imports, calls, bases, vector
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         with self.conn:
             self.conn.executemany(sql, rows)
+
+    def delete_by_repo(self, repo_id: str) -> int:
+        """Delete all stored chunks belonging to the given repository ID."""
+        self._ensure_initialized()
+        clause, params = self._build_repo_sql(repo_id)
+        if not clause:
+            return 0
+        before = self.count()
+        with self.conn:
+            self.conn.execute(f"DELETE FROM {self.table_name} WHERE {clause}", tuple(params))
+        return max(0, before - self.count())
+
+    def list_by_repo(self, repo_id: str, limit: int = 5000) -> List[AstCodeChunk]:
+        """List stored chunks belonging to the given repository ID."""
+        self._ensure_initialized()
+        clause, params = self._build_repo_sql(repo_id)
+        if clause:
+            cursor = self.conn.execute(
+                f"SELECT * FROM {self.table_name} WHERE {clause} LIMIT ?",
+                (*params, limit),
+            )
+        else:
+            cursor = self.conn.execute(f"SELECT * FROM {self.table_name} LIMIT ?", (limit,))
+        return [self._row_to_chunk(r) for r in cursor.fetchall()]
 
     def search_semantic(
         self,
         query_vector: np.ndarray,
         top_k: int = 5,
         ast_node_type: Optional[str] = None,
+        repo_id: Optional[str] = None,
     ) -> List[AstCodeChunk]:
         """Compute cosine similarity between query_vector and stored chunks using NumPy."""
         self._ensure_initialized()
 
+        conditions: List[str] = []
+        params: List[object] = []
         if ast_node_type:
-            cursor = self.conn.execute(
-                f"SELECT * FROM {self.table_name} WHERE astNodeType = ?",
-                (ast_node_type,),
-            )
+            conditions.append("astNodeType = ?")
+            params.append(ast_node_type)
+        repo_clause, repo_params = self._build_repo_sql(repo_id)
+        if repo_clause:
+            conditions.append(repo_clause)
+            params.extend(repo_params)
+
+        if conditions:
+            where_sql = " WHERE " + " AND ".join(conditions)
+            cursor = self.conn.execute(f"SELECT * FROM {self.table_name}{where_sql}", tuple(params))
         else:
             cursor = self.conn.execute(f"SELECT * FROM {self.table_name}")
 
@@ -167,23 +232,39 @@ class SQLiteVectorStore(BaseVectorStore):
 
         return results
 
-    def search_exact(self, identifier: str) -> List[AstCodeChunk]:
+    def search_exact(
+        self,
+        identifier: str,
+        repo_id: Optional[str] = None,
+    ) -> List[AstCodeChunk]:
         """Retrieve AST chunks matching exact entity name or qualified method suffix (e.g. Class.method)."""
         self._ensure_initialized()
 
+        repo_clause, repo_params = self._build_repo_sql(repo_id)
         if _SAFE_IDENT_RE.match(identifier):
+            where_parts = ["(identifier = ? OR identifier LIKE ?)"]
+            params: List[object] = [identifier, f"%.{identifier}"]
+            if repo_clause:
+                where_parts.append(repo_clause)
+                params.extend(repo_params)
+            params.append(identifier)
             cursor = self.conn.execute(
                 f"""
                 SELECT * FROM {self.table_name}
-                WHERE identifier = ? OR identifier LIKE ?
+                WHERE {' AND '.join(where_parts)}
                 ORDER BY CASE WHEN identifier = ? THEN 0 ELSE 1 END, filePath, startLine
                 """,
-                (identifier, f"%.{identifier}", identifier),
+                tuple(params),
             )
         else:
+            where_parts = ["identifier = ?"]
+            params = [identifier]
+            if repo_clause:
+                where_parts.append(repo_clause)
+                params.extend(repo_params)
             cursor = self.conn.execute(
-                f"SELECT * FROM {self.table_name} WHERE identifier = ?",
-                (identifier,),
+                f"SELECT * FROM {self.table_name} WHERE {' AND '.join(where_parts)}",
+                tuple(params),
             )
         rows = cursor.fetchall()
         return [self._row_to_chunk(r, relevance_score=1.0) for r in rows]
@@ -201,10 +282,17 @@ class SQLiteVectorStore(BaseVectorStore):
             return None
         return self._row_to_chunk(row)
 
-    def count(self) -> int:
+    def count(self, repo_id: Optional[str] = None) -> int:
         """Total number of stored chunks."""
         self._ensure_initialized()
-        cursor = self.conn.execute(f"SELECT COUNT(*) FROM {self.table_name}")
+        clause, params = self._build_repo_sql(repo_id)
+        if clause:
+            cursor = self.conn.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE {clause}",
+                tuple(params),
+            )
+        else:
+            cursor = self.conn.execute(f"SELECT COUNT(*) FROM {self.table_name}")
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 
@@ -220,6 +308,8 @@ class SQLiteVectorStore(BaseVectorStore):
         relevance_score: Optional[float] = None,
     ) -> AstCodeChunk:
         score = relevance_score if relevance_score is not None else float(r["relevanceScore"])
+        row_keys = set(r.keys())
+        raw_bases = r["bases"] if "bases" in row_keys else None
         return AstCodeChunk(
             id=r["id"],
             filePath=r["filePath"],
@@ -238,4 +328,5 @@ class SQLiteVectorStore(BaseVectorStore):
             summary=r["summary"],
             imports=json.loads(r["imports"]) if r["imports"] else [],
             calls=json.loads(r["calls"]) if r["calls"] else [],
+            bases=json.loads(raw_bases) if raw_bases else [],
         )
