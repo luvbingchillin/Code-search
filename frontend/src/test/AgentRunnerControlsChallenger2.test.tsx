@@ -3,6 +3,7 @@ import { render, screen, act, renderHook, fireEvent } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import React, { StrictMode, useState } from 'react';
 import { AgentRunner, AgentExecutionStep } from '../components/agent/AgentRunner';
+import { AgenticLoopBanner } from '../components/chat/AgenticLoopBanner';
 import { ChatPane } from '../components/chat/ChatPane';
 import { useReActAgent } from '../hooks/useReActAgent';
 import App from '../App';
@@ -306,32 +307,29 @@ describe('Empirical Challenger 2: M2 Controls, Timers, Race Conditions & StrictM
       expect(screen.getByTestId('agent-elapsed-timer')).toHaveTextContent('1000.0s');
     });
 
-    it('cleans up interval timer and does NOT leak on unmount during active query', async () => {
+    it('cleans up AgenticLoopBanner interval timer and does NOT leak on unmount during active query', () => {
       vi.useFakeTimers();
       const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
 
-      const { result, unmount } = renderHook(() => useReActAgent());
+      const { unmount } = render(
+        <AgenticLoopBanner
+          status={{
+            state: 'Thinking',
+            currentStepMessage: 'Query for unmount check',
+            elapsedMs: 0,
+            activeChunkCount: 0,
+          }}
+        />
+      );
 
-      // Start a query (which starts timerRef.current = window.setInterval(..., 100))
       act(() => {
-        result.current.submitQuery('Query for unmount check');
+        vi.advanceTimersByTime(350);
       });
+      expect(screen.getByTestId('agentic-elapsed-timer')).toHaveTextContent('0.3s');
 
-      expect(result.current.agentStatus.state).toBe('Thinking');
-
-      // Advance timers by 250ms
-      act(() => {
-        vi.advanceTimersByTime(250);
-      });
-      expect(result.current.agentStatus.elapsedMs).toBeGreaterThan(0);
-
-      // Now unmount hook mid-flight
       unmount();
-
-      // clearInterval must have been called during cleanup
       expect(clearIntervalSpy).toHaveBeenCalled();
 
-      // Advance timers further post-unmount to confirm no exceptions
       expect(() => {
         act(() => {
           vi.advanceTimersByTime(1000);
@@ -341,41 +339,92 @@ describe('Empirical Challenger 2: M2 Controls, Timers, Race Conditions & StrictM
       vi.useRealTimers();
     });
 
-    it('clears interval timer on cancelQuery', async () => {
+    it('clears interval timer when transitioning to Idle (cancelQuery) without root hook intervals', () => {
       vi.useFakeTimers();
       const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
 
-      const { result } = renderHook(() => useReActAgent());
+      const { rerender } = render(
+        <AgenticLoopBanner
+          status={{
+            state: 'Thinking',
+            currentStepMessage: 'Active thinking stage',
+            elapsedMs: 0,
+            activeChunkCount: 0,
+          }}
+        />
+      );
 
+      act(() => {
+        vi.advanceTimersByTime(250);
+      });
+
+      rerender(
+        <AgenticLoopBanner
+          status={{
+            state: 'Idle',
+            currentStepMessage: 'Ready to answer questions',
+            elapsedMs: 0,
+            activeChunkCount: 0,
+          }}
+        />
+      );
+
+      expect(clearIntervalSpy).toHaveBeenCalled();
+
+      vi.useRealTimers();
+
+      const { result } = renderHook(() => useReActAgent());
       act(() => {
         result.current.submitQuery('Query for cancel interval check');
       });
-
-      act(() => {
-        vi.advanceTimersByTime(200);
-      });
-
       act(() => {
         result.current.cancelQuery();
       });
-
-      expect(clearIntervalSpy).toHaveBeenCalled();
       expect(result.current.agentStatus.state).toBe('Idle');
-
-      vi.useRealTimers();
     });
 
-    it('clears interval timer upon query completion', async () => {
+    it('clears interval timer upon query completion and computes elapsedMs in useReActAgent', async () => {
+      vi.useFakeTimers();
       const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
 
-      const { result } = renderHook(() => useReActAgent());
+      const { rerender } = render(
+        <AgenticLoopBanner
+          status={{
+            state: 'Searching AST',
+            currentStepMessage: 'Searching code definitions...',
+            elapsedMs: 0,
+            activeChunkCount: 0,
+          }}
+        />
+      );
 
+      act(() => {
+        vi.advanceTimersByTime(250);
+      });
+
+      rerender(
+        <AgenticLoopBanner
+          status={{
+            state: 'Complete',
+            currentStepMessage: 'Completed analysis',
+            elapsedMs: 320,
+            activeChunkCount: 0,
+          }}
+        />
+      );
+
+      expect(clearIntervalSpy).toHaveBeenCalled();
+      expect(screen.getByTestId('agentic-elapsed-timer')).toHaveTextContent('0.3s');
+
+      vi.useRealTimers();
+
+      const { result } = renderHook(() => useReActAgent());
       await act(async () => {
         await result.current.submitQuery('def quick_ast_search(): pass');
       });
 
       expect(result.current.agentStatus.state).toBe('Complete');
-      expect(clearIntervalSpy).toHaveBeenCalled();
+      expect(result.current.agentStatus.elapsedMs).toBeGreaterThanOrEqual(0);
     });
   });
 

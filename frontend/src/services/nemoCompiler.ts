@@ -11,6 +11,7 @@ import init, {
   type CompilerDiagnostic,
   type InitInput,
 } from '@nemoir/compiler-wasm';
+import codeRetrievalWorkflowDsl from '../workflows/codeRetrieval.nemo?raw';
 
 export interface NemoCompileResult {
   ok: boolean;
@@ -22,43 +23,9 @@ export interface NemoCompileResult {
 }
 
 /**
- * Standard ReAct workflow DSL for AST Code Retrieval.
- * Defines the state progression: Thinking -> SearchingAST -> Synthesizing -> Complete.
+ * Canonical ReAct workflow DSL loaded directly from workflows/codeRetrieval.nemo.
  */
-export const DEFAULT_CODE_RETRIEVAL_WORKFLOW = `workflow CodeRetrievalAgent {
-  input {
-    query: string
-  }
-
-  stage @entry Thinking {
-    prompt: "Analyze user query and formulate AST search strategy"
-    output: {
-      confidence: number
-    }
-    transition if confidence > 0.5 => SearchingAST
-    transition else => Synthesizing
-  }
-
-  stage SearchingAST {
-    prompt: "Search AST code chunks matching the query"
-    output: {
-      hasResults: bool {
-        true => Synthesizing
-        false => Complete
-      }
-    }
-  }
-
-  stage Synthesizing {
-    prompt: "Synthesize explanation from retrieved AST chunks"
-    transition else => Complete
-  }
-
-  stage @exit Complete {
-    prompt: "Return code retrieval results to user"
-  }
-}
-`;
+export const DEFAULT_CODE_RETRIEVAL_WORKFLOW = codeRetrievalWorkflowDsl;
 
 // JIT Compilation Cache
 const jitCache = new Map<string, NemoCompileResult>();

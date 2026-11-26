@@ -141,13 +141,13 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
     await user.type(input, 'Where is Session.send');
     await user.click(sendBtn);
 
-    // Step E: Verify searchAstChunks was invoked with { filePath: 'fixtures/requests' }
+    // Step E: Verify searchAstChunks was invoked with { filePath: 'fixtures/requests', repoId: 'requests' }
     await waitFor(() => {
       const scopedCalls = searchAstChunksSpy.mock.calls.filter(
         (c: any[]) => c[0] === 'Where is Session.send'
       );
       expect(scopedCalls.length).toBeGreaterThan(0);
-      expect(scopedCalls[0][1]).toEqual({ filePath: 'fixtures/requests' });
+      expect(scopedCalls[0][1]).toEqual({ filePath: 'fixtures/requests', repoId: 'requests' });
     });
   });
 
@@ -177,7 +177,7 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
     await waitFor(() => {
       const calls = searchAstChunksSpy.mock.calls.filter((c: any[]) => c[0] === 'Query requests');
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests' });
+      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests', repoId: 'requests' });
     });
 
     // Wait for query 1 to fully complete before switching repo or sending next query
@@ -207,7 +207,7 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
     await waitFor(() => {
       const calls = searchAstChunksSpy.mock.calls.filter((c: any[]) => c[0] === 'Query calculator');
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls[0][1]).toEqual({ filePath: 'backend/sample_codebase' });
+      expect(calls[0][1]).toEqual({ filePath: 'backend/sample_codebase', repoId: 'sample_codebase' });
     });
   }, 30000);
 
@@ -230,7 +230,7 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
 
     searchAstChunksSpy.mockClear();
 
-    // Query after error still carries the activeRepoPath
+    // Query after error still carries the activeRepoPath and repoId
     const input = screen.getByTestId('chat-input-textarea');
     const sendBtn = screen.getByTestId('chat-send-btn');
     await user.type(input, 'Query after chunk load error');
@@ -241,7 +241,7 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
         (c: any[]) => c[0] === 'Query after chunk load error'
       );
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests' });
+      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests', repoId: 'requests' });
     });
   });
 
@@ -288,7 +288,7 @@ describe('Challenger 2 Empirical Verification: Scope ReAct Agent Search Queries 
         (c: any[]) => c[0] === 'Fresh query after cancel'
       );
       expect(calls.length).toBeGreaterThan(0);
-      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests' });
+      expect(calls[0][1]).toEqual({ filePath: 'fixtures/requests', repoId: 'requests' });
     });
   });
 

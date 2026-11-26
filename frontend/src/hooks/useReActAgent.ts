@@ -245,16 +245,16 @@ export function useReActAgent(
 
   const simulatorRef = useRef<AgentSimulator>(new AgentSimulator());
   const hasShownSimulatorNoticeRef = useRef<boolean>(false);
-  const timerRef = useRef<number | null>(null);
   const isCancelledRef = useRef<boolean>(false);
+  const lastStreamFlushRef = useRef<number>(0);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+  const flushStreamingTokens = useCallback((accumulated: string, force = false) => {
+    streamingTokensRef.current = accumulated;
+    const now = Date.now();
+    if (force || now - lastStreamFlushRef.current >= 45) {
+      lastStreamFlushRef.current = now;
+      setStreamingTokens(accumulated);
+    }
   }, []);
 
   const setSelectedChunkId = useCallback((id: string) => {
@@ -296,10 +296,6 @@ export function useReActAgent(
       } catch (e) {
         // ignore
       }
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
     }
     setStreamingTokens('');
     streamingTokensRef.current = '';
@@ -386,10 +382,6 @@ export function useReActAgent(
 
       // Intent Handling 1: /help or help
       if (isHelp) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
         const helpContent = getHelpContent();
         const asstMsg: ChatMessage = {
           id: `asst-${Date.now()}`,
@@ -419,10 +411,6 @@ export function useReActAgent(
 
       // Intent Handling 2: About CodeSeek AI
       if (isAbout) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
         const aboutContent = `### ⚡ About CodeSeek AI
 
 **CodeSeek AI** is a privacy-first, edge-computed Python code retrieval and architectural search engine.
@@ -462,10 +450,6 @@ Connect a repository using the **Repositories** menu in the header to start sear
 
       // Intent Handling 3: Connect repository suggestion
       if (isConnectIntent) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
         const isSample = lower.includes('sample');
         const targetRepo = isSample ? 'sample_codebase' : 'psf/requests';
         const targetRepoId = isSample ? 'sample_codebase' : 'requests';
@@ -513,10 +497,6 @@ Once connected, its code symbols and files will load into the code viewer and yo
 
       // Intent Handling 2: /status, /repo, or "what repo am i in"
       if (isStatus) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
         const statusContent = getStatusContent(
           activeRepoRef.current,
           activeRepoPathRef.current,
@@ -554,46 +534,8 @@ Once connected, its code symbols and files will load into the code viewer and yo
       // Strip /ask prefix if user explicitly invoked /ask command
       const effectiveQuery = isAsk ? trimmed.replace(/^\/ask\s*/i, '').trim() || trimmed : trimmed;
 
-      // Guard: Block queries while WebLLM is actively loading and notify the user
-      if (webLLMRef.current && webLLMRef.current.status === 'loading') {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        const pct = Math.min(100, Math.max(0, Math.round(webLLMRef.current.progress || 0)));
-        const modelName = webLLMRef.current.currentModel || 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC';
-        const progressDetail = webLLMRef.current.progressText || `Initializing ${modelName}...`;
-        const loadingContent = `### ⏳ WebLLM Model Still Loading (${pct}%)
-
-**${modelName}** is currently initializing on WebGPU (\`${progressDetail}\`).
-
-Queries are blocked until model loading finishes so your answer is synthesized by the live local SLM. Please wait for **WebLLM: Ready** in the top header and submit your query again.`;
-
-        const asstMsg: ChatMessage = {
-          id: `asst-${Date.now()}`,
-          role: 'assistant',
-          content: loadingContent,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          reActState: 'Idle',
-          citedChunks: [],
-          metrics: {
-            latencyMs: 5,
-            tokensGenerated: 0,
-            astNodesSearched: 0,
-          },
-        };
-        const finalMsgs = [...messagesRef.current, asstMsg];
-        messagesRef.current = finalMsgs;
-        setMessages(finalMsgs);
-        const waitingStatus: AgentStatus = {
-          ...statusRef.current,
-          state: 'Idle',
-          currentStepMessage: `WebLLM loading (${pct}%) — please wait for model initialization before querying`,
-        };
-        statusRef.current = waitingStatus;
-        setAgentStatus(waitingStatus);
-        return;
-      }
+      // Track if WebLLM is still warming/loading so we serve instant non-blocking backend AST results
+      const isWebLLMLoadingNow = Boolean(webLLMRef.current && webLLMRef.current.status === 'loading');
 
       // Intent Handling 3: Repository Connection Gating
       // If no repository is active, do not execute un-scoped vector searches.
@@ -607,10 +549,6 @@ Queries are blocked until model loading finishes so your answer is synthesized b
       const shouldGateRepo = !hasActiveRepo && (!isTestEnv || isExplicitTestGating);
 
       if (shouldGateRepo) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
         const gatingContent = `### ⚠️ No Active Repository Connected
 
 Please select or connect a Python repository before querying code definitions.
@@ -687,16 +625,13 @@ Please select or connect a Python repository before querying code definitions.
         }
       }
 
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = window.setInterval(() => {
-        if (typeof window === 'undefined' || !timerRef.current) return;
-        const nextStatus: AgentStatus = {
-          ...statusRef.current,
-          elapsedMs: Date.now() - startTime,
-        };
-        statusRef.current = nextStatus;
-        setAgentStatus(nextStatus);
-      }, 100);
+      const buildSearchOptions = () => {
+        if (!activeRepoPathRef.current && !activeRepoRef.current?.id) return undefined;
+        const opts: { filePath?: string; repoId?: string } = {};
+        if (activeRepoPathRef.current) opts.filePath = activeRepoPathRef.current;
+        if (activeRepoRef.current?.id) opts.repoId = activeRepoRef.current.id;
+        return opts;
+      };
 
       try {
         const currentLLM = webLLMRef.current;
@@ -723,6 +658,7 @@ Please select or connect a Python repository before querying code definitions.
           const searchingStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Searching AST',
+            elapsedMs: Date.now() - startTime,
             currentStepMessage: isOverview
               ? 'Retrieving foundational architecture and model definitions...'
               : 'Searching indexed codebase for relevant functions & classes...',
@@ -730,9 +666,7 @@ Please select or connect a Python repository before querying code definitions.
           statusRef.current = searchingStatus;
           setAgentStatus(searchingStatus);
 
-          const searchOptions = activeRepoPathRef.current
-            ? { filePath: activeRepoPathRef.current }
-            : undefined;
+          const searchOptions = buildSearchOptions();
           const matchedChunks = nemoIRRef.current
             ? await (searchOptions
                 ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
@@ -754,6 +688,7 @@ Please select or connect a Python repository before querying code definitions.
           const foundStatus: AgentStatus = {
             ...statusRef.current,
             state: 'Searching AST',
+            elapsedMs: Date.now() - startTime,
             currentStepMessage: `Found ${matchedChunks.length} matching definitions`,
             activeChunkCount: matchedChunks.length,
           };
@@ -768,7 +703,10 @@ Please select or connect a Python repository before querying code definitions.
           // Execute compiled NemoIR workflow IR and ground pipeline stages
           if (nemoIRRef.current && typeof nemoIRRef.current.executeWorkflow === 'function') {
             try {
-              const wfResult = (await nemoIRRef.current.executeWorkflow({ query: effectiveQuery })) as {
+              const wfResult = (await nemoIRRef.current.executeWorkflow({
+                query: effectiveQuery,
+                hasResults: matchedChunks.length > 0,
+              })) as {
                 success?: boolean;
                 workflow?: string;
                 stages?: string[];
@@ -907,10 +845,9 @@ Please select or connect a Python repository before querying code definitions.
 
             finalResponseText = await currentLLM.generate(
               prompt,
-              (chunk, accumulated) => {
+              (_chunk, accumulated) => {
                 if (isCancelledRef.current) return;
-                streamingTokensRef.current = accumulated;
-                setStreamingTokens(accumulated);
+                flushStreamingTokens(accumulated);
               },
               {
                 maxTokens: isOverview ? 220 : 200,
@@ -918,6 +855,7 @@ Please select or connect a Python repository before querying code definitions.
                 stop: ['\n\n### User Question', '\n\n### Context AST', '<|im_end|>', '<|endoftext|>'],
               }
             );
+            flushStreamingTokens(finalResponseText, true);
             if (isCancelledRef.current) throw new Error('Query cancelled by user');
           }
         } else {
@@ -930,9 +868,7 @@ Please select or connect a Python repository before querying code definitions.
 
           let liveChunks: AstCodeChunk[] | undefined;
           if (nemoIRRef.current) {
-            const searchOptions = activeRepoPathRef.current
-              ? { filePath: activeRepoPathRef.current }
-              : undefined;
+            const searchOptions = buildSearchOptions();
             const res = await (searchOptions
               ? nemoIRRef.current.searchAstChunks(effectiveSearchTerm, searchOptions)
               : nemoIRRef.current.searchAstChunks(effectiveSearchTerm));
@@ -945,7 +881,10 @@ Please select or connect a Python repository before querying code definitions.
 
             if (typeof nemoIRRef.current.executeWorkflow === 'function') {
               try {
-                const wfResult = (await nemoIRRef.current.executeWorkflow({ query: effectiveQuery })) as {
+                const wfResult = (await nemoIRRef.current.executeWorkflow({
+                  query: effectiveQuery,
+                  hasResults: liveChunks.length > 0,
+                })) as {
                   workflow?: string;
                   stages?: string[];
                 } | null;
@@ -964,7 +903,7 @@ Please select or connect a Python repository before querying code definitions.
             );
           }
 
-          // Summarize real backend AST chunks via deterministic formatter while WebLLM is unloaded
+          // Summarize real backend AST chunks via deterministic formatter while WebLLM is unloaded or warming up
           const result = await simulatorRef.current.runReActCycle(
             effectiveQuery,
             (state: ReActState, message: string, chunks?: AstCodeChunk[]) => {
@@ -984,22 +923,27 @@ Please select or connect a Python repository before querying code definitions.
               const stepStatus: AgentStatus = {
                 ...statusRef.current,
                 state,
+                elapsedMs: Date.now() - startTime,
                 currentStepMessage: message,
                 activeChunkCount: chunks ? chunks.length : statusRef.current.activeChunkCount,
               };
               statusRef.current = stepStatus;
               setAgentStatus(stepStatus);
             },
-            (chunk: string, accumulated: string) => {
+            (_chunk: string, accumulated: string) => {
               if (isCancelledRef.current) return;
-              streamingTokensRef.current = accumulated;
-              setStreamingTokens(accumulated);
+              flushStreamingTokens(accumulated);
             },
             liveChunks
           );
+          flushStreamingTokens(result.response, true);
 
-          const isFirstSummaryResponse = !hasShownSimulatorNoticeRef.current;
-          if (isFirstSummaryResponse) {
+          if (isWebLLMLoadingNow) {
+            const pct = Math.min(100, Math.max(0, Math.round(webLLMRef.current?.progress || 0)));
+            finalResponseText =
+              result.response +
+              `\n\n> *Note: WebLLM is still loading (${pct}%) — returning instant AST search results while GPU initialization completes.*`;
+          } else if (!hasShownSimulatorNoticeRef.current) {
             hasShownSimulatorNoticeRef.current = true;
             finalResponseText =
               result.response +
@@ -1014,11 +958,7 @@ Please select or connect a Python repository before querying code definitions.
           throw new Error('Query cancelled by user');
         }
 
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-
+        const totalElapsedMs = Date.now() - startTime;
         const tokensCount = finalResponseText.split(/\s+/).filter(Boolean).length;
         const assistantMsg: ChatMessage = {
           id: `asst-${Date.now()}`,
@@ -1029,7 +969,7 @@ Please select or connect a Python repository before querying code definitions.
           citedChunks: citedChunksList.map((c) => c.id),
           thoughts: executionThoughts.length > 0 ? executionThoughts : undefined,
           metrics: {
-            latencyMs: Date.now() - startTime,
+            latencyMs: totalElapsedMs,
             tokensGenerated: tokensCount,
             astNodesSearched: citedChunksList.length,
           },
@@ -1042,17 +982,13 @@ Please select or connect a Python repository before querying code definitions.
         const completeStatus: AgentStatus = {
           ...statusRef.current,
           state: 'Complete',
-          currentStepMessage: `Completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`,
+          elapsedMs: totalElapsedMs,
+          currentStepMessage: `Completed in ${(totalElapsedMs / 1000).toFixed(1)}s`,
           activeChunkCount: citedChunksList.length,
         };
         statusRef.current = completeStatus;
         setAgentStatus(completeStatus);
       } catch (err: any) {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-
         const isCancelled = isCancelledRef.current || err?.message?.includes('cancelled');
         if (isCancelled) {
           setStreamingTokens('');

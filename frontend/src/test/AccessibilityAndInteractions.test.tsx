@@ -165,7 +165,7 @@ describe('Accessibility, Layout & Interaction Hardening Suite', () => {
     expect(logRegion).toHaveAttribute('aria-live', 'polite');
   });
 
-  it('CodeViewerHeader flips Full File button label to Symbol Only when active', () => {
+  it('CodeViewerHeader flips Full File button label to Definition Only when active', () => {
     const { rerender } = render(
       <CodeViewerHeader
         chunk={mockChunks[0]}
@@ -186,7 +186,7 @@ describe('Accessibility, Layout & Interaction Hardening Suite', () => {
       />
     );
 
-    expect(screen.getByTestId('toggle-full-file-btn')).toHaveTextContent('Symbol Only');
+    expect(screen.getByTestId('toggle-full-file-btn')).toHaveTextContent('Definition Only');
   });
 
   it('SplitPaneLayout separator supports touch-none and pointer-event resizing', () => {

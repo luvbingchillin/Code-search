@@ -12,13 +12,6 @@ import {
   StrataGraphResponse,
 } from '../types';
 
-export interface SearchRequest {
-  query: string;
-  top_k?: number;
-  ast_node_type?: AstNodeType;
-  file_path?: string;
-}
-
 export interface SearchResponse {
   query: string;
   total_results: number;
@@ -44,6 +37,16 @@ export interface IndexResponse {
   indexed_files: number;
   extracted_chunks: number;
   elapsed_seconds: number;
+  repo_id?: string | null;
+  repo_path?: string | null;
+}
+
+export interface SearchRequest {
+  query: string;
+  top_k?: number;
+  ast_node_type?: AstNodeType;
+  file_path?: string;
+  repo_id?: string;
 }
 
 export interface ApiClientConfig {
@@ -54,6 +57,7 @@ export interface ApiClientConfig {
 export class ApiClient {
   private baseUrl: string;
   private timeoutMs: number;
+  private activeRepoId: string | null = null;
 
   constructor(config?: ApiClientConfig) {
     const envUrl =
@@ -70,6 +74,14 @@ export class ApiClient {
 
   public setBaseUrl(url: string): void {
     this.baseUrl = url.replace(/\/+$/, '');
+  }
+
+  public setActiveRepoId(repoId: string | null): void {
+    this.activeRepoId = repoId;
+  }
+
+  public getActiveRepoId(): string | null {
+    return this.activeRepoId;
   }
 
   private async request<T>(
@@ -182,12 +194,30 @@ export class ApiClient {
     });
   }
 
+  public async indexUploadedFiles(
+    repoName: string,
+    files: Array<{ path: string; content: string }>,
+    options?: { signal?: AbortSignal; timeoutMs?: number }
+  ): Promise<IndexResponse> {
+    return this.request<IndexResponse>('/api/v1/index/upload', {
+      method: 'POST',
+      body: JSON.stringify({
+        repo_name: repoName,
+        files,
+      }),
+      signal: options?.signal,
+      timeoutMs: options?.timeoutMs ?? 60000,
+    });
+  }
+
   public async lookupEntity(
     identifier: string,
-    options?: { signal?: AbortSignal }
+    options?: { repoId?: string; signal?: AbortSignal }
   ): Promise<EntityLookupResponse> {
     const encoded = encodeURIComponent(identifier);
-    return this.request<EntityLookupResponse>(`/api/v1/entity/${encoded}`, {
+    const scopedRepo = options?.repoId ?? this.activeRepoId;
+    const suffix = scopedRepo ? `?repo_id=${encodeURIComponent(scopedRepo)}` : '';
+    return this.request<EntityLookupResponse>(`/api/v1/entity/${encoded}${suffix}`, {
       method: 'GET',
       signal: options?.signal,
     });
@@ -215,6 +245,7 @@ export class ApiClient {
     const trimmed = query.trim();
     if (!trimmed) return [];
 
+    const scopedRepo = options?.repoId ?? options?.filters?.repo ?? this.activeRepoId ?? undefined;
     const isExplicitExact = options?.searchType === 'exact' || options?.exactMatch === true;
     const isEntityPrefix = trimmed.startsWith('entity:') || trimmed.startsWith('exact:');
     const entityTarget = isEntityPrefix
@@ -223,7 +254,10 @@ export class ApiClient {
 
     if (isExplicitExact || isEntityPrefix || options?.filters?.identifier || options?.identifier) {
       const target = entityTarget || trimmed;
-      const response = await this.lookupEntity(target, { signal: options?.signal });
+      const response = await this.lookupEntity(target, {
+        ...(scopedRepo ? { repoId: scopedRepo } : {}),
+        signal: options?.signal,
+      });
       let chunks = response.chunks || [];
       if (options?.topK && options.topK > 0) {
         chunks = chunks.slice(0, options.topK);
@@ -231,15 +265,17 @@ export class ApiClient {
       return chunks;
     }
 
-    const response = await this.search(
-      {
-        query: trimmed,
-        top_k: options?.topK ?? 5,
-        ast_node_type: options?.filters?.astNodeType,
-        file_path: options?.filters?.filePath || options?.filePath,
-      },
-      { signal: options?.signal }
-    );
+    const searchPayload: SearchRequest = {
+      query: trimmed,
+      top_k: options?.topK ?? 5,
+      ast_node_type: options?.filters?.astNodeType,
+      file_path: options?.filters?.filePath || options?.filePath,
+    };
+    if (scopedRepo) {
+      searchPayload.repo_id = scopedRepo;
+    }
+
+    const response = await this.search(searchPayload, { signal: options?.signal });
 
     return response.chunks || [];
   }

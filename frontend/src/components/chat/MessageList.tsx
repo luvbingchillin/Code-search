@@ -91,7 +91,12 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'python' }) => {
   );
 };
 
-function renderFormattedInlineText(text: string, isUser: boolean) {
+function renderFormattedInlineText(
+  text: string,
+  isUser: boolean,
+  symbolMap?: Map<string, string>,
+  onSelectChunk?: (chunkId: string) => void
+) {
   // Regex to match **bold**, *italic*, or `code`
   const regex = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`)/g;
   const parts = text.split(regex);
@@ -115,6 +120,23 @@ function renderFormattedInlineText(text: string, isUser: boolean) {
       );
     }
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+      const codeText = part.slice(1, -1);
+      const cleanSymbol = codeText.replace(/\(\)$/, '').trim();
+      const matchedChunkId = !isUser && symbolMap && onSelectChunk ? symbolMap.get(cleanSymbol) : undefined;
+      if (matchedChunkId) {
+        return (
+          <button
+            key={index}
+            type="button"
+            data-testid={`inline-symbol-${matchedChunkId}`}
+            onClick={() => onSelectChunk?.(matchedChunkId)}
+            className="bg-sky-950/70 hover:bg-sky-900/80 text-sky-300 hover:text-sky-100 border border-sky-500/40 hover:border-sky-400 px-1 py-0.5 rounded font-mono text-[11px] cursor-pointer transition-colors underline decoration-sky-400/50 underline-offset-2"
+            title={`View ${cleanSymbol} in code viewer & 3D map`}
+          >
+            {codeText}
+          </button>
+        );
+      }
       return (
         <code
           key={index}
@@ -124,7 +146,7 @@ function renderFormattedInlineText(text: string, isUser: boolean) {
               : 'bg-slate-800 text-sky-300 border border-slate-700/60 px-1 py-0.5 rounded font-mono text-[11px]'
           }
         >
-          {part.slice(1, -1)}
+          {codeText}
         </code>
       );
     }
@@ -132,10 +154,12 @@ function renderFormattedInlineText(text: string, isUser: boolean) {
   });
 }
 
-const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = ({
-  content,
-  isUser,
-}) => {
+const MarkdownMessageContent: React.FC<{
+  content: string;
+  isUser: boolean;
+  symbolMap?: Map<string, string>;
+  onSelectChunk?: (chunkId: string) => void;
+}> = ({ content, isUser, symbolMap, onSelectChunk }) => {
   // Split by fenced code blocks
   const parts = content.split(/(```[\s\S]*?```)/g);
 
@@ -162,21 +186,21 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
               if (trimmed.startsWith('#### ')) {
                 return (
                   <h5 key={lineIdx} className="font-semibold text-sky-300 text-xs uppercase tracking-wider mt-2.5 mb-0.5">
-                    {renderFormattedInlineText(trimmed.slice(5), isUser)}
+                    {renderFormattedInlineText(trimmed.slice(5), isUser, symbolMap, onSelectChunk)}
                   </h5>
                 );
               }
               if (trimmed.startsWith('### ')) {
                 return (
                   <h4 key={lineIdx} className="font-semibold text-gray-100 text-sm mt-2 mb-0.5">
-                    {renderFormattedInlineText(trimmed.slice(4), isUser)}
+                    {renderFormattedInlineText(trimmed.slice(4), isUser, symbolMap, onSelectChunk)}
                   </h4>
                 );
               }
               if (trimmed.startsWith('## ')) {
                 return (
                   <h3 key={lineIdx} className="font-bold text-gray-100 text-base mt-2.5 mb-1">
-                    {renderFormattedInlineText(trimmed.slice(3), isUser)}
+                    {renderFormattedInlineText(trimmed.slice(3), isUser, symbolMap, onSelectChunk)}
                   </h3>
                 );
               }
@@ -186,7 +210,7 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
                     key={lineIdx}
                     className="pl-2.5 py-1 my-1 border-l border-sky-500/60 bg-slate-950/50 rounded-r text-xs text-slate-300"
                   >
-                    {renderFormattedInlineText(trimmed.slice(2), isUser)}
+                    {renderFormattedInlineText(trimmed.slice(2), isUser, symbolMap, onSelectChunk)}
                   </div>
                 );
               }
@@ -197,7 +221,7 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
                     <span className="text-sky-400 font-mono text-xs mt-0.5 select-none shrink-0">
                       {orderedMatch[1]}.
                     </span>
-                    <span className="flex-1">{renderFormattedInlineText(orderedMatch[2], isUser)}</span>
+                    <span className="flex-1">{renderFormattedInlineText(orderedMatch[2], isUser, symbolMap, onSelectChunk)}</span>
                   </div>
                 );
               }
@@ -207,13 +231,13 @@ const MarkdownMessageContent: React.FC<{ content: string; isUser: boolean }> = (
                     <span className={isUser ? 'text-sky-300 mt-1 select-none' : 'text-sky-400 mt-1 select-none'}>
                       •
                     </span>
-                    <span className="flex-1">{renderFormattedInlineText(trimmed.slice(2), isUser)}</span>
+                    <span className="flex-1">{renderFormattedInlineText(trimmed.slice(2), isUser, symbolMap, onSelectChunk)}</span>
                   </div>
                 );
               }
               return (
                 <p key={lineIdx} className="leading-relaxed">
-                  {renderFormattedInlineText(line, isUser)}
+                  {renderFormattedInlineText(line, isUser, symbolMap, onSelectChunk)}
                 </p>
               );
             })}
@@ -228,6 +252,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   messages,
   chunks,
   onSelectChunk,
+  streamingTokens,
   isSynthesizing = false,
   agentState,
 }) => {
@@ -238,11 +263,19 @@ export const MessageList: React.FC<MessageListProps> = ({
     agentState === 'Searching AST' ||
     agentState === 'Synthesizing';
 
+  const symbolMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of chunks) {
+      map.set(c.identifier, c.id);
+    }
+    return map;
+  }, [chunks]);
+
   const loadingStageLabel =
     agentState === 'Thinking'
       ? 'Thinking...'
       : agentState === 'Searching AST'
-      ? 'Searching AST definitions...'
+      ? 'Searching definitions...'
       : 'Synthesizing response...';
 
   useEffect(() => {
@@ -350,7 +383,12 @@ export const MessageList: React.FC<MessageListProps> = ({
               )}
 
               {/* Formatted Markdown Content */}
-              <MarkdownMessageContent content={msg.content} isUser={isUser} />
+              <MarkdownMessageContent
+                content={msg.content}
+                isUser={isUser}
+                symbolMap={symbolMap}
+                onSelectChunk={onSelectChunk}
+              />
 
               {/* Clickable AST Citations Badges */}
               {msg.citedChunks && msg.citedChunks.length > 0 && (
@@ -389,7 +427,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           </div>
         );
       })}
-      {/* Animated Loading / Thinking Indicator Bubble (word-by-word tokens remain in Traces stream) */}
+      {/* Animated Loading / Thinking Indicator Bubble (word-by-word tokens stay in Traces stream) */}
       {isAgentWorking && (
         <div
           data-testid="agent-loading-bubble"

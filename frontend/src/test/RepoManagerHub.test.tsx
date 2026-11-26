@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConnectRepoModal } from '../components/repo/ConnectRepoModal';
+import { apiClient } from '../services/apiClient';
 import { RepositoryItem } from '../types';
 
 describe('Codebase Repository Hub (ConnectRepoModal)', () => {
@@ -104,5 +105,56 @@ describe('Codebase Repository Hub (ConnectRepoModal)', () => {
     // Click preset
     await user.click(screen.getByTestId('preset-sample-btn'));
     expect(screen.getByTestId('repo-path-input')).toHaveValue('backend/sample_codebase');
+  });
+
+  it('uploads filtered Python files via apiClient.indexUploadedFiles when a folder is picked', async () => {
+    const user = userEvent.setup();
+    const getReposSpy = vi.spyOn(apiClient, 'getRepositories').mockResolvedValue(sampleRepos);
+    const uploadSpy = vi.spyOn(apiClient, 'indexUploadedFiles').mockResolvedValueOnce({
+      repo_id: 'my_app',
+      repo_path: 'backend/data/uploaded_repos/my_app',
+      indexed_files: 1,
+      extracted_chunks: 1,
+      elapsed_seconds: 0.04,
+    });
+
+    try {
+      render(
+        <ConnectRepoModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onSelectRepo={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByTestId('tab-add-repo'));
+
+      const pyFile = new File(['def main():\n    return 1\n'], 'main.py', { type: 'text/x-python' });
+      Object.defineProperty(pyFile, 'webkitRelativePath', { value: 'my_app/main.py' });
+      Object.defineProperty(pyFile, 'text', { value: async () => 'def main():\n    return 1\n' });
+
+      const envFile = new File(['SECRET=123'], '.env', { type: 'text/plain' });
+      Object.defineProperty(envFile, 'webkitRelativePath', { value: 'my_app/.env' });
+
+      const pycFile = new File(['binary'], 'cached.pyc', { type: 'application/octet-stream' });
+      Object.defineProperty(pycFile, 'webkitRelativePath', { value: 'my_app/__pycache__/cached.pyc' });
+
+      fireEvent.change(screen.getByTestId('native-folder-input'), {
+        target: { files: [pyFile, envFile, pycFile] },
+      });
+
+      expect(screen.getByTestId('repo-path-input')).toHaveValue('my_app');
+
+      await user.click(screen.getByTestId('trigger-index-btn'));
+
+      await waitFor(() => {
+        expect(uploadSpy).toHaveBeenCalledWith('my_app', [
+          { path: 'my_app/main.py', content: 'def main():\n    return 1\n' },
+        ]);
+      });
+    } finally {
+      getReposSpy.mockRestore();
+      uploadSpy.mockRestore();
+    }
   });
 });

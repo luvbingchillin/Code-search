@@ -59,7 +59,7 @@ describe('ASTMetadataInspector Component Suite', () => {
 
     const callsSection = screen.getByTestId('ast-calls-section');
     expect(callsSection).toBeInTheDocument();
-    expect(screen.getByText('Called Functions (4):')).toBeInTheDocument();
+    expect(screen.getByText('Calls (4):')).toBeInTheDocument();
 
     sampleChunk.calls!.forEach((call) => {
       const badge = screen.getByTestId(`call-badge-${call}`);
@@ -121,7 +121,7 @@ describe('ASTMetadataInspector Component Suite', () => {
 
     const importsSection = screen.getByTestId('ast-imports-section');
     expect(importsSection).toBeInTheDocument();
-    expect(screen.getByText('Imports (4):')).toBeInTheDocument();
+    expect(screen.getByText('File Imports (4):')).toBeInTheDocument();
 
     sampleChunk.imports!.forEach((imp) => {
       const badge = screen.getByTestId(`import-badge-${imp}`);
@@ -499,6 +499,51 @@ describe('App Call Graph Multi-Hop Navigation & Entity Lookup Suite', () => {
     const backBtn = screen.getByTestId('ast-nav-back-btn');
     await user.click(backBtn);
     expect(handleGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders Inherits bases, Subclasses, Methods, and filters Used Imports vs unused file imports', async () => {
+    const user = userEvent.setup();
+    const handleSelectCall = vi.fn();
+    const handleSelectCaller = vi.fn();
+    const classChunk: AstCodeChunk = {
+      ...mockAstChunks[0],
+      id: 'models.py:DataService:10',
+      astNodeType: 'ClassDef',
+      identifier: 'DataService',
+      bases: ['BaseEntity'],
+      imports: ['typing', 'json', 'unused_lib'],
+      code: 'class DataService(BaseEntity):\n    def run(self, x: typing.Any):\n        return json.dumps(x)\n',
+    };
+
+    render(
+      <ASTMetadataInspector
+        chunk={classChunk}
+        isOpen={true}
+        onClose={vi.fn()}
+        onSelectCall={handleSelectCall}
+        onSelectCaller={handleSelectCaller}
+        subclasses={[{ id: 'sub.py:SubService:1', identifier: 'SubService' }]}
+        classMethods={[{ id: 'models.py:DataService.run:11', identifier: 'DataService.run', astNodeType: 'FunctionDef', startLine: 11 }]}
+      />
+    );
+
+    expect(screen.getByTestId('ast-bases-section')).toBeInTheDocument();
+    await user.click(screen.getByTestId('base-badge-BaseEntity'));
+    expect(handleSelectCall).toHaveBeenCalledWith('BaseEntity');
+
+    expect(screen.getByTestId('ast-subclasses-section')).toBeInTheDocument();
+    await user.click(screen.getByTestId('subclass-badge-SubService'));
+    expect(handleSelectCaller).toHaveBeenCalledWith('sub.py:SubService:1', 'SubService');
+
+    expect(screen.getByTestId('ast-methods-section')).toBeInTheDocument();
+    await user.click(screen.getByTestId('class-method-badge-DataService.run'));
+    expect(handleSelectCaller).toHaveBeenCalledWith('models.py:DataService.run:11', 'DataService.run');
+
+    // Only imports referenced in code ('typing', 'json') show initially; 'unused_lib' hidden behind toggle
+    expect(screen.getByText('Used Imports (2):')).toBeInTheDocument();
+    expect(screen.queryByTestId('import-badge-unused_lib')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('toggle-unused-imports-btn'));
+    expect(screen.getByTestId('import-badge-unused_lib')).toBeInTheDocument();
   });
 });
 

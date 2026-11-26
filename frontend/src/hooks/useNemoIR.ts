@@ -36,23 +36,28 @@ export function useNemoIR(): UseNemoIRReturn {
   );
 
   const executeWorkflow = useCallback(async (input: Record<string, unknown>): Promise<unknown> => {
-    try {
-      const compileResult = await compileCodeRetrievalWorkflow();
-      return {
-        success: compileResult.ok,
-        workflow: '.nemo-vector-search-v1',
-        ir: compileResult.ir,
-        stages: ['Thinking', 'SearchingAST', 'Synthesizing', 'Complete'],
-        output: input,
-      };
-    } catch {
-      return {
-        success: true,
-        workflow: '.nemo-vector-search-v1',
-        stages: ['Thinking', 'SearchingAST', 'Synthesizing', 'Complete'],
-        output: input,
-      };
-    }
+    const compileResult = await compileCodeRetrievalWorkflow();
+    const ir = compileResult.ir as {
+      workflow?: { entry?: string };
+      nodes?: Array<{ id: string }>;
+    } | undefined;
+    const nodeIds = new Set((ir?.nodes ?? []).map((n) => n.id));
+    const hasResults = input.hasResults !== false;
+
+    const stages: string[] = [];
+    if (nodeIds.has('Thinking')) stages.push('Thinking');
+    if (nodeIds.has('SearchingAST')) stages.push('SearchingAST');
+    if (hasResults && nodeIds.has('Synthesizing')) stages.push('Synthesizing');
+    if (nodeIds.has('Complete')) stages.push('Complete');
+
+    return {
+      success: compileResult.ok,
+      workflow: '.nemo-vector-search-v1',
+      ir: compileResult.ir,
+      diagnostics: compileResult.diagnostics,
+      stages: stages.length > 0 ? stages : ['Thinking', 'SearchingAST', ...(hasResults ? ['Synthesizing'] : []), 'Complete'],
+      output: input,
+    };
   }, []);
 
   return {

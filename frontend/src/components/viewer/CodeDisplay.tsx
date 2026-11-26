@@ -18,6 +18,13 @@ interface CodeDisplayProps {
 }
 
 const escapeRegex = (s: string) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+const escapeHtml = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 export const CodeDisplay: React.FC<CodeDisplayProps> = ({
   chunk,
@@ -46,10 +53,10 @@ export const CodeDisplay: React.FC<CodeDisplayProps> = ({
       if (Prism.languages.python) {
         return Prism.highlight(displayCode, Prism.languages.python, 'python');
       }
-      return displayCode;
+      return escapeHtml(displayCode);
     } catch (err) {
       console.error('Prism Python highlighting error:', err);
-      return displayCode;
+      return escapeHtml(displayCode);
     }
   }, [displayCode]);
 

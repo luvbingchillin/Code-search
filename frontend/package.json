@@ -21,7 +21,6 @@
     "prismjs": "^1.29.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-resizable-panels": "^2.1.7",
     "three": "^0.187.0",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.6.0"

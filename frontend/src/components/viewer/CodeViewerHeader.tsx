@@ -8,6 +8,7 @@ interface CodeViewerHeaderProps {
   chunk: AstCodeChunk | null;
   onToggleInspector?: () => void;
   isInspectorOpen?: boolean;
+  relationshipCount?: number;
   onToggleExplorer?: () => void;
   isExplorerOpen?: boolean;
   isMaximized?: boolean;
@@ -26,10 +27,35 @@ interface CodeViewerHeaderProps {
   onToggleFullFile?: () => void;
 }
 
+function formatReadableKind(chunk: AstCodeChunk): { shortLabel: string; longLabel: string } {
+  const isMethod = Boolean(chunk.identifier && chunk.identifier.includes('.'));
+  switch (chunk.astNodeType) {
+    case 'ClassDef':
+      return { shortLabel: 'class', longLabel: 'Class' };
+    case 'AsyncFunctionDef':
+      return {
+        shortLabel: isMethod ? 'async method' : 'async fn',
+        longLabel: isMethod ? 'Async Method' : 'Async Function',
+      };
+    case 'FunctionDef':
+      return {
+        shortLabel: isMethod ? 'method' : 'fn',
+        longLabel: isMethod ? 'Method' : 'Function',
+      };
+    case 'Module':
+      return { shortLabel: 'module', longLabel: 'Module' };
+    case 'Assign':
+      return { shortLabel: 'var', longLabel: 'Variable' };
+    default:
+      return { shortLabel: chunk.astNodeType, longLabel: chunk.astNodeType };
+  }
+}
+
 export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
   chunk,
   onToggleInspector,
   isInspectorOpen,
+  relationshipCount = 0,
   onToggleExplorer,
   isExplorerOpen,
   isMaximized,
@@ -108,14 +134,24 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
             <div
               data-testid="chunk-file-path"
               className="font-mono text-slate-200 truncate min-w-0 font-medium flex items-center space-x-1"
-              title={chunk ? `${chunk.filePath} > ${chunk.identifier}` : 'No file selected'}
+              title={chunk ? `${chunk.filePath} › ${chunk.identifier.replace(/\./g, ' › ')}` : 'No file selected'}
             >
               {chunk ? (
-                <>
-                  <span className="text-slate-400 truncate">{chunk.filePath}</span>
-                  <span className="text-slate-600 font-bold shrink-0">&gt;</span>
-                  <span className="text-sky-300 font-semibold truncate">{chunk.identifier}</span>
-                </>
+                chunk.identifier.includes('.') ? (
+                  <>
+                    <span className="text-slate-400 truncate">{chunk.filePath}</span>
+                    <span className="text-slate-600 font-bold shrink-0">›</span>
+                    <span className="text-slate-300 truncate">{chunk.identifier.split('.')[0]}</span>
+                    <span className="text-slate-600 font-bold shrink-0">›</span>
+                    <span className="text-sky-300 font-semibold truncate">{chunk.identifier.split('.').slice(1).join('.')}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-slate-400 truncate">{chunk.filePath}</span>
+                    <span className="text-slate-600 font-bold shrink-0">›</span>
+                    <span className="text-sky-300 font-semibold truncate">{chunk.identifier}</span>
+                  </>
+                )
               ) : (
                 'No file selected'
               )}
@@ -125,12 +161,13 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
               <>
                 <span
                   data-testid="chunk-node-type"
-                  className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium ${getNodeTypeBadgeColor(
+                  data-ast-node-type={chunk.astNodeType}
+                  className={`px-2 py-0.5 rounded border text-[11px] font-mono font-medium shrink-0 ${getNodeTypeBadgeColor(
                     chunk.astNodeType
                   )}`}
-                  title={`Definition: ${chunk.astNodeType}`}
+                  title={`${formatReadableKind(chunk).longLabel} (${chunk.astNodeType})`}
                 >
-                  {chunk.astNodeType}
+                  {formatReadableKind(chunk).shortLabel}
                 </span>
 
                 <span
@@ -301,10 +338,10 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                 ? 'bg-sky-950 text-sky-300 border-sky-500/60 font-semibold'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
-            title={isFullFileMode ? 'Switch back to isolated symbol view' : 'View full source file with surrounding context'}
+            title={isFullFileMode ? 'Switch back to isolated definition view' : 'View full source file with surrounding context'}
           >
             <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden lg:inline whitespace-nowrap">{isFullFileMode ? 'Symbol Only' : 'Full File'}</span>
+            <span className="hidden lg:inline whitespace-nowrap">{isFullFileMode ? 'Definition Only' : 'Full File'}</span>
           </button>
         )}
 
@@ -340,11 +377,16 @@ export const CodeViewerHeader: React.FC<CodeViewerHeaderProps> = ({
                 ? 'bg-slate-800 text-sky-300 border-sky-500/70'
                 : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border-slate-700'
             }`}
-            title="Inspect symbol details, parameters & call graph"
-            aria-label="Inspect symbol details"
+            title="Inspect callers, outgoing calls, class inheritance, and used imports"
+            aria-label="Inspect calls and references"
           >
             <Info className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden xl:inline">Symbol Info</span>
+            <span className="hidden xl:inline whitespace-nowrap">Calls &amp; Refs</span>
+            {relationshipCount > 0 && (
+              <span className="px-1 py-0.2 rounded bg-slate-950 text-sky-300 border border-slate-700 font-mono text-[10px]">
+                {relationshipCount}
+              </span>
+            )}
           </button>
         )}
 

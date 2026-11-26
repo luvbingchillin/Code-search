@@ -157,10 +157,10 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
           <input
             type="text"
             data-testid="file-tree-filter-input"
-            aria-label="Filter files and symbols"
+            aria-label="Filter files and definitions"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
-            placeholder="Filter files & symbols..."
+            placeholder="Filter files & definitions..."
             className="w-full bg-slate-900 border border-slate-800 rounded pl-7 pr-6 py-1 text-[11px] text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition-colors"
           />
           {filterQuery && (
@@ -232,43 +232,95 @@ export const RepoFileTree: React.FC<RepoFileTreeProps> = ({
                   </span>
                 </button>
 
-                {/* Nested Symbols */}
-                {isExpanded && (
-                  <div className="pl-4 space-y-0.5 border-l border-slate-800/80 ml-3">
-                    {fileNode.symbols.map((symbol) => {
-                      const isSymbolActive = symbol.id === activeChunkId;
-                      const isClass = symbol.astNodeType.toLowerCase().includes('class');
+                {/* Nested Class -> Method Outline */}
+                {isExpanded && (() => {
+                  const classMap = new Map<string, FileSymbolNode[]>();
+                  const classSet = new Set(
+                    fileNode.symbols
+                      .filter((s) => s.astNodeType === 'ClassDef')
+                      .map((s) => s.identifier)
+                  );
+                  for (const clsName of classSet) {
+                    classMap.set(clsName, []);
+                  }
+                  const topLevelSymbols: FileSymbolNode[] = [];
+                  for (const sym of fileNode.symbols) {
+                    if (sym.astNodeType !== 'ClassDef' && sym.identifier.includes('.')) {
+                      const owner = sym.identifier.split('.', 1)[0];
+                      if (classMap.has(owner)) {
+                        classMap.get(owner)!.push(sym);
+                        continue;
+                      }
+                    }
+                    topLevelSymbols.push(sym);
+                  }
 
-                      return (
-                        <button
-                          key={symbol.id}
-                          type="button"
-                          data-testid={`tree-symbol-${symbol.identifier}`}
-                          aria-current={isSymbolActive ? 'true' : undefined}
-                          onClick={() => onSelectSymbol(symbol, fileNode.filePath)}
-                          className={`w-full text-left flex items-center justify-between px-2 py-0.5 rounded cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
-                            isSymbolActive
-                              ? 'bg-sky-950/70 border border-sky-600/60 text-sky-200 font-semibold'
-                              : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
-                          }`}
-                          title={`${symbol.identifier} (${isClass ? 'Class' : 'Function'}, Lines ${symbol.startLine}-${symbol.endLine})`}
-                        >
-                          <div className="flex items-center space-x-1.5 truncate">
-                            {isClass ? (
-                              <Layers className="w-3 h-3 text-sky-400 shrink-0" />
-                            ) : (
-                              <Code2 className="w-3 h-3 text-teal-400 shrink-0" />
-                            )}
-                            <span className="truncate">{symbol.identifier}</span>
-                          </div>
-                          <span className="text-[9px] text-slate-400 font-mono shrink-0 ml-1">
+                  const renderSymbolRow = (symbol: FileSymbolNode, nestedClassOwner?: string) => {
+                    const isSymbolActive = symbol.id === activeChunkId;
+                    const isClass = symbol.astNodeType === 'ClassDef';
+                    const isAsync = symbol.astNodeType === 'AsyncFunctionDef';
+                    const displayLabel = nestedClassOwner
+                      ? symbol.identifier.slice(nestedClassOwner.length + 1)
+                      : symbol.identifier;
+                    const kindTag = isClass ? 'cls' : isAsync ? 'async' : nestedClassOwner ? 'mth' : 'fn';
+
+                    return (
+                      <button
+                        key={symbol.id}
+                        type="button"
+                        data-testid={`tree-symbol-${symbol.identifier}`}
+                        aria-current={isSymbolActive ? 'true' : undefined}
+                        onClick={() => onSelectSymbol(symbol, fileNode.filePath)}
+                        className={`w-full text-left flex items-center justify-between px-2 py-0.5 rounded cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+                          isSymbolActive
+                            ? 'bg-sky-950/70 border border-sky-600/60 text-sky-200 font-semibold'
+                            : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                        }`}
+                        title={`${symbol.identifier} (${isClass ? 'Class' : nestedClassOwner ? 'Method' : isAsync ? 'Async Function' : 'Function'}, Lines ${symbol.startLine}-${symbol.endLine})`}
+                      >
+                        <div className="flex items-center space-x-1.5 truncate min-w-0">
+                          {isClass ? (
+                            <Layers className="w-3 h-3 text-sky-400 shrink-0" />
+                          ) : (
+                            <Code2 className="w-3 h-3 text-teal-400 shrink-0" />
+                          )}
+                          <span className="truncate">{displayLabel}</span>
+                        </div>
+                        <span className="flex items-center space-x-1 shrink-0 ml-1">
+                          <span className={`text-[9px] font-mono px-1 rounded ${
+                            isClass ? 'text-sky-400 bg-sky-950/60' : 'text-slate-500'
+                          }`}>
+                            {kindTag}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-mono">
                             L{symbol.startLine}
                           </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                        </span>
+                      </button>
+                    );
+                  };
+
+                  return (
+                    <div className="pl-3 space-y-0.5 border-l border-slate-800/80 ml-2.5">
+                      {topLevelSymbols.map((symbol) => {
+                        const childMethods = symbol.astNodeType === 'ClassDef' ? classMap.get(symbol.identifier) || [] : [];
+                        return (
+                          <div key={symbol.id} className="space-y-0.5">
+                            {renderSymbolRow(symbol)}
+                            {childMethods.length > 0 && (
+                              <div
+                                data-testid={`tree-class-children-${symbol.identifier}`}
+                                className="pl-3 ml-2 border-l border-slate-800/70 space-y-0.5"
+                              >
+                                {childMethods.map((methodSym) => renderSymbolRow(methodSym, symbol.identifier))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })

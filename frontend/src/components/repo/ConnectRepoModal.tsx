@@ -49,8 +49,9 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   const [pickedFolderInfo, setPickedFolderInfo] = useState<{
     name: string;
     fileCount: number;
-    needsFullPath?: boolean;
+    pyCount: number;
   } | null>(null);
+  const [pickedPythonFiles, setPickedPythonFiles] = useState<File[]>([]);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const [successStats, setSuccessStats] = useState<{
     files: number;
@@ -106,23 +107,26 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
   const handleFolderPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const firstRelative = files[0].webkitRelativePath || '';
-      const folderName = firstRelative.split('/')[0] || 'repository';
+      const fileArr = Array.from(files);
+      const firstRelative = fileArr[0].webkitRelativePath || fileArr[0].name || '';
+      const folderName = firstRelative.split('/')[0] || 'uploaded-repo';
+      const pyFiles = fileArr.filter((f) => {
+        const rel = f.webkitRelativePath || f.name;
+        const segments = rel.split(/[\\/]/);
+        const isHiddenOrEnv = segments.some(
+          (seg) => seg.startsWith('.') || seg === 'node_modules' || seg === '__pycache__' || seg === 'venv'
+        );
+        return !isHiddenOrEnv && (f.name.endsWith('.py') || f.name.endsWith('.pyi'));
+      });
 
-      if (folderName.toLowerCase().includes('request')) {
-        setRepoPath('fixtures/requests');
-        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: false });
-      } else if (folderName.toLowerCase().includes('sample')) {
-        setRepoPath('backend/sample_codebase');
-        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: false });
-      } else {
-        setRepoPath(folderName);
-        setPickedFolderInfo({ name: folderName, fileCount: files.length, needsFullPath: true });
-      }
+      setPickedPythonFiles(pyFiles);
+      setRepoPath(folderName);
+      setPickedFolderInfo({ name: folderName, fileCount: fileArr.length, pyCount: pyFiles.length });
     }
   };
 
   const handleIndex = async (targetPath?: string) => {
+    const shouldUploadPicked = !targetPath && pickedPythonFiles.length > 0 && pickedFolderInfo?.name === repoPath.trim();
     const pathToIndex = (targetPath || repoPath).trim();
     if (!pathToIndex) {
       setError('Please provide a repository directory path.');
@@ -135,15 +139,33 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
     setSuccessStats(null);
 
     try {
-      const resp = await apiClient.indexRepository(pathToIndex);
+      let resp;
+      let effectiveRepoPath = pathToIndex;
+      let effectiveRepoName = pathToIndex.split(/[\\/]/).pop() || pathToIndex;
+
+      if (shouldUploadPicked) {
+        const payloads = await Promise.all(
+          pickedPythonFiles.map(async (file) => ({
+            path: file.webkitRelativePath || file.name,
+            content: await file.text(),
+          }))
+        );
+        resp = await apiClient.indexUploadedFiles(effectiveRepoName, payloads);
+        effectiveRepoPath = resp.repo_path || effectiveRepoPath;
+      } else {
+        resp = await apiClient.indexRepository(pathToIndex);
+        effectiveRepoPath = resp.repo_path || pathToIndex;
+      }
+
       const stats = {
         files: resp.indexed_files,
         chunks: resp.extracted_chunks,
         time: resp.elapsed_seconds,
-        repoPath: pathToIndex,
-        repoName: pathToIndex.split(/[\\/]/).pop() || pathToIndex,
+        repoPath: effectiveRepoPath,
+        repoName: effectiveRepoName,
       };
       setSuccessStats(stats);
+      setPickedPythonFiles([]);
 
       // Refresh repos list
       const refreshed = await apiClient.getRepositories();
@@ -155,11 +177,14 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
 
       // Automatically select the newly indexed repository
       const matched = refreshed.find(
-        (r) => r.path.toLowerCase() === pathToIndex.toLowerCase() || r.id === stats.repoName
+        (r) =>
+          (resp.repo_id && r.id === resp.repo_id) ||
+          r.path.toLowerCase() === effectiveRepoPath.toLowerCase() ||
+          r.id === stats.repoName
       ) || {
-        id: stats.repoName || 'indexed-repo',
-        name: stats.repoName || pathToIndex,
-        path: pathToIndex,
+        id: resp.repo_id || stats.repoName || 'indexed-repo',
+        name: stats.repoName || effectiveRepoPath,
+        path: effectiveRepoPath,
         chunksCount: stats.chunks,
         filesCount: stats.files,
         status: 'indexed',
@@ -492,6 +517,7 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                   onChange={(e) => {
                     setRepoPath(e.target.value);
                     setPickedFolderInfo(null);
+                    setPickedPythonFiles([]);
                   }}
                   placeholder="e.g. fixtures/requests or C:/repos/my-python-app"
                   disabled={isIndexing}
@@ -526,24 +552,24 @@ export const ConnectRepoModal: React.FC<ConnectRepoModalProps> = ({
                 <div
                   data-testid="picked-folder-banner"
                   className={`text-[11px] rounded-md px-2.5 py-1.5 flex items-center space-x-1.5 border ${
-                    pickedFolderInfo.needsFullPath
+                    pickedFolderInfo.pyCount === 0
                       ? 'text-amber-200 bg-amber-950/40 border-amber-700/60'
                       : 'text-sky-300 bg-sky-950/40 border-sky-800/60'
                   }`}
                 >
-                  {pickedFolderInfo.needsFullPath ? (
+                  {pickedFolderInfo.pyCount === 0 ? (
                     <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   ) : (
                     <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                   )}
                   <span>
-                    {pickedFolderInfo.needsFullPath ? (
+                    {pickedFolderInfo.pyCount === 0 ? (
                       <>
-                        Browser security hides full OS paths for <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files). Please paste the full directory path above (e.g. <code className="font-mono text-amber-300">C:/repos/{pickedFolderInfo.name}</code>) before indexing.
+                        Selected <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files), but no Python (<code className="font-mono">.py</code>) source files were found.
                       </>
                     ) : (
                       <>
-                        Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.fileCount} files detected). Ready to index.
+                        Selected via File Explorer: <strong className="font-mono text-white">{pickedFolderInfo.name}</strong> ({pickedFolderInfo.pyCount} Python files ready to upload &amp; index locally).
                       </>
                     )}
                   </span>

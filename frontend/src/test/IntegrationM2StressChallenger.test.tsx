@@ -618,17 +618,18 @@ describe('Milestone 2 Integration Adversarial Stress Suite (int_m2_challenger_2)
 
       // Verify active code viewer header displays selected chunk
       expect(screen.getByTestId('chunk-file-path')).toHaveTextContent('requests/sessions.py');
-      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent('ClassDef');
+      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent('class');
+      expect(screen.getByTestId('chunk-node-type')).toHaveAttribute('data-ast-node-type', 'ClassDef');
 
       // Click second chunk tab ('PreparedRequest')
       fireEvent.click(screen.getByTestId('chunk-tab-chunk-req-2'));
       expect(screen.getByTestId('chunk-file-path')).toHaveTextContent('requests/models.py');
 
-      // Toggle AST Metadata Inspector
+      // Toggle Calls & References Inspector
       const inspectorToggle = screen.getByTestId('toggle-ast-inspector-btn');
       fireEvent.click(inspectorToggle);
       expect(screen.getByTestId('ast-metadata-inspector')).toBeInTheDocument();
-      expect(screen.getByText('The fully mutable PreparedRequest object.')).toBeInTheDocument();
+      expect(screen.getByTestId('ast-metadata-inspector')).toHaveTextContent('PreparedRequest');
     });
   });
 

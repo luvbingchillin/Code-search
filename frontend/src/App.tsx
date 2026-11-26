@@ -24,7 +24,7 @@ export interface AppProps {
 
 export const App: React.FC<AppProps> = ({
   autoConnectLastRepo = !isTestEnv,
-  autoInitWebLLM = !isTestEnv,
+  autoInitWebLLM = false,
 }) => {
   const [activeRepo, setActiveRepo] = React.useState<RepositoryItem | null>(null);
   const [healthRefreshTrigger, setHealthRefreshTrigger] = React.useState<number>(0);
@@ -32,6 +32,10 @@ export const App: React.FC<AppProps> = ({
   const [copiedBackendCmd, setCopiedBackendCmd] = React.useState<boolean>(false);
   const [strataFocusRequest, setStrataFocusRequest] = React.useState<{ chunkId: string; nonce: number } | null>(null);
   const webLLM = useWebLLM({ initialModel: PRECISION_MODEL, autoInit: autoInitWebLLM });
+
+  React.useEffect(() => {
+    apiClient.setActiveRepoId(activeRepo?.id ?? null);
+  }, [activeRepo?.id]);
 
   const handleBackendHealthChange = React.useCallback((healthy: boolean) => {
     setIsBackendOffline(!healthy);

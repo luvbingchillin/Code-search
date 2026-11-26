@@ -196,7 +196,7 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
       const notice = await screen.findByTestId('external-call-notice');
       expect(notice).toBeInTheDocument();
       expect(notice).toHaveTextContent(
-        "External entity: 'external_dispatch' is not defined locally in this repository."
+        "External symbol 'external_dispatch' is not defined in this repository."
       );
     });
   });
@@ -497,8 +497,8 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
     });
   });
 
-  describe('12. Block Queries While WebLLM is Loading & Notify User', () => {
-    it('blocks query submission when webLLM.status is loading and emits a notification message with loading progress', async () => {
+  describe('12. Non-Blocking Fallback Queries While WebLLM is Warming Up', () => {
+    it('serves live AST search + deterministic summary immediately while webLLM.status is loading instead of blocking', async () => {
       const mockSearch = vi.fn().mockResolvedValue([sampleChunk]);
       const loadingWebLLM = {
         status: 'loading' as const,
@@ -528,15 +528,14 @@ describe('UX Flows & Edge Cases Refinement Suite', () => {
         await result.current.submitQuery('Where is Session.send defined?');
       });
 
-      // Vector search and generation must NOT be called while WebLLM is loading
-      expect(mockSearch).not.toHaveBeenCalled();
+      // Live AST retrieval still executes cleanly, while WebLLM neural generation is skipped until Ready
+      expect(mockSearch).toHaveBeenCalledTimes(1);
       expect(loadingWebLLM.generate).not.toHaveBeenCalled();
 
       const lastMsg = result.current.messages[result.current.messages.length - 1];
       expect(lastMsg.role).toBe('assistant');
-      expect(lastMsg.content).toContain('WebLLM Model Still Loading (42%)');
-      expect(lastMsg.content).toContain('Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC');
-      expect(result.current.agentStatus.state).toBe('Idle');
+      expect(lastMsg.content).toContain('WebLLM is still loading (42%)');
+      expect(result.current.agentStatus.state).toBe('Complete');
     });
   });
 });

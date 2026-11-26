@@ -326,7 +326,8 @@ async def handle_request(item_id: int, q: str | None = None) -> dict:
 
       // Initial header verification
       expect(screen.getByTestId('chunk-file-path')).toHaveTextContent(mockAstChunks[0].filePath);
-      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent(mockAstChunks[0].astNodeType);
+      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent('fn');
+      expect(screen.getByTestId('chunk-node-type')).toHaveAttribute('data-ast-node-type', mockAstChunks[0].astNodeType);
       expect(screen.getByTestId('chunk-line-range')).toHaveTextContent(
         `Lines ${mockAstChunks[0].startLine}–${mockAstChunks[0].endLine}`
       );
@@ -347,7 +348,8 @@ async def handle_request(item_id: int, q: str | None = None) -> dict:
 
       // Header updates to Chunk 2
       expect(screen.getByTestId('chunk-file-path')).toHaveTextContent(mockAstChunks[1].filePath);
-      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent(mockAstChunks[1].astNodeType);
+      expect(screen.getByTestId('chunk-node-type')).toHaveTextContent('class');
+      expect(screen.getByTestId('chunk-node-type')).toHaveAttribute('data-ast-node-type', mockAstChunks[1].astNodeType);
       expect(screen.getByTestId('chunk-line-range')).toHaveTextContent(
         `Lines ${mockAstChunks[1].startLine}–${mockAstChunks[1].endLine}`
       );
@@ -371,7 +373,7 @@ async def handle_request(item_id: int, q: str | None = None) -> dict:
       );
     });
 
-    it('synchronizes AST Metadata Inspector with the selected tab when opened', async () => {
+    it('synchronizes Calls & References inspector with the selected tab when opened', async () => {
       const user = userEvent.setup();
       render(<InteractiveViewerHarness />);
 
@@ -382,19 +384,18 @@ async def handle_request(item_id: int, q: str | None = None) -> dict:
       const inspector = screen.getByTestId('ast-metadata-inspector');
       expect(inspector).toBeInTheDocument();
 
-      // Chunk 1 metadata
+      // Chunk 1 relationship metadata
       expect(inspector.textContent).toContain('verify_jwt_token');
-      expect(inspector.textContent).toContain('token: str');
-      expect(inspector.textContent).toContain('secret_key: str');
-      expect(inspector.textContent).toContain('@rate_limit(max_requests=100)');
+      expect(inspector.textContent).toContain('jwt.decode');
+      expect(inspector.textContent).toContain('L45–62');
 
       // Switch to Chunk 2 with inspector open
       const tab2 = screen.getByTestId(`chunk-tab-${mockAstChunks[1].id}`);
       await user.click(tab2);
 
-      // Inspector now reflects Chunk 2 metadata
+      // Inspector now reflects Chunk 2 relationship metadata
       expect(inspector.textContent).toContain('AsyncDatabasePool');
-      expect(inspector.textContent).toContain('@singleton');
+      expect(inspector.textContent).toContain('asyncpg.create_pool');
       expect(inspector.textContent).not.toContain('verify_jwt_token');
     });
 

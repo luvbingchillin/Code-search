@@ -22,6 +22,7 @@ export const mockAstChunks: AstCodeChunk[] = [
     docstring: 'Verifies JWT signature and extracts token payload.',
     parameters: ['token: str', 'secret_key: str'],
     decorators: ['@rate_limit(max_requests=100)'],
+    calls: ['jwt.decode'],
   },
   {
     id: 'chunk-db-02',
@@ -45,5 +46,6 @@ export const mockAstChunks: AstCodeChunk[] = [
     relevanceScore: 0.88,
     docstring: 'Manages asynchronous database connection pooling.',
     decorators: ['@singleton'],
+    calls: ['asyncpg.create_pool'],
   },
 ];

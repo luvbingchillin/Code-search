@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import Prism from 'prismjs';
 import { CodeViewerContainer } from '../components/viewer/CodeViewerContainer';
 import { mockAstChunks } from './fixtures/mockData';
 
@@ -194,5 +195,31 @@ describe('CodeViewerPane & Syntax Highlighting Suite', () => {
 
     // Highlighting is cleared
     expect(codeDisplay.innerHTML).not.toContain('<mark');
+  });
+
+  it('escapes HTML safely in CodeDisplay fallback when Prism Python grammar is unavailable', () => {
+    const xssChunk = {
+      ...mockAstChunks[0],
+      id: 'xss-fallback-chunk',
+      code: 'def unsafe_str():\n    return "<script>alert(1)</script>"',
+    };
+    const originalPython = Prism.languages.python;
+    delete Prism.languages.python;
+
+    try {
+      render(
+        <CodeViewerContainer
+          chunks={[xssChunk]}
+          selectedChunkId={xssChunk.id}
+          onSelectChunk={() => {}}
+        />
+      );
+
+      const codeDisplay = screen.getByTestId('code-display');
+      expect(codeDisplay.querySelector('script')).toBeNull();
+      expect(codeDisplay.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    } finally {
+      Prism.languages.python = originalPython;
+    }
   });
 });

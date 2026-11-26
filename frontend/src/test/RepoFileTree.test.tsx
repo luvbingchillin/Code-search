@@ -82,9 +82,11 @@ describe('RepoFileTree Component Suite', () => {
     expect(screen.getByText('adapters.py')).toBeInTheDocument();
     expect(screen.getByText('2 files')).toBeInTheDocument();
 
-    // Verify symbols inside initial expanded files
+    // Verify nested class -> method hierarchy inside expanded files
     expect(await screen.findByText('Session')).toBeInTheDocument();
-    expect(screen.getByText('Session.send')).toBeInTheDocument();
+    const nestedGroup = screen.getByTestId('tree-class-children-Session');
+    expect(nestedGroup).toBeInTheDocument();
+    expect(screen.getByTestId('tree-symbol-Session.send')).toHaveTextContent('send');
   });
 
   it('invokes onSelectSymbol when clicking a symbol node', async () => {

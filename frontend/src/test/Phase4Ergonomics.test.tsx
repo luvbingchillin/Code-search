@@ -135,4 +135,34 @@ describe('Phase 4 Everyday Developer Ergonomics Suite', () => {
     expect(bubble).toHaveTextContent('Synthesizing response...');
     expect(bubble).not.toHaveTextContent('PreparedRequest via HTTPAdapter');
   });
+
+  it('renders backticked active symbols in MessageList as clickable inline-symbol buttons', async () => {
+    const user = userEvent.setup();
+    const onSelectChunk = vi.fn();
+    const targetChunk = {
+      ...mockAstChunks[0],
+      id: 'chunk-inline-1',
+      identifier: 'solve_dependencies',
+    };
+
+    render(
+      <MessageList
+        messages={[
+          {
+            id: 'msg-inline-1',
+            role: 'assistant',
+            content: 'Inspect `solve_dependencies` for how parameters resolve.',
+            timestamp: '12:05 PM',
+          },
+        ]}
+        chunks={[targetChunk]}
+        onSelectChunk={onSelectChunk}
+      />
+    );
+
+    const inlineBtn = screen.getByTestId('inline-symbol-chunk-inline-1');
+    expect(inlineBtn).toHaveTextContent('solve_dependencies');
+    await user.click(inlineBtn);
+    expect(onSelectChunk).toHaveBeenCalledWith('chunk-inline-1');
+  });
 });

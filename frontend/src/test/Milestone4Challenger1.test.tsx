@@ -275,7 +275,7 @@ describe('Challenger 1 Empirical Adversarial Suite: AST Call Graph & Multi-Hop N
       // Inspector stays open and now displays Chunk B's metadata and calls
       await waitFor(() => {
         expect(screen.getByTestId('call-badge-omega_finalizer')).toBeInTheDocument();
-        expect(screen.getByText('Called Functions (1):')).toBeInTheDocument();
+        expect(screen.getByText('Calls (1):')).toBeInTheDocument();
       });
 
       // Hop 2: Click omega_finalizer on Chunk B's inspector
@@ -516,7 +516,7 @@ describe('Challenger 1 Empirical Adversarial Suite: AST Call Graph & Multi-Hop N
 
       const importsSection = screen.getByTestId('ast-imports-section');
       expect(importsSection).toBeInTheDocument();
-      expect(screen.getByText('Imports (2):')).toBeInTheDocument();
+      expect(screen.getByText('File Imports (2):')).toBeInTheDocument();
 
       expect(screen.getByTestId('import-badge-core.beta')).toHaveTextContent('core.beta');
       expect(screen.getByTestId('import-badge-core.gamma')).toHaveTextContent('core.gamma');

@@ -544,7 +544,7 @@ describe('Challenger 2 Empirical Verification: Milestone 4 Component Integration
 
       expect(screen.getByTestId('ast-metadata-inspector')).toBeInTheDocument();
       expect(screen.getByTestId('ast-calls-section')).toBeInTheDocument();
-      expect(screen.getByText('Called Functions (2):')).toBeInTheDocument();
+      expect(screen.getByText('Calls (2):')).toBeInTheDocument();
       expect(screen.queryByTestId('ast-imports-section')).not.toBeInTheDocument();
     });
 
@@ -566,7 +566,7 @@ describe('Challenger 2 Empirical Verification: Milestone 4 Component Integration
       expect(screen.getByTestId('ast-metadata-inspector')).toBeInTheDocument();
       expect(screen.queryByTestId('ast-calls-section')).not.toBeInTheDocument();
       expect(screen.getByTestId('ast-imports-section')).toBeInTheDocument();
-      expect(screen.getByText('Imports (2):')).toBeInTheDocument();
+      expect(screen.getByText('File Imports (2):')).toBeInTheDocument();
     });
 
     it('3.5 smoothly updates content when active chunk changes while inspector remains open', async () => {
@@ -588,8 +588,8 @@ describe('Challenger 2 Empirical Verification: Milestone 4 Component Integration
       // Open inspector while on chunkAlpha (has 3 calls, 3 imports)
       await user.click(screen.getByTestId('toggle-ast-inspector-btn'));
       expect(screen.getByTestId('ast-calls-section')).toBeInTheDocument();
-      expect(screen.getByText('Called Functions (3):')).toBeInTheDocument();
-      expect(screen.getByText('Imports (3):')).toBeInTheDocument();
+      expect(screen.getByText('Calls (3):')).toBeInTheDocument();
+      expect(screen.getByText('File Imports (3):')).toBeInTheDocument();
 
       // Switch to chunkGamma via tab click (chunkGamma has 0 calls, 0 imports)
       const gammaTab = screen.getByTestId(`chunk-tab-${chunkGamma.id}`);
@@ -632,8 +632,8 @@ describe('Challenger 2 Empirical Verification: Milestone 4 Component Integration
       );
 
       expect(screen.getByTestId('ast-calls-section')).toBeInTheDocument();
-      expect(screen.getByText('Called Functions (50):')).toBeInTheDocument();
-      expect(screen.getByText('Imports (50):')).toBeInTheDocument();
+      expect(screen.getByText('Calls (50):')).toBeInTheDocument();
+      expect(screen.getByText('File Imports (50):')).toBeInTheDocument();
 
       // Click 50th badge
       const lastBadge = screen.getByTestId('call-badge-func_call_49');

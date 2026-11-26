@@ -113,6 +113,32 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
 
   const isBusy = status.state === 'Thinking' || status.state === 'Searching AST' || status.state === 'Synthesizing';
 
+  // Localized elapsed stopwatch: ticks only inside this banner during active work
+  // instead of re-rendering the entire App tree at 10Hz.
+  const [liveElapsedMs, setLiveElapsedMs] = React.useState<number>(status.elapsedMs);
+  const startWallRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    if (!isBusy) {
+      startWallRef.current = null;
+      setLiveElapsedMs(status.elapsedMs);
+      return;
+    }
+    const baseElapsed = status.elapsedMs > 0 ? status.elapsedMs : 0;
+    startWallRef.current = Date.now() - baseElapsed;
+    setLiveElapsedMs(baseElapsed);
+    const id = window.setInterval(() => {
+      if (startWallRef.current !== null) {
+        setLiveElapsedMs(Date.now() - startWallRef.current);
+      }
+    }, 100);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [isBusy, status.elapsedMs]);
+
+  const displayedElapsedMs = isBusy ? Math.max(status.elapsedMs, liveElapsedMs) : status.elapsedMs;
+
   return (
     <div
       data-testid="agentic-loop-banner"
@@ -184,13 +210,13 @@ export const AgenticLoopBanner: React.FC<AgenticLoopBannerProps> = ({
         )}
 
         {/* Elapsed Timer */}
-        {status.elapsedMs > 0 && (
+        {displayedElapsedMs > 0 && (
           <div
             data-testid="agentic-elapsed-timer"
             className="flex items-center space-x-1 text-[11px] font-mono text-slate-200 bg-slate-950 px-2 py-0.5 rounded border border-slate-700"
           >
             <Clock className="w-3 h-3 text-slate-400" />
-            <span>{(status.elapsedMs / 1000).toFixed(1)}s</span>
+            <span>{(displayedElapsedMs / 1000).toFixed(1)}s</span>
           </div>
         )}
 

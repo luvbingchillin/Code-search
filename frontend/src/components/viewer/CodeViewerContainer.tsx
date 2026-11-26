@@ -13,6 +13,12 @@ const LazyStrataCanvas = lazy(() =>
   import('../strata/StrataCanvas').then((mod) => ({ default: mod.StrataCanvas }))
 );
 
+const STRATA_VIEW_LAYOUT_OPTIONS = {
+  layoutMode: 'clustered' as const,
+  curveSegments: 8,
+  curveHeight: 6,
+};
+
 export interface CodeViewerContainerProps {
   chunks: AstCodeChunk[];
   selectedChunkId: string | null;
@@ -67,11 +73,15 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
   // Strata 3D graph state (fetched strictly from local FastAPI backend)
   const [strataGraphData, setStrataGraphData] = useState<StrataGraphData>(() =>
-    computeStrataLayout({ nodes: [], edges: [] })
+    computeStrataLayout({ nodes: [], edges: [] }, STRATA_VIEW_LAYOUT_OPTIONS)
   );
   const [strataOfflineError, setStrataOfflineError] = useState<boolean>(false);
   const [strataRetryTick, setStrataRetryTick] = useState<number>(0);
   const [inspectedNodeId, setInspectedNodeId] = useState<string | null>(null);
+  const [activeCameraFocus, setActiveCameraFocus] = useState<{ chunkId: string | null; nonce: number }>({
+    chunkId: null,
+    nonce: 0,
+  });
 
   const handleToggleViewMode = (mode: ViewMode) => {
     setInternalViewMode(mode);
@@ -81,7 +91,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   // Fetch strata graph data when active repository changes
   useEffect(() => {
     if (!activeRepoId) {
-      setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }));
+      setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }, STRATA_VIEW_LAYOUT_OPTIONS));
       setStrataOfflineError(false);
       return;
     }
@@ -92,14 +102,14 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
       .getRepoStrataGraph(activeRepoId)
       .then((rawGraph) => {
         if (isMounted && rawGraph && rawGraph.nodes) {
-          setStrataGraphData(computeStrataLayout(rawGraph));
+          setStrataGraphData(computeStrataLayout(rawGraph, STRATA_VIEW_LAYOUT_OPTIONS));
           setStrataOfflineError(false);
         }
       })
       .catch((err) => {
         console.warn('Failed to load strata graph from backend:', err);
         if (isMounted) {
-          setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }));
+          setStrataGraphData(computeStrataLayout({ nodes: [], edges: [] }, STRATA_VIEW_LAYOUT_OPTIONS));
           setStrataOfflineError(true);
         }
       });
@@ -187,7 +197,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
   // Resolve a cited or selected chunk ID to its corresponding StrataNode in the current graph
   const resolvedFocusTargetId = useMemo(() => {
-    const rawTarget = focusRequest?.chunkId ?? inspectedNodeId ?? selectedChunk?.id;
+    const rawTarget = activeCameraFocus.chunkId ?? focusRequest?.chunkId ?? inspectedNodeId ?? selectedChunk?.id;
     if (!rawTarget || !strataGraphData?.nodes?.length) return null;
 
     const matchingChunk = chunks.find((c) => c.id === rawTarget);
@@ -200,9 +210,9 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
       strataGraphData.nodes.find((n) => n.identifier === targetIdent);
 
     return match?.id ?? null;
-  }, [focusRequest, inspectedNodeId, selectedChunk?.id, chunks, strataGraphData]);
+  }, [activeCameraFocus.chunkId, focusRequest, inspectedNodeId, selectedChunk?.id, chunks, strataGraphData]);
 
-  // Sync Strata inspector when a new chat citation focus request arrives
+  // Sync Strata inspector and camera glide when a new chat citation focus request arrives
   useEffect(() => {
     if (!focusRequest || !strataGraphData?.nodes?.length) return;
     const rawTarget = focusRequest.chunkId;
@@ -217,13 +227,17 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
 
     if (match) {
       setInspectedNodeId(match.id);
+      setActiveCameraFocus((prev) => ({ chunkId: match.id, nonce: prev.nonce + 1 }));
     }
   }, [focusRequest, chunks, strataGraphData]);
 
   // Click on a node in Strata map: inspect details and sync selection
-  const handleSelectStrataNode = (chunkId: string) => {
+  const handleSelectStrataNode = (chunkId: string, glideCamera: boolean = false) => {
     setInspectedNodeId(chunkId);
     onSelectChunk(chunkId);
+    if (glideCamera) {
+      setActiveCameraFocus((prev) => ({ chunkId, nonce: prev.nonce + 1 }));
+    }
   };
 
   // P1: Dismiss floating strata node inspector on Escape key
@@ -246,6 +260,25 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
       ) ?? null
     );
   }, [inspectedNodeId, strataGraphData]);
+
+  const inspectedNodeCallers = useMemo(() => {
+    if (!inspectedNode || !strataGraphData) return [];
+    const nodeById = new Map(strataGraphData.nodes.map((n) => [n.id, n]));
+    const seen = new Set<string>();
+    const callers: Array<{ id: string; identifier: string; tier: number }> = [];
+    for (const edge of strataGraphData.edges) {
+      if ((edge.target === inspectedNode.id || edge.target === inspectedNode.identifier) && !seen.has(edge.source)) {
+        seen.add(edge.source);
+        const src = nodeById.get(edge.source);
+        callers.push({
+          id: edge.source,
+          identifier: src?.identifier ?? edge.source,
+          tier: edge.sourceTier,
+        });
+      }
+    }
+    return callers;
+  }, [inspectedNode, strataGraphData]);
 
   const inspectedNodeCallees = useMemo(() => {
     if (!inspectedNode || !strataGraphData) return [];
@@ -314,9 +347,26 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
     }
   };
 
-  // Compute upstream callers for the selected chunk from the repository strata call graph
-  const selectedChunkCallers = useMemo(() => {
-    if (!selectedChunk || !strataGraphData) return [];
+  // Compute local identifiers set + inheritance/method/caller relationships for the selected chunk
+  const localCallIdentifiers = useMemo(() => {
+    const ids = new Set<string>();
+    for (const c of chunks) {
+      ids.add(c.identifier);
+      const base = c.identifier.split('.').pop();
+      if (base) ids.add(base);
+    }
+    for (const n of strataGraphData.nodes) {
+      ids.add(n.identifier);
+      const base = n.identifier.split('.').pop();
+      if (base) ids.add(base);
+    }
+    return ids;
+  }, [chunks, strataGraphData.nodes]);
+
+  const { selectedChunkCallers, selectedChunkSubclasses } = useMemo(() => {
+    if (!selectedChunk || !strataGraphData) {
+      return { selectedChunkCallers: [], selectedChunkSubclasses: [] };
+    }
     const nodeById = new Map(strataGraphData.nodes.map((n) => [n.id, n]));
     const targetIds = new Set<string>([selectedChunk.id]);
     for (const n of strataGraphData.nodes) {
@@ -324,23 +374,71 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         targetIds.add(n.id);
       }
     }
-    const seen = new Set<string>();
-    const callers: Array<{ id: string; identifier: string; filePath?: string }> = [];
+    const seenCallers = new Set<string>();
+    const seenSubs = new Set<string>();
+    const callers: Array<{ id: string; identifier: string; filePath?: string; startLine?: number }> = [];
+    const subclasses: Array<{ id: string; identifier: string; filePath?: string; startLine?: number }> = [];
+
     for (const edge of strataGraphData.edges) {
-      if (targetIds.has(edge.target) && !targetIds.has(edge.source) && !seen.has(edge.source)) {
-        seen.add(edge.source);
-        const srcNode = nodeById.get(edge.source);
-        if (srcNode) {
-          callers.push({
+      if (!targetIds.has(edge.target) || targetIds.has(edge.source)) continue;
+      const srcNode = nodeById.get(edge.source);
+      if (!srcNode) continue;
+      if (edge.edgeType === 'inherits') {
+        if (!seenSubs.has(edge.source)) {
+          seenSubs.add(edge.source);
+          subclasses.push({
             id: srcNode.id,
             identifier: srcNode.identifier,
             filePath: srcNode.filePath,
+            startLine: srcNode.startLine,
           });
         }
+      } else if (!seenCallers.has(edge.source)) {
+        seenCallers.add(edge.source);
+        callers.push({
+          id: srcNode.id,
+          identifier: srcNode.identifier,
+          filePath: srcNode.filePath,
+          startLine: srcNode.startLine,
+        });
       }
     }
-    return callers;
+    return { selectedChunkCallers: callers, selectedChunkSubclasses: subclasses };
   }, [selectedChunk, strataGraphData]);
+
+  const selectedClassMethods = useMemo(() => {
+    if (!selectedChunk || selectedChunk.astNodeType !== 'ClassDef') return [];
+    const prefix = `${selectedChunk.identifier}.`;
+    const byId = new Map<string, { id: string; identifier: string; astNodeType: string; startLine: number }>();
+    for (const n of strataGraphData.nodes) {
+      if (n.filePath === selectedChunk.filePath && n.identifier.startsWith(prefix)) {
+        byId.set(n.id, {
+          id: n.id,
+          identifier: n.identifier,
+          astNodeType: n.astNodeType,
+          startLine: n.startLine ?? 1,
+        });
+      }
+    }
+    for (const c of chunks) {
+      if (c.filePath === selectedChunk.filePath && c.identifier.startsWith(prefix) && !byId.has(c.id)) {
+        byId.set(c.id, {
+          id: c.id,
+          identifier: c.identifier,
+          astNodeType: c.astNodeType,
+          startLine: c.startLine,
+        });
+      }
+    }
+    return Array.from(byId.values()).sort((a, b) => a.startLine - b.startLine);
+  }, [selectedChunk, strataGraphData.nodes, chunks]);
+
+  const selectedRelationshipCount = useMemo(() => {
+    if (!selectedChunk) return 0;
+    const callsCount = selectedChunk.calls?.length ?? 0;
+    const basesCount = selectedChunk.bases?.length ?? 0;
+    return callsCount + basesCount + selectedChunkCallers.length + selectedChunkSubclasses.length;
+  }, [selectedChunk, selectedChunkCallers.length, selectedChunkSubclasses.length]);
 
   const handleSelectCaller = async (callerId: string, identifier: string) => {
     const prevId = selectedChunk?.id;
@@ -385,9 +483,10 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
   };
 
   const handleSelectTreeSymbol = async (symbol: FileSymbolNode) => {
-    // Sync 3D Strata inspection when picking a symbol from the Explorer while in Strata mode
+    // Sync 3D Strata inspection and camera glide when picking a symbol from Explorer while in Strata mode
     if (activeViewMode === 'strata') {
       setInspectedNodeId(symbol.id);
+      setActiveCameraFocus((prev) => ({ chunkId: symbol.id, nonce: prev.nonce + 1 }));
     }
 
     // 1. Check if chunk already loaded locally
@@ -441,6 +540,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
         chunk={selectedChunk}
         isInspectorOpen={isInspectorOpen}
         onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
+        relationshipCount={selectedRelationshipCount}
         isExplorerOpen={isExplorerOpen}
         onToggleExplorer={() => setIsExplorerOpen((prev) => !prev)}
         searchTerm={searchTerm}
@@ -519,9 +619,9 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                     graphData={strataGraphData}
                     highlightedChunkIds={highlightedChunkIds}
                     selectedChunkId={inspectedNodeId ?? selectedChunkId}
-                    onSelectNode={handleSelectStrataNode}
+                    onSelectNode={(id) => handleSelectStrataNode(id, false)}
                     focusTargetId={resolvedFocusTargetId}
-                    focusNonce={focusRequest?.nonce}
+                    focusNonce={activeCameraFocus.nonce}
                   />
                 </Suspense>
               )}
@@ -587,8 +687,45 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400">Scope:</span>
                         <span>
-                          Lines {inspectedNode.startLine}–{inspectedNode.endLine}
+                          Lines {inspectedNode.startLine}–{inspectedNode.endLine}{' '}
+                          <span className="text-slate-400">({inspectedNode.loc} LOC)</span>
                         </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Incoming Callers (Called By) */}
+                  <div className="mb-2.5 pt-2 border-t border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">
+                        Called By
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {inspectedNodeCallers.length} {inspectedNodeCallers.length === 1 ? 'caller' : 'callers'}
+                      </span>
+                    </div>
+                    {inspectedNodeCallers.length > 0 ? (
+                      <div className="max-h-20 overflow-y-auto space-y-1 pr-1">
+                        {inspectedNodeCallers.map((caller) => (
+                          <button
+                            key={caller.id}
+                            type="button"
+                            onClick={() => handleSelectStrataNode(caller.id, true)}
+                            className="w-full text-left flex items-center justify-between p-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 text-[10px] cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400"
+                            title={`Focus 3D camera on caller ${caller.identifier}`}
+                          >
+                            <span className="text-emerald-300 truncate font-mono">
+                              &larr; {caller.identifier}
+                            </span>
+                            <span className="text-slate-400 text-[9px] shrink-0 ml-1">
+                              T{caller.tier}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-400 italic">
+                        No upstream callers in graph
                       </div>
                     )}
                   </div>
@@ -604,14 +741,14 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                       </span>
                     </div>
                     {inspectedNodeCallees.length > 0 ? (
-                      <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
+                      <div className="max-h-20 overflow-y-auto space-y-1 pr-1">
                         {inspectedNodeCallees.map((edge) => (
                           <button
                             key={edge.id}
                             type="button"
-                            onClick={() => handleSelectStrataNode(edge.target)}
+                            onClick={() => handleSelectStrataNode(edge.target, true)}
                             className="w-full text-left flex items-center justify-between p-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-[10px] cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-sky-400"
-                            title={`Inspect ${edge.callName || edge.target} in 3D Strata`}
+                            title={`Focus 3D camera on ${edge.callName || edge.target}`}
                           >
                             <span className="text-sky-300 truncate font-mono">
                               &rarr; {edge.callName || edge.target}
@@ -659,7 +796,7 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                 isLoadingFullFile={isLoadingFullFile}
               />
 
-              {/* Collapsible AST Metadata Drawer */}
+              {/* Collapsible Calls & References Drawer */}
               <ASTMetadataInspector
                 chunk={selectedChunk}
                 isOpen={isInspectorOpen}
@@ -667,6 +804,9 @@ export const CodeViewerContainer: React.FC<CodeViewerContainerProps> = ({
                 onSelectCall={handleSelectCall}
                 callers={selectedChunkCallers}
                 onSelectCaller={handleSelectCaller}
+                classMethods={selectedClassMethods}
+                subclasses={selectedChunkSubclasses}
+                localCallIdentifiers={localCallIdentifiers}
                 canGoBack={navHistory.length > 0}
                 onGoBack={handleNavBack}
               />
