@@ -184,6 +184,7 @@ describe('3D Strata Code Dependency Model UI Integration Suite', () => {
       expect(inspector).toHaveTextContent('Session');
       expect(inspector).toHaveTextContent('fixtures/requests/sessions.py');
       expect(inspector).toHaveTextContent('ClassDef');
+      expect(inspector).toHaveTextContent('Called By');
       expect(inspector).toHaveTextContent('Call References');
 
       // Displays "Open in Code Viewer" action button

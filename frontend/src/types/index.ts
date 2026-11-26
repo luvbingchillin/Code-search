@@ -38,6 +38,7 @@ export interface AstCodeChunk {
   summary?: string;
   imports?: string[];
   calls?: string[];
+  bases?: string[];
 }
 
 export type ReActState =
@@ -118,6 +119,7 @@ export interface NemoSearchOptions {
   exactMatch?: boolean;
   filePath?: string;
   identifier?: string;
+  repoId?: string;
 }
 
 export interface UseNemoIRReturn {
@@ -169,6 +171,7 @@ export interface StrataNodeDTO {
   startLine?: number;
   endLine?: number;
   calls?: string[];
+  bases?: string[];
   [key: string]: unknown;
 }
 
@@ -177,6 +180,7 @@ export interface StrataEdgeDTO {
   source: string;
   target: string;
   callName?: string;
+  edgeType?: 'call' | 'inherits' | string;
   [key: string]: unknown;
 }
 

@@ -266,4 +266,75 @@ describe('StrataLayout Engine (Pure TypeScript, Zero WebGL)', () => {
       expect(DEFAULT_STRATA_TIERS[3].name).toBe('Entrypoints & Interfaces');
     });
   });
+
+  describe('7. Clustered CodeCity Module Layout & Semantic Node Metrics', () => {
+    const clusteredNodes: RawStrataNode[] = [
+      { id: 'sess-cls', identifier: 'Session', filePath: 'requests/sessions.py', astNodeType: 'ClassDef', tier: 2, startLine: 100, endLine: 460 },
+      { id: 'sess-req', identifier: 'Session.request', filePath: 'requests/sessions.py', astNodeType: 'FunctionDef', tier: 2, startLine: 150, endLine: 210 },
+      { id: 'sess-prep', identifier: 'Session.prepare_request', filePath: 'requests/sessions.py', astNodeType: 'FunctionDef', tier: 2, startLine: 215, endLine: 260 },
+      { id: 'cook-cls', identifier: 'RequestsCookieJar', filePath: 'requests/cookies.py', astNodeType: 'ClassDef', tier: 2, startLine: 10, endLine: 90 },
+      { id: 'cook-get', identifier: 'RequestsCookieJar.get', filePath: 'requests/cookies.py', astNodeType: 'FunctionDef', tier: 2, startLine: 30, endLine: 45 },
+    ];
+    const clusteredEdges: RawStrataEdge[] = [
+      { id: 'ce-1', source: 'sess-cls', target: 'sess-req' },
+      { id: 'ce-2', source: 'sess-cls', target: 'sess-prep' },
+      { id: 'ce-3', source: 'sess-req', target: 'cook-get' },
+    ];
+
+    it('packs distinct file modules into non-overlapping clusters with parent class anchors', () => {
+      const result = computeStrataLayout(
+        { nodes: clusteredNodes, edges: clusteredEdges },
+        { layoutMode: 'clustered', curveSegments: 8, curveHeight: 6 }
+      );
+
+      const tier2 = result.tiers.find((t) => t.tier === 2)!;
+      expect(tier2.clusters).toHaveLength(2);
+      expect(tier2.discRadius).toBeGreaterThanOrEqual(24);
+
+      const [cA, cB] = tier2.clusters!;
+      const centerDist = Math.hypot(cA.centerX - cB.centerX, cA.centerZ - cB.centerZ);
+      expect(centerDist).toBeGreaterThanOrEqual(cA.radius + cB.radius);
+
+      // Nodes from sessions.py must sit closer to each other than to cookies.py nodes
+      const sessCls = result.nodes.find((n) => n.id === 'sess-cls')!;
+      const sessReq = result.nodes.find((n) => n.id === 'sess-req')!;
+      const cookCls = result.nodes.find((n) => n.id === 'cook-cls')!;
+      const intraDist = Math.hypot(sessCls.x - sessReq.x, sessCls.z - sessReq.z);
+      const interDist = Math.hypot(sessCls.x - cookCls.x, sessCls.z - cookCls.z);
+      expect(intraDist).toBeLessThan(interDist);
+    });
+
+    it('computes LOC, degree metrics, and taller heightScale for larger symbols', () => {
+      const result = computeStrataLayout(
+        { nodes: clusteredNodes, edges: clusteredEdges },
+        { layoutMode: 'clustered' }
+      );
+      const bigClass = result.nodes.find((n) => n.id === 'sess-cls')!;
+      const smallMethod = result.nodes.find((n) => n.id === 'cook-get')!;
+
+      expect(bigClass.loc).toBe(361);
+      expect(bigClass.outDegree).toBe(2);
+      expect(smallMethod.loc).toBe(16);
+      expect(smallMethod.inDegree).toBe(1);
+      expect(bigClass.heightScale).toBeGreaterThan(smallMethod.heightScale);
+      expect(bigClass.moduleGroup).toBe('sessions.py');
+    });
+
+    it('remains 100% deterministic under reversed input ordering in clustered mode', () => {
+      const r1 = computeStrataLayout(
+        { nodes: clusteredNodes, edges: clusteredEdges },
+        { layoutMode: 'clustered' }
+      );
+      const r2 = computeStrataLayout(
+        { nodes: [...clusteredNodes].reverse(), edges: [...clusteredEdges].reverse() },
+        { layoutMode: 'clustered' }
+      );
+      const m1 = new Map(r1.nodes.map((n) => [n.id, n]));
+      for (const n2 of r2.nodes) {
+        const n1 = m1.get(n2.id)!;
+        expect(n2.x).toBe(n1.x);
+        expect(n2.z).toBe(n1.z);
+      }
+    });
+  });
 });

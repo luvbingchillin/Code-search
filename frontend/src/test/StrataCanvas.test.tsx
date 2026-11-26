@@ -77,4 +77,28 @@ describe('StrataCanvas Component Suite', () => {
     expect(screen.getByTestId('strata-canvas')).toBeInTheDocument();
     expect(screen.getByText(/0 nodes · 0 caller-callee edges/i)).toBeInTheDocument();
   });
+
+  it('allows isolating a specific tier and toggling edge display modes in headless fallback', () => {
+    render(<StrataCanvas graphData={graphData} />);
+
+    // Initially all 4 nodes are visible
+    expect(screen.getByTestId('strata-node-node-1')).toBeInTheDocument();
+    expect(screen.getByTestId('strata-node-node-2')).toBeInTheDocument();
+
+    // Isolate Tier 1
+    fireEvent.click(screen.getByTestId('strata-tier-filter-1'));
+    expect(screen.getByTestId('strata-node-node-2')).toBeInTheDocument();
+    expect(screen.queryByTestId('strata-node-node-1')).not.toBeInTheDocument();
+
+    // Toggle edge mode
+    const crossTierBtn = screen.getByTestId('strata-edge-mode-cross-tier');
+    fireEvent.click(crossTierBtn);
+    expect(crossTierBtn.className).toContain('text-sky-300');
+
+    // Toggle focus dim control
+    const dimBtn = screen.getByTestId('strata-toggle-dim-btn');
+    expect(dimBtn).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(dimBtn);
+    expect(dimBtn).toHaveAttribute('aria-pressed', 'false');
+  });
 });
